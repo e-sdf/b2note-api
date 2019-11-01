@@ -10,7 +10,7 @@ function onListening() {
   const bind = typeof addr === "string"
     ? "pipe " + addr
     : "port " + (addr ? addr.port : "");
-  console.log("Listening on " + bind);
+  console.log("B2NOTE server listening on " + bind);
 }
 
 // Setup and go
@@ -21,7 +21,6 @@ app.set("port", port);
 var server = http.createServer(app);
 
 server.listen(port);
-console.log("B2Note server running on " + port);
 server.on("listening", onListening);
 
 

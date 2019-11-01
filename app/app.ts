@@ -3,7 +3,7 @@ import cors from "cors";
 import * as path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
-import * as results from "./results";
+import router from "./router";
 
 var app = express();
 
@@ -13,8 +13,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.get("/api/annotations", (req, res: any) => {
-  results.okRes(res, { result: "works"});  
-});
+app.use("/api", router);
 
 export default app;
