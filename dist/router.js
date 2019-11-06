@@ -6,46 +6,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const _ = __importStar(require("lodash"));
 const express_1 = require("express");
-const mongodb_1 = require("mongodb");
+const logging_1 = require("./logging");
 const responses = __importStar(require("./responses"));
-const config_1 = __importDefault(require("./config"));
 const an = __importStar(require("./shared/annotation"));
-var router = express_1.Router();
-const colName = "annotations";
-// Database routines {{{1
-async function getDbClient(resp) {
-    return mongodb_1.MongoClient.connect(config_1.default.mongodbUrl);
-}
-function getCollection(dbClient) {
-    return dbClient.db(config_1.default.dbName).collection(colName);
-}
-async function findAnnotationsOfTarget(anCol, id, source) {
-    const query = { "target.id": id, "target.source": source };
-    const res = await anCol.find(query);
-    return res.toArray();
-}
-async function addAnnotation(resp, annotation) {
-    const dbClient = await getDbClient(resp);
-    const anCol = getCollection(dbClient);
-    const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-    const existing = annotations.find((an) => _.isEqual(an.body.items, annotation.body.items));
-    if (existing) {
-        await dbClient.close();
-        return null;
-    }
-    else {
-        const res = anCol.insertOne(annotation);
-        await dbClient.close();
-        return res;
-    }
-}
-// Response creation {{{1
+const db = __importStar(require("./db"));
+const router = express_1.Router();
 function mkResponse(id) {
     const ts = an.mkTimestamp();
     return {
@@ -58,16 +25,24 @@ function mkResponse(id) {
                 href: "annotations/" + id
             }
         },
-        "_status": "OK"
+        _status: "OK"
     };
 }
+function handleError(resp, error) {
+    logging_1.logError(error);
+    responses.serverErr(resp, error, "Internal server error");
+}
 // Handlers {{{1
+// Get all annotations TODO: filter by user
+router.get("/annotations", (req, resp) => {
+    db.getClient().then(client => db.getAnnotations(db.getCollection(client)).then(anl => responses.ok(resp, anl), error => handleError(resp, error)), error => handleError(resp, error));
+});
 // Create a new annotation 
 router.post("/annotations", (req, resp) => {
     const annotation = req.body;
-    addAnnotation(resp, annotation).then(res => {
-        if (res) { // annotation saved
-            responses.created(resp, mkResponse(res.insertedId));
+    db.addAnnotation(annotation).then(newId => {
+        if (newId) { // annotation saved
+            responses.created(resp, mkResponse(newId));
         }
         else { // annotation already exists
             responses.forbidden(resp, { message: "Annotation already exists" });

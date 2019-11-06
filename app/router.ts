@@ -1,48 +1,25 @@
-import * as _ from "lodash";
 import { Request, Response, Router } from "express";
-import * as express from "express";
-import { MongoClient, Db, Collection, InsertOneWriteOpResult } from "mongodb";
+import { logError } from "./logging";
 import * as responses from "./responses";
-import config from "./config";
 import * as an from "./shared/annotation";
+import * as db from "./db";
 
-var router = Router();
+const router = Router();
 
-const colName = "annotations";
-
-// Database routines {{{1
-async function getDbClient(resp: Response): Promise<MongoClient> {
-  return MongoClient.connect(config.mongodbUrl);
+interface AnResponse {
+  _updated: string;
+  _created: string;
+  _id: string;
+  _links: {
+    self: {
+      title: string;
+      href: string;
+    };
+  };
+  _status: string;
 }
 
-function getCollection(dbClient: MongoClient): Collection {
-  return dbClient.db(config.dbName).collection(colName);
-}
-
-async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<any> {
-  const query = { "target.id": id, "target.source": source };
-  const res = await anCol.find(query);
-  return res.toArray();
-}
-
-async function addAnnotation(resp: Response, annotation: an.AnRecord): Promise<InsertOneWriteOpResult<any> | null> {
-  const dbClient = await getDbClient(resp);
-  const anCol = getCollection(dbClient);
-  const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-  const existing = annotations.find((an: an.AnRecord) => _.isEqual(an.body.items, annotation.body.items));
-  if (existing) {
-    await dbClient.close();
-    return null;
-  } else {
-    const res = anCol.insertOne(annotation);
-    await dbClient.close();
-    return res;
-  }
-}
-
-// Response creation {{{1
-
-function mkResponse(id: string) {
+function mkResponse(id: string): AnResponse {
   const ts = an.mkTimestamp();
   return {
     _updated: ts,
@@ -50,23 +27,39 @@ function mkResponse(id: string) {
     _id: id,
     _links: {
       self: {
-	title: "Annotation",
-	href: "annotations/" + id
+        title: "Annotation",
+        href: "annotations/" + id
       }
     },
-    "_status": "OK"
+    _status: "OK"
   };
+}
+
+function handleError(resp: Response, error: any): void {
+  logError(error);
+  responses.serverErr(resp, error, "Internal server error");
 }
 
 // Handlers {{{1
 
+// Get all annotations TODO: filter by user
+router.get("/annotations", (req: Request, resp: Response) => {
+  db.getClient().then(
+    client => db.getAnnotations(db.getCollection(client)).then(
+      anl => responses.ok(resp, anl),
+      error => handleError(resp, error)
+    ),
+    error => handleError(resp, error)
+  );
+});
+
 // Create a new annotation 
 router.post("/annotations", (req: Request, resp: Response) => {
   const annotation = req.body as an.AnRecord;
-  addAnnotation(resp, annotation).then(
-    res => {
-      if (res) { // annotation saved
-	responses.created(resp, mkResponse(res.insertedId));
+  db.addAnnotation(annotation).then(
+    newId => {
+      if (newId) { // annotation saved
+        responses.created(resp, mkResponse(newId));
       } else { // annotation already exists
         responses.forbidden(resp, { message: "Annotation already exists" });
       }

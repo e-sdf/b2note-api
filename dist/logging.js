@@ -1,7 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const chalk = require('chalk');
+const chalk_1 = __importDefault(require("chalk"));
 function logError(msg) {
-    console.error(new Error(chalk.bold.red(msg)));
+    console.error(new Error(chalk_1.default.bold.red(msg)));
 }
 exports.logError = logError;

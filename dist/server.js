@@ -23,7 +23,7 @@ function onListening() {
     console.log("B2NOTE server listening on " + bind);
 }
 // Setup and go
-var port = 3050;
+const port = 3050;
 app_1.default.set("port", port);
 var server = http.createServer(app_1.default);
 server.listen(port);

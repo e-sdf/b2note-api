@@ -5,7 +5,7 @@ import app from "./app";
  * Event listener for HTTP server "listening" event.
  */
 
-function onListening() {
+function onListening(): void {
   const addr = server.address();
   const bind = typeof addr === "string"
     ? "pipe " + addr
@@ -15,7 +15,7 @@ function onListening() {
 
 // Setup and go
 
-var port = 3050
+const port = 3050
 app.set("port", port);
 
 var server = http.createServer(app);

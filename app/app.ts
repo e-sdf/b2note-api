@@ -1,11 +1,10 @@
 import express from "express";
 import cors from "cors";
-import * as path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import router from "./router";
 
-var app = express();
+const app = express();
 
 app.use(cors());
 app.use(logger("dev"));
