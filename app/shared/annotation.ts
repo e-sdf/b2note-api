@@ -1,6 +1,9 @@
 // Types {{{1
 
-export type BodyItemType = "SpecificResource" | "TextualBody";
+export enum BodyItemType {
+  SPECIFIC_RESOURCE = "SpecificResource",
+  TEXTUAL_BODY = "TextualBody"
+}
 
 export interface AnItem {
   type: BodyItemType;
@@ -8,9 +11,14 @@ export interface AnItem {
   value?: string;
 }
 
+export enum PurposeType {
+  TAGGING = "tagging",
+  COMMENTING = "commenting"
+}
+
 export interface AnBody {
   items: Array<AnItem>;
-  purpose: string;
+  purpose: PurposeType;
   type: string;
 }
 
@@ -40,7 +48,7 @@ export interface AnRecord {
   generated: string;
   generator: AnGenerator;
   id: string;
-  motivation: string;
+  motivation: PurposeType;
   target: AnTarget;
   type: string;
 }
@@ -48,23 +56,31 @@ export interface AnRecord {
 // Record Creation {{{1
 
 export function mkTimestamp(): string {
-  const twoDigits = (n: string): string => n.length === 1 ? "0" + n : n;
-  const d = new Date();
-  const yyyy = d.getFullYear().toString();
-  const mm = twoDigits(d.getMonth().toString());
-  const dd = twoDigits(d.getDate().toString());
-  const hh = twoDigits(d.getHours().toString());
-  const mi = twoDigits(d.getMinutes().toString());
-  const ss = twoDigits(d.getSeconds().toString());
-  const ms = d.getMilliseconds().toString();
-  return yyyy + "-" + mm + "-" + dd +
-    "T" + hh + ":" + mi + ":" + ss + "." + ms;
+  return (new Date()).toISOString();
+}
+
+// Request parameters
+
+export enum OwnerFilter {
+  MINE = "mine",
+  OTHERS = "others"
+}
+
+export enum TypeFilter {
+  SEMANTIC = "semantic",
+  KEYWORD = "keyword",
+  COMMENT = "comment"
+}
+
+export interface GetQuery {
+  owner?: Array<OwnerFilter>;
+  type?: Array<TypeFilter>;
 }
 
 // Record Accessing {{{1
 
 export function getLabel(anRecord: AnRecord): string {
-  const item = anRecord.body.items.find((i: AnItem) => i.type === "TextualBody" as BodyItemType);
+  const item = anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.TEXTUAL_BODY );
   if (!item) {
     throw new Error("TextualBody record not found in body item");
   } else {

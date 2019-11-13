@@ -45,7 +45,7 @@ function handleError(resp: Response, error: any): void {
 // Get all annotations TODO: filter by user
 router.get("/annotations", (req: Request, resp: Response) => {
   db.getClient().then(
-    client => db.getAnnotations(db.getCollection(client)).then(
+    client => db.getAnnotations(db.getCollection(client), req.query).then(
       anl => responses.ok(resp, anl),
       error => handleError(resp, error)
     ),

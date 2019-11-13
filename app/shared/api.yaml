@@ -1,0 +1,403 @@
+openapi: 3.0.0
+info:
+  description: B2NOTE Annotation Service API
+  version: "1.0.0"
+  title: B2NOTE Annotation API
+  contact:
+    email: ylefranc@esciencefactory.com 
+  license:
+    name: Apache 2.0
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/B2Note/B2Note/1.0.0
+  - url: "https://b2note.bsc.es/api/v1"
+tags:
+  - name: annotation
+  - name: user
+paths:
+  /annotations:
+    options:
+      tags:
+        - annotation
+      summary: Get request options
+      responses:
+        "200":
+          description: Returns a list of possible request types
+    get:
+      tags:
+        - annotation
+      summary: Get all annotations
+      operationId: getAnnotations
+      parameters:
+        - in: query
+          name: owner 
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [mine, others]
+          description: Authors of annotations to include in the result
+        - in: query
+          name: type
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [semantic, keyword, comment]
+          description: Type of annotations to include in the result
+      responses:
+        "200":
+          description: Returns a list of annotations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Annotation"
+    post:
+      tags:
+        - annotation
+      summary: Add a new annotation of a subject
+      operationId: addAnnotation
+      responses:
+        "405":
+          description: Invalid input
+      requestBody:
+        $ref: "#/components/requestBodies/Annotation"
+    put:
+      tags:
+        - annotation
+      summary: Update an existing annotation
+      operationId: updateAnnotation
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Annotation not found
+        "405":
+          description: Validation exception
+      requestBody:
+        $ref: "#/components/requestBodies/Annotation"
+  "/annotation/{annotationId}":
+    get:
+      tags:
+        - annotation
+      summary: Find annotation by ID
+      description: Returns a single annotation
+      operationId: getAnnotationById
+      parameters:
+        - name: annotationId
+          in: path
+          description: ID of annotation to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Annotation"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/Annotation"
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Annotation not found
+    delete:
+      tags:
+        - annotation
+      summary: Deletes a annotation
+      operationId: deleteAnnotation
+      parameters:
+        - name: api_key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: annotationId
+          in: path
+          description: Annotation id to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "404":
+          description: Annotation not found
+  /annotation/findByPid:
+    get:
+      tags:
+        - annotation
+      summary: Finds Annotations by its pid
+      description: Multiple pid values can be provided with comma separated strings
+      operationId: findAnnotationsByPid
+      parameters:
+        - name: pid
+          in: query
+          description: Pid values that need to be considered for filter
+          required: true
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Annotation"
+        "400":
+          description: Invalid status value
+  /annotation/findBySubject:
+    get:
+      tags:
+        - annotation
+      summary: Finds Annotations by its subject
+      description: Multiple subject values can be provided with comma separated strings
+      operationId: findAnnotationsBySubject
+      parameters:
+        - name: subject
+          in: query
+          description: Subject values that need to be considered for filter
+          required: true
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Annotation"
+        "400":
+          description: Invalid status value
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      responses:
+        default:
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        description: Created user object
+        required: true
+  /user/createWithArray:
+    post:
+      tags:
+        - user
+      summary: Creates list of users with given input array
+      operationId: createUsersWithArrayInput
+      responses:
+        default:
+          description: successful operation
+      requestBody:
+        $ref: "#/components/requestBodies/UserArray"
+  /user/createWithList:
+    post:
+      tags:
+        - user
+      summary: Creates list of users with given input array
+      operationId: createUsersWithListInput
+      responses:
+        default:
+          description: successful operation
+      requestBody:
+        $ref: "#/components/requestBodies/UserArray"
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The user name for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login in clear text
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: string
+        "400":
+          description: Invalid username/password supplied
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      operationId: logoutUser
+      responses:
+        default:
+          description: successful operation
+  "/user/{username}":
+    get:
+      tags:
+        - user
+      summary: Get user by user name
+      operationId: getUserByName
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be fetched. Use user1 for testing.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+    put:
+      tags:
+        - user
+      summary: Updated user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+        - name: username
+          in: path
+          description: name that need to be updated
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Invalid user supplied
+        "404":
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        description: Updated user object
+        required: true
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+externalDocs:
+  description: Find out more about B2NOTE
+  url: "https://b2note.bsc.es/"
+components:
+  schemas:
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: string
+    Annotations:
+      type: array
+      items: 
+        $ref: "#/components/schemas/Annotation"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+  requestBodies:
+    Annotation:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Annotation"
+      description: Annotation object that needs to be added
+      required: true
+    UserArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+      description: List of user object
+      required: true
