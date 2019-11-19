@@ -61,7 +61,7 @@ export function mkTimestamp(): string {
 
 // Request parameters
 
-export enum OwnerFilter {
+export enum CreatorFilter {
   MINE = "mine",
   OTHERS = "others"
 }
@@ -73,8 +73,10 @@ export enum TypeFilter {
 }
 
 export interface GetQuery {
-  owner?: Array<OwnerFilter>;
-  type?: Array<TypeFilter>;
+  user?: string;
+  "target-source"?: string;
+  "creator-filter"?: Array<CreatorFilter>;
+  "type-filter"?: Array<TypeFilter>;
 }
 
 // Record Accessing {{{1
@@ -92,3 +94,16 @@ export function getLabel(anRecord: AnRecord): string {
   }
 }
 
+// Querying {{{1
+
+export function isSemantic(anRecord: AnRecord): boolean {
+  return anRecord.motivation === PurposeType.TAGGING && anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
+}
+
+export function isKeyword(anRecord: AnRecord): boolean {
+  return anRecord.motivation === PurposeType.TAGGING && !anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
+}
+
+export function isComment(anRecord: AnRecord): boolean {
+  return anRecord.motivation === PurposeType.COMMENTING;
+}

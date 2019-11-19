@@ -31,14 +31,12 @@ paths:
       operationId: getAnnotations
       parameters:
         - in: query
-          name: owner 
+          name: creator
           style: form
           schema:
-            type: array
-            items:
-              type: string
-              enum: [mine, others]
-          description: Authors of annotations to include in the result
+            type: string
+          required: false
+          description: Return just annotations created by this creator ID
         - in: query
           name: type
           style: form
@@ -58,7 +56,7 @@ paths:
     post:
       tags:
         - annotation
-      summary: Add a new annotation of a subject
+      summary: Add a new annotation of a source
       operationId: addAnnotation
       responses:
         "405":
@@ -158,17 +156,17 @@ paths:
                   $ref: "#/components/schemas/Annotation"
         "400":
           description: Invalid status value
-  /annotation/findBySubject:
+  /annotation/findBySource:
     get:
       tags:
         - annotation
-      summary: Finds Annotations by its subject
-      description: Multiple subject values can be provided with comma separated strings
-      operationId: findAnnotationsBySubject
+      summary: Finds Annotations by its source
+      description: Multiple source values can be provided with comma separated strings
+      operationId: findAnnotationsBySource
       parameters:
-        - name: subject
+        - name: source
           in: query
-          description: Subject values that need to be considered for filter
+          description: Source values that need to be considered for filter
           required: true
           explode: true
           schema:

@@ -30,9 +30,10 @@ app.options("*", cors());
 //}).install(app);
 
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
-app.use("/api/spec", express.static("api.yaml"));
+app.use("/favicon.ico", express.static("favicon.ico"));
+app.use("/api/v1/spec", express.static("api.yaml"));
 
 app.use("/api/v1", router);
 
