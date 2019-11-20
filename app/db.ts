@@ -60,10 +60,13 @@ function isEmptyFilter(filter: Record<string, any>): boolean {
 
 // Queries {{{1
 
-async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<any> {
+async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<an.AnRecord>> {
   const query = { "target.id": id, "target.source": source };
-  const res = await anCol.find(query);
-  return res.toArray();
+  return await anCol.find(query).toArray();
+}
+
+export async function getAnnotationsForTag(anCol: Collection, query: an.FilesQuery): Promise<Array<an.AnRecord>> {
+  return anCol.find({ "body.items": { "$elemMatch": { value: query.tag } } }).toArray();
 }
 
 // DB API {{{1

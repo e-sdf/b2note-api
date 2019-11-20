@@ -75,8 +75,12 @@ export enum TypeFilter {
 export interface GetQuery {
   user?: string;
   "target-source"?: string;
-  "creator-filter"?: Array<CreatorFilter>;
-  "type-filter"?: Array<TypeFilter>;
+  "creator-filter"?: Array<CreatorFilter> | undefined;
+  "type-filter"?: Array<TypeFilter> | undefined;
+}
+
+export interface FilesQuery {
+  tag: string;
 }
 
 // Record Accessing {{{1

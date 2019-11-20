@@ -45,7 +45,7 @@ function handleError(resp: Response, error: any): void {
 // Get list of annotations
 router.get("/annotations", (req: Request, resp: Response) => {
   db.getClient().then(
-    client => db.getAnnotations(db.getCollection(client), req.query).then(
+    client => db.getAnnotations(db.getCollection(client), req.query as an.GetQuery).then(
       anl => responses.ok(resp, anl),
       error => handleError(resp, error)
     ),
@@ -68,5 +68,16 @@ router.post("/annotations", (req: Request, resp: Response) => {
     err => responses.serverErr(resp, err, "Internal server error")
   );
 });
+
+router.get("/files", (req: Request, resp: Response) => {
+  db.getClient().then(
+    client => db.getAnnotationsForTag(db.getCollection(client), req.query as an.FilesQuery).then(
+      annotations => responses.ok(resp, annotations.map(a => a.target.source)),
+      error => handleError(resp, error)
+    ),
+    error => handleError(resp, error)
+  );
+});
+
 
 export default router;
