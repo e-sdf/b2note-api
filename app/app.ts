@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import { OpenApiValidator } from "express-openapi-validator";
+import { apiUrl } from "./shared/server";
 import router from "./router";
 import "source-map-support/register";
 import { logError } from "./logging";
@@ -33,9 +34,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 app.use("/favicon.ico", express.static("favicon.ico"));
-app.use("/api/v1/spec", express.static("api.yaml"));
+app.use(apiUrl + "/spec", express.static("api.yaml"));
 
-app.use("/api/v1", router);
+app.use(apiUrl, router);
 
 // Register error handler
 app.use((err: any, req: Request, resp: Response, next: NextFunction) => {

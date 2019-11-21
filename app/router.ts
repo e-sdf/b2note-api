@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { logError } from "./logging";
 import * as responses from "./responses";
-import * as an from "./shared/annotation";
+import * as anModel from "./shared/annotationsModel";
 import * as db from "./db";
 
 const router = Router();
@@ -20,7 +20,7 @@ interface AnResponse {
 }
 
 function mkResponse(id: string): AnResponse {
-  const ts = an.mkTimestamp();
+  const ts = anModel.mkTimestamp();
   return {
     _updated: ts,
     _created: ts,
@@ -43,9 +43,9 @@ function handleError(resp: Response, error: any): void {
 // Handlers {{{1
 
 // Get list of annotations
-router.get("/annotations", (req: Request, resp: Response) => {
+router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   db.getClient().then(
-    client => db.getAnnotations(db.getCollection(client), req.query as an.GetQuery).then(
+    client => db.getAnnotations(db.getCollection(client), req.query as anModel.GetQuery).then(
       anl => responses.ok(resp, anl),
       error => handleError(resp, error)
     ),
@@ -54,8 +54,8 @@ router.get("/annotations", (req: Request, resp: Response) => {
 });
 
 // Create a new annotation 
-router.post("/annotations", (req: Request, resp: Response) => {
-  const annotation = req.body as an.AnRecord;
+router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
+  const annotation = req.body as anModel.AnRecord;
   db.addAnnotation(annotation).then(
     newId => {
       if (newId) { // annotation saved
@@ -69,15 +69,14 @@ router.post("/annotations", (req: Request, resp: Response) => {
   );
 });
 
-router.get("/files", (req: Request, resp: Response) => {
+router.get(anModel.filesUrl, (req: Request, resp: Response) => {
   db.getClient().then(
-    client => db.getAnnotationsForTag(db.getCollection(client), req.query as an.FilesQuery).then(
+    client => db.getAnnotationsForTag(db.getCollection(client), req.query as anModel.FilesQuery).then(
       annotations => responses.ok(resp, annotations.map(a => a.target.source)),
       error => handleError(resp, error)
     ),
     error => handleError(resp, error)
   );
 });
-
 
 export default router;

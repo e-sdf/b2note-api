@@ -1,3 +1,8 @@
+// Endpoints {{{1
+
+export const annotationsUrl = "/annotations";
+export const filesUrl = "/files";
+
 // Types {{{1
 
 export enum BodyItemType {

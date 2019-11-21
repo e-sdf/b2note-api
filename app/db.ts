@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { MongoClient, Collection } from "mongodb";
 import config from "./config";
-import * as an from "./shared/annotation";
+import * as anModel from "./shared/annotationsModel";
 
 const colName = "annotations";
 
@@ -17,37 +17,37 @@ export function getCollection(dbClient: MongoClient): Collection {
 
 // Filters {{{1
 
-function mkTargetSourceFilter(query: an.GetQuery): Record<string, any> {
+function mkTargetSourceFilter(query: anModel.GetQuery): Record<string, any> {
   const ff = query["target-source"];
   return (
     ff ? { "target.source": ff } : { }
   );
 }
 
-function mkAuthorFilter(query: an.GetQuery): Record<string, any> {
+function mkAuthorFilter(query: anModel.GetQuery): Record<string, any> {
   const c = query["creator-filter"];
   return (
     c ?
-      c.includes(an.CreatorFilter.MINE) && !c.includes(an.CreatorFilter.OTHERS) ? 
+      c.includes(anModel.CreatorFilter.MINE) && !c.includes(anModel.CreatorFilter.OTHERS) ? 
         { "creator.id": query.user }
-      : c.includes(an.CreatorFilter.OTHERS) && !c.includes(an.CreatorFilter.MINE) ?
+      : c.includes(anModel.CreatorFilter.OTHERS) && !c.includes(anModel.CreatorFilter.MINE) ?
         { "creator.id": { "$not": { "$eq": query.user } } }
       : {}
     : {}
   );
 }
 
-function mkTypeFilter(query: an.GetQuery): Record<string, any> {
-  const semanticFilter = query["type-filter"]?.includes(an.TypeFilter.SEMANTIC) ? {
-    motivation: an.PurposeType.TAGGING,
-    "body.items.type": an.BodyItemType.SPECIFIC_RESOURCE 
+function mkTypeFilter(query: anModel.GetQuery): Record<string, any> {
+  const semanticFilter = query["type-filter"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
+    motivation: anModel.PurposeType.TAGGING,
+    "body.items.type": anModel.BodyItemType.SPECIFIC_RESOURCE 
   } : {};
-  const keywordFilter = query["type-filter"]?.includes(an.TypeFilter.KEYWORD) ? {
-    motivation: an.PurposeType.TAGGING,
-    "body.items": { "$not": { "$elemMatch": { type: an.BodyItemType.SPECIFIC_RESOURCE } } } 
+  const keywordFilter = query["type-filter"]?.includes(anModel.TypeFilter.KEYWORD) ? {
+    motivation: anModel.PurposeType.TAGGING,
+    "body.items": { "$not": { "$elemMatch": { type: anModel.BodyItemType.SPECIFIC_RESOURCE } } } 
   } : {};
-  const commentFilter = query["type-filter"]?.includes(an.TypeFilter.COMMENT) ? { 
-    motivation: an.PurposeType.COMMENTING 
+  const commentFilter = query["type-filter"]?.includes(anModel.TypeFilter.COMMENT) ? { 
+    motivation: anModel.PurposeType.COMMENTING 
   } : {};
   const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}].filter(i => { return !_.isEmpty(i); });
   const filter = { "$or": typeFilters};
@@ -60,18 +60,18 @@ function isEmptyFilter(filter: Record<string, any>): boolean {
 
 // Queries {{{1
 
-async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<an.AnRecord>> {
+async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.AnRecord>> {
   const query = { "target.id": id, "target.source": source };
   return await anCol.find(query).toArray();
 }
 
-export async function getAnnotationsForTag(anCol: Collection, query: an.FilesQuery): Promise<Array<an.AnRecord>> {
+export async function getAnnotationsForTag(anCol: Collection, query: anModel.FilesQuery): Promise<Array<anModel.AnRecord>> {
   return anCol.find({ "body.items": { "$elemMatch": { value: query.tag } } }).toArray();
 }
 
 // DB API {{{1
 
-export function getAnnotations(anCol: Collection, query: an.GetQuery): Promise<Array<an.AnRecord>> {
+export function getAnnotations(anCol: Collection, query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
   console.log(JSON.stringify(mkTargetSourceFilter(query)));
   const filter = {
     ...mkTargetSourceFilter(query),
@@ -81,11 +81,11 @@ export function getAnnotations(anCol: Collection, query: an.GetQuery): Promise<A
   return isEmptyFilter(filter) ? Promise.resolve([]) : anCol.find(filter).toArray();
 }
 
-export async function addAnnotation(annotation: an.AnRecord): Promise<string|null> {
+export async function addAnnotation(annotation: anModel.AnRecord): Promise<string|null> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-  const existing = annotations.find((an: an.AnRecord) => _.isEqual(an.body.items, annotation.body.items));
+  const existing = annotations.find((an: anModel.AnRecord) => _.isEqual(anModel.body.items, annotation.body.items));
   if (existing) {
     await dbClient.close();
     return null;
