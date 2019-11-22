@@ -69,6 +69,23 @@ router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
   );
 });
 
+// Delete an annotation
+router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
+  const params: anModel.DeleteQuery = { id: req.params.id };
+  db.deleteAnnotation(params).then(
+    deletedNo => {
+      if (deletedNo > 0) { // annotation deleted
+        responses.ok(resp, { message: "Deleted successfuly" });
+      } else { // id does not exist
+        responses.notFound(resp);
+      }
+    }
+  ).catch(
+    err => responses.serverErr(resp, err, "Internal server error")
+  );
+});
+
+// Get files for a certain tag
 router.get(anModel.filesUrl, (req: Request, resp: Response) => {
   db.getClient().then(
     client => db.getAnnotationsForTag(db.getCollection(client), req.query as anModel.FilesQuery).then(

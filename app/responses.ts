@@ -26,3 +26,8 @@ export function forbidden(resp: Response, result?: object): void {
   resp.status(403);
   resp.json(result || { message: "Forbidden" });
 }
+
+export function notFound(resp: Response, result?: object): void {
+  resp.status(404);
+  resp.json(result || { message: "Not found" });
+}

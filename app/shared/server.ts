@@ -1,1 +1,3 @@
-export const apiUrl = "/api/v1";
+export const endpointUrl = "https://b2note.bsc.es";
+
+export const apiUrl = "/api";

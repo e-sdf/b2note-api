@@ -64,7 +64,7 @@ export function mkTimestamp(): string {
   return (new Date()).toISOString();
 }
 
-// Request parameters
+// Requests parameters {{{1
 
 export enum CreatorFilter {
   MINE = "mine",
@@ -86,6 +86,10 @@ export interface GetQuery {
 
 export interface FilesQuery {
   tag: string;
+}
+
+export interface DeleteQuery {
+  id: string;
 }
 
 // Record Accessing {{{1

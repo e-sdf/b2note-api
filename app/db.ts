@@ -1,6 +1,7 @@
 import * as _ from "lodash";
-import { MongoClient, Collection } from "mongodb";
+import { MongoClient, Collection, ObjectId } from "mongodb";
 import config from "./config";
+import { endpointUrl, apiUrl } from "./shared/server";
 import * as anModel from "./shared/annotationsModel";
 
 const colName = "annotations";
@@ -85,16 +86,25 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<strin
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-  const existing = annotations.find((an: anModel.AnRecord) => _.isEqual(anModel.body.items, annotation.body.items));
+  const existing = annotations.find((a: anModel.AnRecord) => _.isEqual(a.body.items, annotation.body.items));
   if (existing) {
     await dbClient.close();
     return null;
   } else {
     const res = await anCol.insertOne(annotation);
     const newId = res.insertedId as string;
-    await anCol.findOneAndUpdate({ _id: newId }, { "$set": { id: "/api/annotations/" + newId } });  
+    await anCol.findOneAndUpdate({ _id: newId }, { "$set": { id: endpointUrl + apiUrl + anModel.annotationsUrl + "/" + newId } });  
     await dbClient.close();
     return newId;
   }
 }
+
+export async function deleteAnnotation(query: anModel.DeleteQuery): Promise<number> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
+  const res = await anCol.deleteOne({ _id: new ObjectId(query.id) });
+  await dbClient.close();
+  return res.result.n || 0;
+}
+
 
