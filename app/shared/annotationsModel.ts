@@ -10,7 +10,7 @@ export enum BodyItemType {
   TEXTUAL_BODY = "TextualBody"
 }
 
-export interface AnItem {
+export interface AnBodyItem {
   type: BodyItemType;
   source?: string;
   value?: string;
@@ -22,7 +22,7 @@ export enum PurposeType {
 }
 
 export interface AnBody {
-  items: Array<AnItem>;
+  items: Array<AnBodyItem>;
   purpose: PurposeType;
   type: string;
 }
@@ -95,7 +95,7 @@ export interface DeleteQuery {
 // Record Accessing {{{1
 
 export function getLabel(anRecord: AnRecord): string {
-  const item = anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.TEXTUAL_BODY );
+  const item = anRecord.body.items.find((i: AnBodyItem) => i.type === BodyItemType.TEXTUAL_BODY );
   if (!item) {
     throw new Error("TextualBody record not found in body item");
   } else {
@@ -109,12 +109,16 @@ export function getLabel(anRecord: AnRecord): string {
 
 // Querying {{{1
 
+export function getNoOfTargets(anRecord: AnRecord): number {
+  return anRecord.body.items.filter((i: AnBodyItem) => i.type === BodyItemType.SPECIFIC_RESOURCE).length;
+}
+
 export function isSemantic(anRecord: AnRecord): boolean {
-  return anRecord.motivation === PurposeType.TAGGING && anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
+  return anRecord.motivation === PurposeType.TAGGING && anRecord.body.items.find((i: AnBodyItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
 }
 
 export function isKeyword(anRecord: AnRecord): boolean {
-  return anRecord.motivation === PurposeType.TAGGING && !anRecord.body.items.find((i: AnItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
+  return anRecord.motivation === PurposeType.TAGGING && !anRecord.body.items.find((i: AnBodyItem) => i.type === BodyItemType.SPECIFIC_RESOURCE);
 }
 
 export function isComment(anRecord: AnRecord): boolean {
