@@ -99,10 +99,18 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<strin
   }
 }
 
-export async function deleteAnnotation(query: anModel.DeleteQuery): Promise<number> {
+export async function updateAnnotation(anId: string, changes: Record<keyof anModel.AnRecord, string>): Promise<number> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
-  const res = await anCol.deleteOne({ _id: new ObjectId(query.id) });
+  const res = await anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes });
+  await dbClient.close();
+  return res.modifiedCount;
+}
+
+export async function deleteAnnotation(anId: string): Promise<number> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
+  const res = await anCol.deleteOne({ _id: new ObjectId(anId) });
   await dbClient.close();
   return res.result.n || 0;
 }

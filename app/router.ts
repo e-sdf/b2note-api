@@ -1,7 +1,8 @@
 import { Request, Response, Router } from "express";
 import { logError } from "./logging";
-import * as responses from "./responses";
+import * as validator from "./validator";
 import * as anModel from "./shared/annotationsModel";
+import * as responses from "./responses";
 import * as db from "./db";
 
 const router = Router();
@@ -44,35 +45,67 @@ function handleError(resp: Response, error: any): void {
 
 // Get list of annotations
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
-  db.getClient().then(
-    client => db.getAnnotations(db.getCollection(client), req.query as anModel.GetQuery).then(
-      anl => responses.ok(resp, anl),
+  const errors = validator.validateGetQuery(req.query);
+  if (errors) {
+    responses.clientErr(resp, errors);
+  } else {
+    db.getClient().then(
+      client => db.getAnnotations(db.getCollection(client), req.query as anModel.GetQuery).then(
+        anl => responses.ok(resp, anl),
+        error => handleError(resp, error)
+      ),
       error => handleError(resp, error)
-    ),
-    error => handleError(resp, error)
-  );
+    );
+  }
 });
 
 // Create a new annotation 
 router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
-  const annotation = req.body as anModel.AnRecord;
-  db.addAnnotation(annotation).then(
-    newId => {
-      if (newId) { // annotation saved
-        responses.created(resp, mkResponse(newId));
-      } else { // annotation already exists
-        responses.forbidden(resp, { message: "Annotation already exists" });
+  const errors = validator.validateAnRecord(req.body);
+  if (errors) {
+    responses.clientErr(resp, errors);
+  } else {
+    const annotation = req.body as anModel.AnRecord;
+    db.addAnnotation(annotation).then(
+      newId => {
+        if (newId) { // annotation saved
+          responses.created(resp, mkResponse(newId));
+        } else { // annotation already exists
+          responses.forbidden(resp, { message: "Annotation already exists" });
+        }
       }
-    }
-  ).catch(
-    err => responses.serverErr(resp, err, "Internal server error")
-  );
+    ).catch(
+      err => responses.serverErr(resp, err, "Internal server error")
+    );
+  }
+});
+
+// Edit an annotation
+router.patch(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
+  const anId = req.params.id;
+  const errors = validator.validateAnRecordOpt(req.body);
+  if (errors) {
+    responses.clientErr(resp, errors);
+  } else {
+    const changes = req.body as Record<keyof anModel.AnRecord, string>;
+    db.updateAnnotation(anId, changes).then(
+      modified => {
+        if (modified > 0) { // operation successful 
+          responses.ok(resp);
+        } else { // annotation not found
+          responses.notFound(resp);
+        }
+      }
+    ).catch(
+      err => responses.serverErr(resp, err, "Internal server error")
+    );
+  }
 });
 
 // Delete an annotation
 router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
-  const params: anModel.DeleteQuery = { id: req.params.id };
-  db.deleteAnnotation(params).then(
+  const anId = req.params.id;
+  db.deleteAnnotation(anId).then(
     deletedNo => {
       if (deletedNo > 0) { // annotation deleted
         responses.ok(resp, { message: "Deleted successfuly" });

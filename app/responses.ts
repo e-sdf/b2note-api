@@ -1,9 +1,9 @@
 import { Response } from "express";
 import { logError } from './logging';
 
-export function clientErr(resp: Response, msg: string): void {
+export function clientErr(resp: Response, result: object): void {
   resp.status(400);
-  resp.send(msg);
+  resp.json(result);
 }
 
 export function serverErr(resp: Response, error: string, msg: string): void {
@@ -14,7 +14,7 @@ export function serverErr(resp: Response, error: string, msg: string): void {
 
 export function ok(resp: Response, result?: object): void {
   resp.status(200);
-  resp.json(result || { message: "OK" });
+  resp.json(result || { message: "Success" });
 }
 
 export function created(resp: Response, result?: object): void {

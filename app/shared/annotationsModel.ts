@@ -88,10 +88,6 @@ export interface FilesQuery {
   tag: string;
 }
 
-export interface DeleteQuery {
-  id: string;
-}
-
 // Record Accessing {{{1
 
 export function getLabel(anRecord: AnRecord): string {
