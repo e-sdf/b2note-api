@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { logError } from "./logging";
 import * as validator from "./validator";
 import * as anModel from "./shared/annotationsModel";
+import * as sModel from "./shared/searchModel";
 import * as responses from "./responses";
 import * as db from "./db";
 
@@ -120,13 +121,32 @@ router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) =>
 
 // Get files for a certain tag
 router.get(anModel.filesUrl, (req: Request, resp: Response) => {
-  db.getClient().then(
-    client => db.getAnnotationsForTag(db.getCollection(client), req.query as anModel.FilesQuery).then(
-      annotations => responses.ok(resp, annotations.map(a => a.target.source)),
+  const errors = validator.validateFilesQuery(req.query);
+  if (errors) {
+    responses.clientErr(resp, errors);
+  } else {
+    db.getClient().then(
+      client => db.getAnnotationsForTag(db.getCollection(client), req.query as anModel.FilesQuery).then(
+        annotations => responses.ok(resp, annotations.map(a => a.target.source)),
+        error => handleError(resp, error)
+      ),
       error => handleError(resp, error)
-    ),
-    error => handleError(resp, error)
-  );
+    );
+  }
+});
+
+// Search
+router.get(sModel.searchUrl, (req: Request, resp: Response) => {
+  const query: sModel.SearchQuery = JSON.parse(req.query.query);
+  const errors = validator.validateSearchQuery(query);
+  if (errors) {
+    responses.clientErr(resp, errors);
+  } else {
+    db.searchFiles(query).then(
+      files => responses.ok(resp, files),
+      error => handleError(resp, error)
+    );
+  }
 });
 
 export default router;

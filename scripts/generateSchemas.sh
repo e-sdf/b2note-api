@@ -11,10 +11,20 @@ typescript-json-schema --id "anRecord" $O --required app/shared/annotationsModel
 # Schema with optional fields for patch validations
 S="anRecord.opt.schema.js"
 F="$D/$S"
-echo "export const anRecordSchemaOpt = " > $F
+echo "export const anRecordOptSchema = " > $F
 typescript-json-schema --id "anRecordOpt" $O app/shared/annotationsModel.ts AnRecord >> $F
 
 S="getQuery.schema.js"
 F=$D/$S
 echo "export const getQuerySchema = " > $F
 typescript-json-schema --id "getQuery" $O --required app/shared/annotationsModel.ts GetQuery >> $F
+
+S="filesQuery.schema.js"
+F=$D/$S
+echo "export const filesQuerySchema = " > $F
+typescript-json-schema --id "filesQuery" $O --required app/shared/annotationsModel.ts FilesQuery >> $F
+
+S="searchQuery.schema.js"
+F=$D/$S
+echo "export const searchQuerySchema = " > $F
+typescript-json-schema --id "searchQuery" $O --required app/shared/searchModel.ts SearchQuery >> $F

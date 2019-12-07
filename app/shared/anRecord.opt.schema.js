@@ -1,4 +1,4 @@
-export const anRecordSchemaOpt = 
+export const anRecordOptSchema = 
 {
     "$id": "anRecordOpt",
     "$ref": "anRecordOpt#/definitions/AnRecord",

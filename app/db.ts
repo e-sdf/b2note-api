@@ -3,6 +3,7 @@ import { MongoClient, Collection, ObjectId } from "mongodb";
 import config from "./config";
 import { endpointUrl, apiUrl } from "./shared/server";
 import * as anModel from "./shared/annotationsModel";
+import * as sModel from "./shared/searchModel";
 
 const colName = "annotations";
 
@@ -113,6 +114,16 @@ export async function deleteAnnotation(anId: string): Promise<number> {
   const res = await anCol.deleteOne({ _id: new ObjectId(anId) });
   await dbClient.close();
   return res.result.n || 0;
+}
+
+export async function searchFiles(query: sModel.SearchQuery): Promise<Array<string>> {
+  console.log(JSON.stringify(query));
+  return Promise.resolve(["f1", "f2"]);
+  //const dbClient = await getClient();
+  //const anCol = getCollection(dbClient);
+  //const res = await anCol.deleteOne({ _id: new ObjectId(anId) });
+  //await dbClient.close();
+  //return res.result.n || 0;
 }
 
 
