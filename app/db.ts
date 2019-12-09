@@ -42,14 +42,15 @@ function mkAuthorFilter(query: anModel.GetQuery): Record<string, any> {
 function mkTypeFilter(query: anModel.GetQuery): Record<string, any> {
   const semanticFilter = query["type-filter"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
-    "body.items.type": anModel.BodyItemType.SPECIFIC_RESOURCE 
+    "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
   const keywordFilter = query["type-filter"]?.includes(anModel.TypeFilter.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
-    "body.items": { "$not": { "$elemMatch": { type: anModel.BodyItemType.SPECIFIC_RESOURCE } } } 
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
   const commentFilter = query["type-filter"]?.includes(anModel.TypeFilter.COMMENT) ? { 
-    motivation: anModel.PurposeType.COMMENTING 
+    motivation: anModel.PurposeType.COMMENTING ,
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
   const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}].filter(i => { return !_.isEmpty(i); });
   const filter = { "$or": typeFilters};
@@ -87,7 +88,7 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<strin
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-  const existing = annotations.find((a: anModel.AnRecord) => _.isEqual(a.body.items, annotation.body.items));
+  const existing = annotations.find((an: anModel.AnRecord) => anModel.getLabel(an) === anModel.getLabel(annotation));
   if (existing) {
     await dbClient.close();
     return null;
