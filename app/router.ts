@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import { Request, Response, Router } from "express";
 import { logError } from "./logging";
 import * as validator from "./validator";
@@ -125,8 +126,9 @@ router.get(anModel.filesUrl, (req: Request, resp: Response) => {
   if (errors) {
     responses.clientErr(resp, errors);
   } else {
+    const query = req.query as anModel.FilesQuery;
     db.getClient().then(
-      client => db.getAnnotationsForTag(db.getCollection(client), req.query as anModel.FilesQuery).then(
+      client => db.getAnnotationsForTag(db.getCollection(client), query.tag).then(
         annotations => responses.ok(resp, annotations.map(a => a.target.source)),
         error => handleError(resp, error)
       ),
@@ -142,8 +144,11 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   if (errors) {
     responses.clientErr(resp, errors);
   } else {
-    db.searchFiles(query).then(
-      files => responses.ok(resp, files),
+    db.getClient().then(
+      client => db.searchRecords(db.getCollection(client), query).then(
+        annotations => responses.ok(resp, _.uniq(annotations.map(a => a.target.source))),
+        error => handleError(resp, error)
+      ),
       error => handleError(resp, error)
     );
   }

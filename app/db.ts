@@ -7,6 +7,8 @@ import * as sModel from "./shared/searchModel";
 
 const colName = "annotations";
 
+type DBQuery = Record<string, any>;
+
 // DB Access {{{1
 
 export async function getClient(): Promise<MongoClient> {
@@ -19,14 +21,14 @@ export function getCollection(dbClient: MongoClient): Collection {
 
 // Filters {{{1
 
-function mkTargetSourceFilter(query: anModel.GetQuery): Record<string, any> {
+function mkTargetSourceFilter(query: anModel.GetQuery): DBQuery {
   const ff = query["target-source"];
   return (
     ff ? { "target.source": ff } : { }
   );
 }
 
-function mkAuthorFilter(query: anModel.GetQuery): Record<string, any> {
+function mkAuthorFilter(query: anModel.GetQuery): DBQuery {
   const c = query["creator-filter"];
   return (
     c ?
@@ -39,7 +41,7 @@ function mkAuthorFilter(query: anModel.GetQuery): Record<string, any> {
   );
 }
 
-function mkTypeFilter(query: anModel.GetQuery): Record<string, any> {
+function mkTypeFilter(query: anModel.GetQuery): DBQuery {
   const semanticFilter = query["type-filter"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
@@ -57,7 +59,7 @@ function mkTypeFilter(query: anModel.GetQuery): Record<string, any> {
   return filter;
 }
 
-function isEmptyFilter(filter: Record<string, any>): boolean {
+function isEmptyFilter(filter: DBQuery): boolean {
   return filter["$or"]?.length === 0;
 }
 
@@ -68,8 +70,13 @@ async function findAnnotationsOfTarget(anCol: Collection, id: string, source: st
   return await anCol.find(query).toArray();
 }
 
-export async function getAnnotationsForTag(anCol: Collection, query: anModel.FilesQuery): Promise<Array<anModel.AnRecord>> {
-  return anCol.find({ "body.items": { "$elemMatch": { value: query.tag } } }).toArray();
+export async function getAnnotationsForTag(anCol: Collection, value: string): Promise<Array<anModel.AnRecord>> {
+  return anCol.find({
+    "$or": [
+      { "body.value": value },
+      { "body.items": { "$elemMatch": { value } } }
+    ]
+  }).toArray();
 }
 
 // DB API {{{1
@@ -117,14 +124,64 @@ export async function deleteAnnotation(anId: string): Promise<number> {
   return res.result.n || 0;
 }
 
-export async function searchFiles(query: sModel.SearchQuery): Promise<Array<string>> {
-  console.log(JSON.stringify(query));
-  return Promise.resolve(["f1", "f2"]);
-  //const dbClient = await getClient();
-  //const anCol = getCollection(dbClient);
-  //const res = await anCol.deleteOne({ _id: new ObjectId(anId) });
-  //await dbClient.close();
-  //return res.result.n || 0;
+function mkSemanticDBQuery(value: string): DBQuery {
+  return {
+    "body.type": anModel.AnBodyItemType.COMPOSITE,
+    "body.items": { "$elemMatch": { value } }
+  };
+}
+
+function mkKeywordDBQuery(value: string): DBQuery {
+  return {
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY,
+    "motivation": anModel.PurposeType.TAGGING,
+    "body.value": value
+  };
+}
+
+function mkCommentDBQuery(value: string): DBQuery {
+  return {
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY,
+    "motivation": anModel.PurposeType.COMMENTING,
+    "body.value": value
+  };
+}
+
+export async function searchRecords(anCol: Collection, query: sModel.SearchQuery): Promise<Array<anModel.AnRecord>> {
+  function term2dbQuery(term: sModel.SearchTerm): DBQuery {
+    return (
+      term.type === anModel.TypeFilter.SEMANTIC ?
+        mkSemanticDBQuery(term.label)
+      : term.type === anModel.TypeFilter.KEYWORD ?
+        mkKeywordDBQuery(term.label)
+      : term.type === anModel.TypeFilter.COMMENT ?
+        mkCommentDBQuery(term.label)
+      : { error: "Unknown tag type" }
+    );
+  }
+  function mkDbOperator(operator: sModel.OperatorType): string {
+    return ( 
+      operator === sModel.OperatorType.AND ? "$and"
+    : operator === sModel.OperatorType.AND_NOT ? "TODO"
+    : operator === sModel.OperatorType.XOR ? "$xor"
+    : operator === sModel.OperatorType.OR ? "$or"
+    : "unknown operator"
+   );
+  }
+
+  //const dbQuery: DBQuery = 
+    //dbQueryTerms.length === 1 ? 
+      //dbQueryTerms[0]
+    //: query.terms.reduce(
+      //(res: DBQuery, term: sModel.SearchTerm) => ({
+        //term.operator ? { ...res, [term2dbQuery(term)]: [ mkDbOperator(term.operator) ] } : { error: "Term operator not expected" }
+      //}),
+      //{ }
+
+  //);
+  console.log(JSON.stringify(dbQuery, null, 2));
+  //return anCol.find(dbQuery).toArray();
+  return [];
 }
 
 
