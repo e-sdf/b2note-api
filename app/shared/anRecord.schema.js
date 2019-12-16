@@ -4,6 +4,80 @@ export const anRecordSchema =
     "$ref": "anRecord#/definitions/AnRecord",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "definitions": {
+        "AnBodyItemSpecific": {
+            "additionalProperties": false,
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "SpecificResource"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "source",
+                "type"
+            ],
+            "type": "object"
+        },
+        "AnBodyItemTextual": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "TextualBody"
+                    ],
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "value"
+            ],
+            "type": "object"
+        },
+        "AnCompositeBody": {
+            "additionalProperties": false,
+            "properties": {
+                "items": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "anRecord#/definitions/AnBodyItemSpecific"
+                            },
+                            {
+                                "$ref": "anRecord#/definitions/AnBodyItemTextual"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "purpose": {
+                    "enum": [
+                        "tagging"
+                    ],
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "Composite"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "items",
+                "purpose",
+                "type"
+            ],
+            "type": "object"
+        },
         "AnCreator": {
             "additionalProperties": false,
             "properties": {
@@ -51,6 +125,14 @@ export const anRecordSchema =
                     "type": "string"
                 },
                 "body": {
+                    "anyOf": [
+                        {
+                            "$ref": "anRecord#/definitions/AnCompositeBody"
+                        },
+                        {
+                            "$ref": "anRecord#/definitions/AnTextualBody"
+                        }
+                    ]
                 },
                 "created": {
                     "type": "string"
@@ -108,6 +190,29 @@ export const anRecordSchema =
                 "id",
                 "source",
                 "type"
+            ],
+            "type": "object"
+        },
+        "AnTextualBody": {
+            "additionalProperties": false,
+            "properties": {
+                "purpose": {
+                    "$ref": "anRecord#/definitions/PurposeType"
+                },
+                "type": {
+                    "enum": [
+                        "TextualBody"
+                    ],
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "purpose",
+                "type",
+                "value"
             ],
             "type": "object"
         },

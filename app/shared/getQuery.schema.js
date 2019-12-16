@@ -7,20 +7,13 @@ export const getQuerySchema =
         "GetQuery": {
             "additionalProperties": false,
             "properties": {
-                "creator-filter": {
-                    "items": {
-                        "enum": [
-                            "mine",
-                            "others"
-                        ],
-                        "type": "string"
-                    },
-                    "type": "array"
+                "creator": {
+                    "type": "string"
                 },
                 "target-source": {
                     "type": "string"
                 },
-                "type-filter": {
+                "type": {
                     "items": {
                         "enum": [
                             "comment",
@@ -31,7 +24,7 @@ export const getQuerySchema =
                     },
                     "type": "array"
                 },
-                "user": {
+                "value": {
                     "type": "string"
                 }
             },

@@ -4,6 +4,7 @@ import { logError } from "./logging";
 import * as validator from "./validator";
 import * as anModel from "./shared/annotationsModel";
 import * as sModel from "./shared/searchModel";
+import * as searchQueryParser from "./shared/searchQueryParser";
 import * as responses from "./responses";
 import * as db from "./db";
 
@@ -120,6 +121,31 @@ router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) =>
   );
 });
 
+// Search annotations
+router.get(anModel.searchUrl, (req: Request, resp: Response) => {
+  const expr = req.query.expression;
+  if (!expr) {
+    responses.clientErr(resp, { error: "parameter missing: expression" });
+  } else {
+    const parseResult = searchQueryParser.parse(expr);
+    if (parseResult.error) {
+      responses.clientErr(resp, { error: "expression syntax error", details: parseResult.error });
+    } else {
+      if (!parseResult.result) {
+        throw new Error("result field expected but missing");
+      } else {
+        db.getClient().then(
+          client => db.searchAnnotations(db.getCollection(client), parseResult.result as sModel.Sexpr).then(
+            anl => responses.ok(resp, anl),
+            error => handleError(resp, error)
+          ),
+          error => handleError(resp, error)
+        );
+      }
+    }
+  }
+});
+
 // Get files for a certain tag
 router.get(anModel.filesUrl, (req: Request, resp: Response) => {
   const errors = validator.validateFilesQuery(req.query);
@@ -130,23 +156,6 @@ router.get(anModel.filesUrl, (req: Request, resp: Response) => {
     db.getClient().then(
       client => db.getAnnotationsForTag(db.getCollection(client), query.tag).then(
         annotations => responses.ok(resp, annotations.map(a => a.target.source)),
-        error => handleError(resp, error)
-      ),
-      error => handleError(resp, error)
-    );
-  }
-});
-
-// Search
-router.get(sModel.searchUrl, (req: Request, resp: Response) => {
-  const query: sModel.SearchQuery = JSON.parse(req.query.query);
-  const errors = validator.validateSearchQuery(query);
-  if (errors) {
-    responses.clientErr(resp, errors);
-  } else {
-    db.getClient().then(
-      client => db.searchRecords(db.getCollection(client), query).then(
-        annotations => responses.ok(resp, _.uniq(annotations.map(a => a.target.source))),
         error => handleError(resp, error)
       ),
       error => handleError(resp, error)

@@ -4,6 +4,67 @@ export const anRecordOptSchema =
     "$ref": "anRecordOpt#/definitions/AnRecord",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "definitions": {
+        "AnBodyItemSpecific": {
+            "additionalProperties": false,
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "SpecificResource"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AnBodyItemTextual": {
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "enum": [
+                        "TextualBody"
+                    ],
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AnCompositeBody": {
+            "additionalProperties": false,
+            "properties": {
+                "items": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "anRecordOpt#/definitions/AnBodyItemSpecific"
+                            },
+                            {
+                                "$ref": "anRecordOpt#/definitions/AnBodyItemTextual"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "purpose": {
+                    "enum": [
+                        "tagging"
+                    ],
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "Composite"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
         "AnCreator": {
             "additionalProperties": false,
             "properties": {
@@ -41,6 +102,14 @@ export const anRecordOptSchema =
                     "type": "string"
                 },
                 "body": {
+                    "anyOf": [
+                        {
+                            "$ref": "anRecordOpt#/definitions/AnCompositeBody"
+                        },
+                        {
+                            "$ref": "anRecordOpt#/definitions/AnTextualBody"
+                        }
+                    ]
                 },
                 "created": {
                     "type": "string"
@@ -79,6 +148,24 @@ export const anRecordOptSchema =
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AnTextualBody": {
+            "additionalProperties": false,
+            "properties": {
+                "purpose": {
+                    "$ref": "anRecordOpt#/definitions/PurposeType"
+                },
+                "type": {
+                    "enum": [
+                        "TextualBody"
+                    ],
+                    "type": "string"
+                },
+                "value": {
                     "type": "string"
                 }
             },

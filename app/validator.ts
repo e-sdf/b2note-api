@@ -3,14 +3,12 @@ import { getQuerySchema } from "./shared/getQuery.schema";
 import { anRecordSchema } from "./shared/anRecord.schema";
 import { anRecordOptSchema } from "./shared/anRecord.opt.schema";
 import { filesQuerySchema } from "./shared/filesQuery.schema";
-import { searchQuerySchema } from "./shared/searchQuery.schema";
 
 const ajv = new Ajv();
 ajv.addSchema(getQuerySchema);
 ajv.addSchema(anRecordSchema);
 ajv.addSchema(anRecordOptSchema);
 ajv.addSchema(filesQuerySchema);
-ajv.addSchema(searchQuerySchema);
 
 export function validateGetQuery(query: any): Array<Ajv.ErrorObject> | null | undefined {
   ajv.validate("getQuery#/definitions/GetQuery", query);
@@ -31,9 +29,3 @@ export function validateFilesQuery(query: any): Array<Ajv.ErrorObject> | null | 
   ajv.validate("filesQuery#/definitions/FilesQuery", query);
   return ajv.errors;
 }
-
-export function validateSearchQuery(query: any): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("searchQuery#/definitions/SearchQuery", query);
-  return ajv.errors;
-}
-

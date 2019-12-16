@@ -21,36 +21,16 @@ export function getCollection(dbClient: MongoClient): Collection {
 
 // Filters {{{1
 
-function mkTargetSourceFilter(query: anModel.GetQuery): DBQuery {
-  const ff = query["target-source"];
-  return (
-    ff ? { "target.source": ff } : { }
-  );
-}
-
-function mkAuthorFilter(query: anModel.GetQuery): DBQuery {
-  const c = query["creator-filter"];
-  return (
-    c ?
-      c.includes(anModel.CreatorFilter.MINE) && !c.includes(anModel.CreatorFilter.OTHERS) ? 
-        { "creator.id": query.user }
-      : c.includes(anModel.CreatorFilter.OTHERS) && !c.includes(anModel.CreatorFilter.MINE) ?
-        { "creator.id": { "$not": { "$eq": query.user } } }
-      : {}
-    : {}
-  );
-}
-
 function mkTypeFilter(query: anModel.GetQuery): DBQuery {
-  const semanticFilter = query["type-filter"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
+  const semanticFilter = query["type"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
-  const keywordFilter = query["type-filter"]?.includes(anModel.TypeFilter.KEYWORD) ? {
+  const keywordFilter = query["type"]?.includes(anModel.TypeFilter.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
-  const commentFilter = query["type-filter"]?.includes(anModel.TypeFilter.COMMENT) ? { 
+  const commentFilter = query["type"]?.includes(anModel.TypeFilter.COMMENT) ? { 
     motivation: anModel.PurposeType.COMMENTING ,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
@@ -59,18 +39,37 @@ function mkTypeFilter(query: anModel.GetQuery): DBQuery {
   return filter;
 }
 
+function mkCreatorFilter(query: anModel.GetQuery): DBQuery {
+  return query.creator ? { "creator.id": query.creator } : {};
+}
+
+function mkTargetSourceFilter(query: anModel.GetQuery): DBQuery {
+  const ff = query["target-source"];
+  return (
+    ff ? { "target.source": ff } : { }
+  );
+}
+
+function mkValueFilter(query: anModel.GetQuery): DBQuery {
+  return query.value ? { "$or": [
+    { "body.value": query.value }, // keyword and comment 
+    { "body.items": { "$elemMatch": { value: query.value } } } // semantic
+  ] }
+  : {};
+}
+
 function isEmptyFilter(filter: DBQuery): boolean {
   return filter["$or"]?.length === 0;
 }
 
 // Queries {{{1
 
-async function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.AnRecord>> {
+function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.AnRecord>> {
   const query = { "target.id": id, "target.source": source };
-  return await anCol.find(query).toArray();
+  return anCol.find(query).toArray();
 }
 
-export async function getAnnotationsForTag(anCol: Collection, value: string): Promise<Array<anModel.AnRecord>> {
+export function getAnnotationsForTag(anCol: Collection, value: string): Promise<Array<anModel.AnRecord>> {
   return anCol.find({
     "$or": [
       { "body.value": value },
@@ -82,11 +81,11 @@ export async function getAnnotationsForTag(anCol: Collection, value: string): Pr
 // DB API {{{1
 
 export function getAnnotations(anCol: Collection, query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
-  console.log(JSON.stringify(mkTargetSourceFilter(query)));
   const filter = {
-    ...mkTargetSourceFilter(query),
-    ...mkAuthorFilter(query),
     ...mkTypeFilter(query),
+    ...mkCreatorFilter(query),
+    ...mkTargetSourceFilter(query),
+    ...mkValueFilter(query)
   };
   return isEmptyFilter(filter) ? Promise.resolve([]) : anCol.find(filter).toArray();
 }
@@ -124,6 +123,8 @@ export async function deleteAnnotation(anId: string): Promise<number> {
   return res.result.n || 0;
 }
 
+// Searching {{{1
+
 function mkSemanticDBQuery(value: string): DBQuery {
   return {
     "body.type": anModel.AnBodyItemType.COMPOSITE,
@@ -147,41 +148,62 @@ function mkCommentDBQuery(value: string): DBQuery {
   };
 }
 
-export async function searchRecords(anCol: Collection, query: sModel.SearchQuery): Promise<Array<anModel.AnRecord>> {
-  function term2dbQuery(term: sModel.SearchTerm): DBQuery {
-    return (
-      term.type === anModel.TypeFilter.SEMANTIC ?
-        mkSemanticDBQuery(term.label)
-      : term.type === anModel.TypeFilter.KEYWORD ?
-        mkKeywordDBQuery(term.label)
-      : term.type === anModel.TypeFilter.COMMENT ?
-        mkCommentDBQuery(term.label)
-      : { error: "Unknown tag type" }
-    );
-  }
-  function mkDbOperator(operator: sModel.OperatorType): string {
-    return ( 
-      operator === sModel.OperatorType.AND ? "$and"
-    : operator === sModel.OperatorType.AND_NOT ? "TODO"
-    : operator === sModel.OperatorType.XOR ? "$xor"
-    : operator === sModel.OperatorType.OR ? "$or"
-    : "unknown operator"
-   );
-  }
-
-  //const dbQuery: DBQuery = 
-    //dbQueryTerms.length === 1 ? 
-      //dbQueryTerms[0]
-    //: query.terms.reduce(
-      //(res: DBQuery, term: sModel.SearchTerm) => ({
-        //term.operator ? { ...res, [term2dbQuery(term)]: [ mkDbOperator(term.operator) ] } : { error: "Term operator not expected" }
-      //}),
-      //{ }
-
-  //);
-  console.log(JSON.stringify(dbQuery, null, 2));
-  //return anCol.find(dbQuery).toArray();
-  return [];
+function mkRegexDBQuery(regex: string): DBQuery {
+  return {
+    "$or": [
+      { "body.value": { "$regex": regex } },
+      { "body.items": { "$elemMatch": { "$regex": regex } } }
+    ]
+  };
 }
 
+function mkTagQuery(tagExpr: sModel.TagExpr): DBQuery {
+  //console.log(tagExpr);
+  const val = tagExpr.value;
+  switch (tagExpr.type) {
+    case sModel.SearchType.SEMANTIC: return mkSemanticDBQuery(val);
+    case sModel.SearchType.KEYWORD: return mkKeywordDBQuery(val);
+    case sModel.SearchType.COMMENT: return mkCommentDBQuery(val);
+    case sModel.SearchType.REGEX: return mkRegexDBQuery(val);
+    default: throw new Error("query type " + tagExpr.type + "not implemented");
+  }
 
+}
+
+function mkUnaryQuery(unExpr: sModel.UnOperatorExpr): DBQuery {
+  if (unExpr.operator !== sModel.UnOperatorType.NOT) { throw new Error("Just NOT unary operator implemented"); }
+  return {
+    "$not": mkExprQuery(unExpr.expr)
+  };
+}
+
+function mkBinaryQuery(biExpr: sModel.BiOperatorExpr): DBQuery {
+
+  function mkOperator(operator: sModel.BiOperatorType): string {
+    switch (operator) {
+      case sModel.BiOperatorType.AND: return "$and";
+      case sModel.BiOperatorType.OR: return "$or";
+      case sModel.BiOperatorType.XOR: return "$xor";
+      default: throw new Error("Unknown binary operator");
+    }
+  }
+
+  return {
+    [mkOperator(biExpr.operator)]: [ mkExprQuery(biExpr.lexpr), mkExprQuery(biExpr.rexpr)]
+  };
+}
+
+function mkExprQuery(sExpr: sModel.Sexpr): DBQuery {
+  return (
+      sModel.isTagExpr(sExpr) ? mkTagQuery(sExpr as sModel.TagExpr)
+    : sModel.isUnaryExpr(sExpr) ? mkUnaryQuery(sExpr as sModel.UnOperatorExpr)
+    : mkBinaryQuery(sExpr as sModel.BiOperatorExpr)
+  );
+}
+
+export function searchAnnotations(anCol: Collection, sExpr: sModel.Sexpr): Promise<Array<anModel.AnRecord>> {
+  //console.log(JSON.stringify(sExpr, null, 2));
+  const dbQuery = mkExprQuery(sExpr);
+  console.log(JSON.stringify(dbQuery, null, 2));
+  return anCol.find(dbQuery).toArray();
+}
