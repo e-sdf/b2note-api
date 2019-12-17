@@ -4,7 +4,7 @@ import * as sModel from "./searchModel";
 
 export const annotationsUrl = "/annotations";
 export const searchUrl = "/search";
-export const filesUrl = "/files";
+export const targetsUrl = "/targets";
 
 // Types {{{1
 
@@ -179,7 +179,7 @@ export interface GetQuery {
   value?: string;
 }
 
-export interface FilesQuery {
+export interface TargetsQuery {
   tag: string;
 }
 

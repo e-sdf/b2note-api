@@ -146,16 +146,16 @@ router.get(anModel.searchUrl, (req: Request, resp: Response) => {
   }
 });
 
-// Get files for a certain tag
-router.get(anModel.filesUrl, (req: Request, resp: Response) => {
-  const errors = validator.validateFilesQuery(req.query);
+// Get targets for a certain tag
+router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
+  const errors = validator.validateTargetsQuery(req.query);
   if (errors) {
     responses.clientErr(resp, errors);
   } else {
-    const query = req.query as anModel.FilesQuery;
+    const query = req.query as anModel.TargetsQuery;
     db.getClient().then(
       client => db.getAnnotationsForTag(db.getCollection(client), query.tag).then(
-        annotations => responses.ok(resp, annotations.map(a => a.target.source)),
+        annotations => responses.ok(resp, annotations.map(a => a.target)),
         error => handleError(resp, error)
       ),
       error => handleError(resp, error)

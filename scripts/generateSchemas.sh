@@ -19,7 +19,7 @@ F=$D/$S
 echo "export const getQuerySchema = " > $F
 typescript-json-schema --id "getQuery" $O --required app/shared/annotationsModel.ts GetQuery >> $F
 
-S="filesQuery.schema.js"
+S="targetsQuery.schema.js"
 F=$D/$S
-echo "export const filesQuerySchema = " > $F
-typescript-json-schema --id "filesQuery" $O --required app/shared/annotationsModel.ts FilesQuery >> $F
+echo "export const targetsQuerySchema = " > $F
+typescript-json-schema --id "targetsQuery" $O --required app/shared/annotationsModel.ts TargetsQuery >> $F

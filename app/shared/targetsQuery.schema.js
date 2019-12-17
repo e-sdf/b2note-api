@@ -1,10 +1,10 @@
-export const filesQuerySchema = 
+export const targetsQuerySchema = 
 {
-    "$id": "filesQuery",
-    "$ref": "filesQuery#/definitions/FilesQuery",
+    "$id": "targetsQuery",
+    "$ref": "targetsQuery#/definitions/TargetsQuery",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "definitions": {
-        "FilesQuery": {
+        "TargetsQuery": {
             "additionalProperties": false,
             "properties": {
                 "tag": {
