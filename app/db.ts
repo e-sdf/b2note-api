@@ -4,7 +4,7 @@ import config from "./config";
 import { endpointUrl, apiUrl } from "./core/server";
 import * as anModel from "./core/annotationsModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, TagExpr, isBinaryExpr, isUnaryExpr, isTagExpr, Sexpr } from "./core/searchModel";
-import * as oreg from "./core/ontologyRegister";
+import { OntologyDict, OntologyInfo, getOntologies } from "./core/ontologyRegister";
 
 const colName = "annotations";
 
@@ -209,16 +209,18 @@ function mkExprQuery(sExpr: Sexpr): DBQuery {
 async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
 
   async function expandSynonymsToExpr(tagExpr: TagExpr): Promise<Sexpr> {
+    console.log(tagExpr);
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologies: Array<oreg.OntologyInfo> = await oreg.getOntologies(tagExpr.value);
-          console.log(ontologies.map(o => o.synonyms));
-          //const synonyms = ontologies.reduce(
-            //(acc: Array<string>, o: oreg.OntologyInfo) => [ ...acc, [ ...o.synonyms ] ],
-            //[]
-          //);
-          //console.log(synonyms);
+          const ontologiesDict: OntologyDict = await getOntologies(tagExpr.value);
+          const ontologies = ontologiesDict[tagExpr.value.toLocaleLowerCase()];
+          const synonyms = ontologies.reduce(
+            (acc: Array<string>, o: OntologyInfo) => [ ...acc,  ...o.synonyms  ],
+            []
+          );
+          console.log(synonyms);
+          //TODO: make synonyms expr
           return tagExpr;
         })()
       : tagExpr
@@ -247,6 +249,6 @@ export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promis
   //console.log(JSON.stringify(sExpr, null, 2));
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
   const dbQuery = mkExprQuery(withSynonymExprs);
-  console.log(JSON.stringify(dbQuery, null, 2));
+  //console.log(JSON.stringify(dbQuery, null, 2));
   return anCol.find(dbQuery).toArray();
 }

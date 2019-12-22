@@ -62,4 +62,4 @@ typings/
 
 dist/
 
-app/core/*.js
+b2note-core/
