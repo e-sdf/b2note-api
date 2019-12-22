@@ -212,9 +212,13 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologies = await oreg.getExactOntologies(tagExpr.value);
-          console.log(ontologies);
-          //const synonyms = 
+          const ontologies: Array<oreg.OntologyInfo> = await oreg.getOntologies(tagExpr.value);
+          console.log(ontologies.map(o => o.synonyms));
+          //const synonyms = ontologies.reduce(
+            //(acc: Array<string>, o: oreg.OntologyInfo) => [ ...acc, [ ...o.synonyms ] ],
+            //[]
+          //);
+          //console.log(synonyms);
           return tagExpr;
         })()
       : tagExpr
