@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import { OpenApiValidator } from "express-openapi-validator";
-import { apiUrl } from "./shared/server";
+import { apiUrl } from "./core/server";
 import router from "./router";
 import "source-map-support/register";
 import { logError } from "./logging";

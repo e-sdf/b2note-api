@@ -8,7 +8,7 @@
     "generate": "scripts/generateSchemas.sh",
     "watch": "nodemon --watch app --ext ts,js,yaml --exec npm run build\\;npm run copy\\;npm run run",
     "build": "rm -rf dist/*; tsc; npm run copy",
-    "copy": "cp app/shared/api.yaml dist/",
+    "copy": "cp app/core/api.yaml dist/",
     "run": "cd dist; node server",
     "clean": "npm cache clean --force"
   },

@@ -1,8 +1,8 @@
 import Ajv from "ajv";
-import { getQuerySchema } from "./shared/getQuery.schema";
-import { anRecordSchema } from "./shared/anRecord.schema";
-import { anRecordOptSchema } from "./shared/anRecord.opt.schema";
-import { targetsQuerySchema } from "./shared/targetsQuery.schema";
+import { getQuerySchema } from "./core/getQuery.schema";
+import { anRecordSchema } from "./core/anRecord.schema";
+import { anRecordOptSchema } from "./core/anRecord.opt.schema";
+import { targetsQuerySchema } from "./core/targetsQuery.schema";
 
 const ajv = new Ajv();
 ajv.addSchema(getQuerySchema);

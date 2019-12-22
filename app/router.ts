@@ -2,9 +2,9 @@ import * as _ from "lodash";
 import { Request, Response, Router } from "express";
 import { logError } from "./logging";
 import * as validator from "./validator";
-import * as anModel from "./shared/annotationsModel";
-import * as sModel from "./shared/searchModel";
-import * as searchQueryParser from "./shared/searchQueryParser";
+import * as anModel from "./core/annotationsModel";
+import * as sModel from "./core/searchModel";
+import * as searchQueryParser from "./core/searchQueryParser";
 import * as responses from "./responses";
 import * as db from "./db";
 
