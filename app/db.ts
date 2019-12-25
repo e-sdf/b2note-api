@@ -1,4 +1,5 @@
-import * as _ from "lodash";
+import _ from "lodash";
+import { matchSwitch } from "@babakness/exhaustive-type-checking";
 import { MongoClient, Collection, ObjectId } from "mongodb";
 import config from "./config";
 import { endpointUrl, apiUrl } from "./core/server";
@@ -86,14 +87,24 @@ export function getAnnotationsForTag(anCol: Collection, value: string): Promise<
 
 // DB API {{{1
 
-export function getAnnotations(anCol: Collection, query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
+function sort(ans: Array<anModel.AnRecord>): Array<anModel.AnRecord> {
+  return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
+}
+    
+export async function getAnnotations(anCol: Collection, query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
     ...mkTargetSourceFilter(query),
     ...mkValueFilter(query)
   };
-  return isEmptyFilter(filter) ? Promise.resolve([]) : anCol.find(filter).toArray();
+  if (isEmptyFilter(filter)) {
+    return Promise.resolve([]);
+  } else {
+    const anl = await anCol.find(filter).toArray();
+    const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
+    return res;
+  }
 }
 
 export async function addAnnotation(annotation: anModel.AnRecord): Promise<string|null> {
@@ -163,53 +174,63 @@ function mkRegexDBQuery(regex: string): DBQuery {
   };
 }
 
-function mkTagQuery(tagExpr: TagExpr): DBQuery {
+function mkTagDBQuery(tagExpr: TagExpr): DBQuery {
   //console.log(tagExpr);
   const val = tagExpr.value;
-  switch (tagExpr.type) {
-    case SearchType.SEMANTIC: return mkSemanticDBQuery(val);
-    case SearchType.KEYWORD: return mkKeywordDBQuery(val);
-    case SearchType.COMMENT: return mkCommentDBQuery(val);
-    case SearchType.REGEX: return mkRegexDBQuery(val);
-    default: throw new Error("query type " + tagExpr.type + "not implemented");
-  }
+  return matchSwitch(tagExpr.type, {
+    [SearchType.SEMANTIC]: () => mkSemanticDBQuery(val),
+    [SearchType.KEYWORD]: () => mkKeywordDBQuery(val),
+    [SearchType.COMMENT]: () => mkCommentDBQuery(val),
+    [SearchType.REGEX]: () => mkRegexDBQuery(val)
+  });
 }
 
-function mkUnaryQuery(unExpr: UnOperatorExpr): DBQuery {
+function mkUnaryDBQuery(unExpr: UnOperatorExpr): DBQuery {
   if (unExpr.operator !== UnOperatorType.NOT) { throw new Error("Just NOT unary operator implemented"); }
   return {
-    "$not": mkExprQuery(unExpr.expr)
+    "$not": mkExprDBQuery(unExpr.expr)
   };
 }
 
-function mkBinaryQuery(biExpr: BiOperatorExpr): DBQuery {
+function mkBinaryDBQuery(biExpr: BiOperatorExpr): DBQuery {
 
   function mkOperator(operator: BiOperatorType): string {
-    switch (operator) {
-      case BiOperatorType.AND: return "$and";
-      case BiOperatorType.OR: return "$or";
-      case BiOperatorType.XOR: return "$xor";
-      default: throw new Error("Unknown binary operator");
-    }
+    return matchSwitch(operator, {
+      [BiOperatorType.AND]: () => "$and",
+      [BiOperatorType.OR]: () => "$or",
+      [BiOperatorType.XOR]: () => "$xor"
+    });
   }
 
   return {
-    [mkOperator(biExpr.operator)]: [ mkExprQuery(biExpr.lexpr), mkExprQuery(biExpr.rexpr)]
+    [mkOperator(biExpr.operator)]: [ mkExprDBQuery(biExpr.lexpr), mkExprDBQuery(biExpr.rexpr)]
   };
 }
 
-function mkExprQuery(sExpr: Sexpr): DBQuery {
+function mkExprDBQuery(sExpr: Sexpr): DBQuery {
   return (
-      isTagExpr(sExpr) ? mkTagQuery(sExpr as TagExpr)
-    : isUnaryExpr(sExpr) ? mkUnaryQuery(sExpr as UnOperatorExpr)
-    : mkBinaryQuery(sExpr as BiOperatorExpr)
+      isTagExpr(sExpr) ? mkTagDBQuery(sExpr as TagExpr)
+    : isUnaryExpr(sExpr) ? mkUnaryDBQuery(sExpr as UnOperatorExpr)
+    : mkBinaryDBQuery(sExpr as BiOperatorExpr)
   );
 }
 
 async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
+  
+  function mkMultiAndExpr(tags: Array<string>): Sexpr {
+    if (tags.length === 0) { throw new Error("empty tags array"); }
+    return (
+      tags.length === 1 ?
+        ({ type: SearchType.SEMANTIC, value: tags[0] } as TagExpr)
+      : ({ 
+        operator: BiOperatorType.OR,
+        lexpr: mkMultiAndExpr([tags[0]]),
+        rexpr: mkMultiAndExpr(_.tail(tags))
+      } as BiOperatorExpr)
+    );
+  }
 
   async function expandSynonymsToExpr(tagExpr: TagExpr): Promise<Sexpr> {
-    console.log(tagExpr);
     return (
       tagExpr.synonymsFlag ?
         (async () => {
@@ -219,9 +240,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
             (acc: Array<string>, o: OntologyInfo) => [ ...acc,  ...o.synonyms  ],
             []
           );
-          console.log(synonyms);
-          //TODO: make synonyms expr
-          return tagExpr;
+          return mkMultiAndExpr([ tagExpr.value, ...synonyms ]);
         })()
       : tagExpr
     );
@@ -248,7 +267,8 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
 export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
   //console.log(JSON.stringify(sExpr, null, 2));
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
-  const dbQuery = mkExprQuery(withSynonymExprs);
-  //console.log(JSON.stringify(dbQuery, null, 2));
+  console.log(JSON.stringify(withSynonymExprs, null, 2));
+  const dbQuery = mkExprDBQuery(withSynonymExprs);
+  console.log(JSON.stringify(dbQuery, null, 2));
   return anCol.find(dbQuery).toArray();
 }

@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { Request, Response, Router } from "express";
 import { logError } from "./logging";
 import * as validator from "./validator";
@@ -44,22 +43,47 @@ function handleError(resp: Response, error: any): void {
   responses.serverErr(resp, error, "Internal server error");
 }
 
+function setDownloadHeader(resp: Response, fname: string, format: anModel.Format): void {
+  const ext = anModel.mkFileExt(format);
+  resp.setHeader("Content-Disposition", "attachment");
+  resp.setHeader("filename", fname + "." + ext);
+}
+
 // Handlers {{{1
 
 // Get list of annotations
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
-  const errors = validator.validateGetQuery(req.query);
-  if (errors) {
-    responses.clientErr(resp, errors);
-  } else {
-    db.getClient().then(
-      client => db.getAnnotations(db.getCollection(client), req.query as anModel.GetQuery).then(
-        anl => responses.ok(resp, anl),
+  try {
+    const query2 = {
+      ... req.query,
+      download: req.query.download ? JSON.parse(req.query.download) : false
+    };
+    const errors = validator.validateGetQuery(query2);
+    if (errors) {
+      responses.clientErr(resp, errors);
+    } else {
+      const query3 = query2 as anModel.GetQuery;
+      db.getClient().then(
+        client => db.getAnnotations(db.getCollection(client), query3).then(
+          anl => {
+            const format = query3.format || anModel.Format.JSONLD;
+            if (query3.download) {
+              setDownloadHeader(resp, "annotations_" + anModel.mkTimestamp(), format);
+            }
+            if (format === anModel.Format.JSONLD) {
+              responses.json(resp, anl);
+            } else if (query3.format === anModel.Format.RDF) {
+              responses.xml(resp, anModel.annotations2RDF(anl));
+            } else {
+              throw new Error("Unknown download format");
+            }
+          },
+          error => handleError(resp, error)
+        ),
         error => handleError(resp, error)
-      ),
-      error => handleError(resp, error)
-    );
-  }
+      );
+    }
+  } catch (error) { responses.clientErr(resp, { message: "download parameter is expected to be boolean" } ); }
 });
 
 // Create a new annotation 
@@ -122,7 +146,7 @@ router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) =>
 });
 
 // Search annotations
-router.get(anModel.searchUrl, (req: Request, resp: Response) => {
+router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   const expr = req.query.expression;
   if (!expr) {
     responses.clientErr(resp, { error: "parameter missing: expression" });

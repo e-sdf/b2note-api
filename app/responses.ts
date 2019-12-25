@@ -17,6 +17,19 @@ export function ok(resp: Response, result?: object): void {
   resp.json(result || { message: "Success" });
 }
 
+export function json(resp: Response, result: Record<string, any>): void {
+  resp.status(200);
+  resp.header("Access-Control-Expose-Headers", "Content-Disposition, filename");
+  resp.send(result);
+}
+
+export function xml(resp: Response, result: string): void {
+  resp.status(200);
+  resp.header("Content-Type","text/xml");
+  resp.header("Access-Control-Expose-Headers", "Content-Disposition, filename");
+  resp.send(result);
+}
+
 export function created(resp: Response, result?: object): void {
   resp.status(201);
   resp.json(result || { message: "Created" });
