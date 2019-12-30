@@ -24,15 +24,15 @@ export function getCollection(dbClient: MongoClient): Collection {
 // Filters {{{1
 
 function mkTypeFilter(query: anModel.GetQuery): DBQuery {
-  const semanticFilter = query["type"]?.includes(anModel.TypeFilter.SEMANTIC) ? {
+  const semanticFilter = query["type"]?.includes(anModel.AnRecordType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
-  const keywordFilter = query["type"]?.includes(anModel.TypeFilter.KEYWORD) ? {
+  const keywordFilter = query["type"]?.includes(anModel.AnRecordType.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
-  const commentFilter = query["type"]?.includes(anModel.TypeFilter.COMMENT) ? { 
+  const commentFilter = query["type"]?.includes(anModel.AnRecordType.COMMENT) ? { 
     motivation: anModel.PurposeType.COMMENTING ,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
@@ -87,6 +87,15 @@ export function getAnnotationsForTag(anCol: Collection, value: string): Promise<
 
 // DB API {{{1
 
+export function getAnnotation(anCol: Collection, anId: string): Promise<anModel.AnRecord|null> {
+  try {
+    const _id = new ObjectId(anId);
+    return anCol.findOne({ _id });
+  } catch(error) { 
+    return Promise.resolve(null);
+  }
+}
+
 function sort(ans: Array<anModel.AnRecord>): Array<anModel.AnRecord> {
   return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
 }
@@ -98,16 +107,13 @@ export async function getAnnotations(anCol: Collection, query: anModel.GetQuery)
     ...mkTargetSourceFilter(query),
     ...mkValueFilter(query)
   };
-  if (isEmptyFilter(filter)) {
-    return Promise.resolve([]);
-  } else {
-    const anl = await anCol.find(filter).toArray();
-    const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
-    return res;
-  }
+  const dbQuery = isEmptyFilter(filter) ? {} : filter;
+  const anl = await anCol.find(dbQuery).toArray();
+  const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
+  return res;
 }
 
-export async function addAnnotation(annotation: anModel.AnRecord): Promise<string|null> {
+export async function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnRecord|null> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
@@ -118,9 +124,13 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<strin
   } else {
     const res = await anCol.insertOne(annotation);
     const newId = res.insertedId as string;
-    await anCol.findOneAndUpdate({ _id: newId }, { "$set": { id: endpointUrl + apiUrl + anModel.annotationsUrl + "/" + newId } });  
+    const newAn = await anCol.findOneAndUpdate(
+      { _id: newId },
+      { "$set": { id: endpointUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
+      { returnOriginal: false }
+    );  
     await dbClient.close();
-    return newId;
+    return newAn.value;
   }
 }
 
@@ -129,15 +139,20 @@ export async function updateAnnotation(anId: string, changes: Record<keyof anMod
   const anCol = getCollection(dbClient);
   const res = await anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes });
   await dbClient.close();
-  return res.modifiedCount;
+  return Promise.resolve(res.modifiedCount);
 }
 
 export async function deleteAnnotation(anId: string): Promise<number> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const res = await anCol.deleteOne({ _id: new ObjectId(anId) });
-  await dbClient.close();
-  return res.result.n || 0;
+  try {
+    const _id = new ObjectId(anId);
+    const dbClient = await getClient();
+    const anCol = getCollection(dbClient);
+    const res = await anCol.deleteOne({ _id });
+    await dbClient.close();
+    return Promise.resolve(res.result.n || 0);
+  } catch(error) { 
+    return Promise.resolve(0);
+  }
 }
 
 // Searching {{{1

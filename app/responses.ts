@@ -17,21 +17,29 @@ export function ok(resp: Response, result?: object): void {
   resp.json(result || { message: "Success" });
 }
 
-export function json(resp: Response, result: Record<string, any>): void {
+export function jsonld(resp: Response, result: Record<string, any>): void {
   resp.status(200);
-  resp.header("Access-Control-Expose-Headers", "Content-Disposition, filename");
+  resp.setHeader("Vary", "Accept");
+  resp.setHeader("Content-Type", "application/ld+json");
+  resp.setHeader("profile", "http://www.w3.org/ns/anno.jsonld");
+  resp.setHeader("Access-Control-Expose-Headers", "Content-Disposition, filename, profile");
   resp.send(result);
 }
 
 export function xml(resp: Response, result: string): void {
   resp.status(200);
-  resp.header("Content-Type","text/xml");
-  resp.header("Access-Control-Expose-Headers", "Content-Disposition, filename");
+  resp.setHeader("Vary", "Accept");
+  resp.setHeader("Content-Type","text/xml");
+  resp.setHeader("Access-Control-Expose-Headers", "Content-Disposition, filename");
   resp.send(result);
 }
 
-export function created(resp: Response, result?: object): void {
+export function created(resp: Response, location: string, result?: object): void {
   resp.status(201);
+  resp.setHeader("Content-Type", "application/ld+json");
+  resp.setHeader("profile", "http://www.w3.org/ns/anno.jsonld");
+  resp.setHeader("Location", location);
+  resp.setHeader("Access-Control-Expose-Headers", "Location, profile");
   resp.json(result || { message: "Created" });
 }
 

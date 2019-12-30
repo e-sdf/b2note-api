@@ -30,13 +30,11 @@ app.options("*", cors());
   //validateResponses: false
 //}).install(app);
 
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public"), { index: false }));
-
-app.use("/favicon.ico", express.static("favicon.ico"));
-app.use(apiUrl + "/spec", express.static("api.yaml"));
-
-app.use(apiUrl, router);
+// Add Allow header middleware
+app.use((req: Request, resp: Response, next: NextFunction) => {
+  resp.setHeader("Allow", "PUT,GET,OPTIONS,HEAD,DELETE,PATCH");
+  next();
+});
 
 // Register error handler
 app.use((err: any, req: Request, resp: Response, next: NextFunction) => {
@@ -46,5 +44,13 @@ app.use((err: any, req: Request, resp: Response, next: NextFunction) => {
     errors: err.errors,
   });
 });
+
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
+
+app.use("/favicon.ico", express.static("favicon.ico"));
+app.use(apiUrl + "/spec", express.static("api.yaml"));
+
+app.use(apiUrl, router);
 
 export default app;

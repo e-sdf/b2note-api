@@ -15,10 +15,10 @@ function onListening(): void {
 
 // Setup and go
 
-const port = 3050
+const port = 3050;
 app.set("port", port);
 
-var server = http.createServer(app);
+const server = http.createServer(app);
 
 server.listen(port);
 server.on("listening", onListening);

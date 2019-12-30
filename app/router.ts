@@ -6,6 +6,8 @@ import * as sModel from "./core/searchModel";
 import * as searchQueryParser from "./core/searchQueryParser";
 import * as responses from "./responses";
 import * as db from "./db";
+import { endpointUrl, apiUrl } from "./core/server";
+import * as rdf from "./rdf";
 
 const router = Router();
 
@@ -22,20 +24,8 @@ interface AnResponse {
   _status: string;
 }
 
-function mkResponse(id: string): AnResponse {
-  const ts = anModel.mkTimestamp();
-  return {
-    _updated: ts,
-    _created: ts,
-    _id: id,
-    _links: {
-      self: {
-        title: "Annotation",
-        href: "annotations/" + id
-      }
-    },
-    _status: "OK"
-  };
+function mkLocation(id: string): string {
+  return endpointUrl + apiUrl + "/annotations/" + id;
 }
 
 function handleError(resp: Response, error: any): void {
@@ -71,9 +61,9 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
               setDownloadHeader(resp, "annotations_" + anModel.mkTimestamp(), format);
             }
             if (format === anModel.Format.JSONLD) {
-              responses.json(resp, anl);
+              responses.jsonld(resp, anl);
             } else if (query3.format === anModel.Format.RDF) {
-              responses.xml(resp, anModel.annotations2RDF(anl));
+              responses.xml(resp, rdf.mkRDF(anl));
             } else {
               throw new Error("Unknown download format");
             }
@@ -86,6 +76,17 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   } catch (error) { responses.clientErr(resp, { message: "download parameter is expected to be boolean" } ); }
 });
 
+// Get annotation
+router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
+  db.getClient().then(
+    client => db.getAnnotation(db.getCollection(client), req.params.id).then(
+      an => an ? responses.jsonld(resp, an) : responses.notFound(resp),
+      error => handleError(resp, error)
+    ),
+    error => handleError(resp, error)
+  );
+});
+
 // Create a new annotation 
 router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
   const errors = validator.validateAnRecord(req.body);
@@ -94,9 +95,9 @@ router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
   } else {
     const annotation = req.body as anModel.AnRecord;
     db.addAnnotation(annotation).then(
-      newId => {
-        if (newId) { // annotation saved
-          responses.created(resp, mkResponse(newId));
+      newAn => {
+        if (newAn) { // annotation saved
+          responses.created(resp, newAn.id, newAn);
         } else { // annotation already exists
           responses.forbidden(resp, { message: "Annotation already exists" });
         }
