@@ -7,7 +7,7 @@ import * as searchQueryParser from "./core/searchQueryParser";
 import * as responses from "./responses";
 import * as db from "./db";
 import { endpointUrl, apiUrl } from "./core/server";
-import * as rdf from "./rdf";
+import * as rdf from "./core/rdf";
 
 const router = Router();
 

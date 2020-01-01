@@ -160,6 +160,7 @@ export async function deleteAnnotation(anId: string): Promise<number> {
 function mkSemanticDBQuery(value: string): DBQuery {
   return {
     "body.type": anModel.AnBodyItemType.COMPOSITE,
+    // "body.items": { "$elemMatch": { "$regex": value, "$options": "i" } }
     "body.items": { "$elemMatch": { value } }
   };
 }
@@ -183,8 +184,8 @@ function mkCommentDBQuery(value: string): DBQuery {
 function mkRegexDBQuery(regex: string): DBQuery {
   return {
     "$or": [
-      { "body.value": { "$regex": regex } },
-      { "body.items": { "$elemMatch": { "$regex": regex } } }
+      { "body.value": { "$regex": regex, "$options": "i" } },
+      { "body.items": { "$elemMatch": { "$regex": regex, "$options": "i" } } }
     ]
   };
 }
@@ -282,8 +283,8 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
 export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
   //console.log(JSON.stringify(sExpr, null, 2));
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
-  console.log(JSON.stringify(withSynonymExprs, null, 2));
+  // console.log(JSON.stringify(withSynonymExprs, null, 2));
   const dbQuery = mkExprDBQuery(withSynonymExprs);
   console.log(JSON.stringify(dbQuery, null, 2));
-  return anCol.find(dbQuery).toArray();
+  return anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
 }
