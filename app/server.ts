@@ -1,10 +1,6 @@
 import * as http  from "http";
 import app from "./app";
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
 function onListening(): void {
   const addr = server.address();
   const bind = typeof addr === "string"
@@ -13,9 +9,7 @@ function onListening(): void {
   console.log("B2NOTE server listening on " + bind);
 }
 
-// Setup and go
-
-const port = 3050;
+const port = process.env.PORT || 3050;
 app.set("port", port);
 
 const server = http.createServer(app);
