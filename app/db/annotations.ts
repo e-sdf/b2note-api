@@ -1,24 +1,18 @@
 import _ from "lodash";
 import { matchSwitch } from "@babakness/exhaustive-type-checking";
 import { MongoClient, Collection, ObjectId } from "mongodb";
-import config from "./config";
-import { endpointUrl, apiUrl } from "./core/server";
-import * as anModel from "./core/annotationsModel";
-import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, TagExpr, isBinaryExpr, isUnaryExpr, isTagExpr, Sexpr } from "./core/searchModel";
-import { OntologyDict, OntologyInfo, getOntologies } from "./core/ontologyRegister";
-
-const colName = "annotations";
-
-type DBQuery = Record<string, any>;
+import { getClient, DBQuery } from "./client";
+import { endpointUrl, apiUrl } from "../core/server";
+import * as anModel from "../core/annotationsModel";
+import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, TagExpr, isBinaryExpr, isUnaryExpr, isTagExpr, Sexpr } from "../core/searchModel";
+import { OntologyDict, OntologyInfo, getOntologies } from "../core/ontologyRegister";
 
 // DB Access {{{1
 
-export async function getClient(): Promise<MongoClient> {
-  return MongoClient.connect(config.mongodbUrl, { useUnifiedTopology: true });
-}
+export { getClient } from "./client";
 
 export function getCollection(dbClient: MongoClient): Collection {
-  return dbClient.db(config.dbName).collection(colName);
+  return dbClient.db().collection("annotations");
 }
 
 // Filters {{{1

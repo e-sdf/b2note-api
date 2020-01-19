@@ -6,10 +6,10 @@ export function clientErr(resp: Response, result: object): void {
   resp.json(result);
 }
 
-export function serverErr(resp: Response, error: string, msg: string): void {
+export function serverErr(resp: Response, error: string, msg?: string): void {
   logError(error);
   resp.status(500);
-  resp.send(msg);
+  resp.send(msg || "Internal server error");
 }
 
 export function ok(resp: Response, result?: object): void {
@@ -41,6 +41,11 @@ export function created(resp: Response, location: string, result?: object): void
   resp.setHeader("Location", location);
   resp.setHeader("Access-Control-Expose-Headers", "Location, profile");
   resp.json(result || { message: "Created" });
+}
+
+export function notAuthenticated(resp: Response): void {
+  resp.status(401);
+  resp.json( { message: "User not authenticated" });
 }
 
 export function forbidden(resp: Response, result?: object): void {

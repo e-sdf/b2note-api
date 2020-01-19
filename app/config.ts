@@ -3,8 +3,7 @@ import devConfig from "./config.dev";
 import prodConfig from "./config.prod";
 
 const globalConfig = {
-  mongodbUrl: "mongodb://localhost:27017",
-  dbName: "b2note"
+  mongodbUrl: "mongodb://localhost:27017/b2note"
 };
 
 const env: string = process.env.NODE_ENV || "development";

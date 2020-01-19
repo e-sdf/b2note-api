@@ -5,8 +5,7 @@ import * as anModel from "./core/annotationsModel";
 import * as sModel from "./core/searchModel";
 import * as searchQueryParser from "./core/searchQueryParser";
 import * as responses from "./responses";
-import * as db from "./db";
-import { endpointUrl, apiUrl } from "./core/server";
+import * as db from "./db/annotations";
 import * as rdf from "./core/rdf";
 
 const router = Router();
@@ -22,10 +21,6 @@ interface AnResponse {
     };
   };
   _status: string;
-}
-
-function mkLocation(id: string): string {
-  return endpointUrl + apiUrl + "/annotations/" + id;
 }
 
 function handleError(resp: Response, error: any): void {
