@@ -57,3 +57,24 @@ export function notFound(resp: Response, result?: object): void {
   resp.status(404);
   resp.json(result || { message: "Not found" });
 }
+
+export function windowWithMessage(resp: Response, msg: string): void {
+  if (!process.env.CLIENT_URL) { logError("CLIENT_URL env variable is not defined");}
+  resp.status(200);
+  resp.setHeader("Content-Type","text/html");
+  resp.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>B2NOTE Authorization Response</title>
+    </head>
+      <body>
+        <p>The page sends message to its opener containing the logged user</p>
+      </body>
+      <script>
+        window.opener.postMessage('${msg}', '${process.env.CLIENT_URL || ""}');
+        console.log("message posted");
+      </script>
+    </html>
+  `);
+}

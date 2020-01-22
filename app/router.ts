@@ -1,4 +1,5 @@
 import { Request, Response, Router } from "express";
+import passport from "passport";
 import { logError } from "./logging";
 import * as validator from "./validator";
 import * as anModel from "./core/annotationsModel";
@@ -83,63 +84,69 @@ router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
 });
 
 // Create a new annotation 
-router.post(anModel.annotationsUrl, (req: Request, resp: Response) => {
-  const errors = validator.validateAnRecord(req.body);
-  if (errors) {
-    responses.clientErr(resp, errors);
-  } else {
-    const annotation = req.body as anModel.AnRecord;
-    db.addAnnotation(annotation).then(
-      newAn => {
-        if (newAn) { // annotation saved
-          responses.created(resp, newAn.id, newAn);
-        } else { // annotation already exists
-          responses.forbidden(resp, { message: "Annotation already exists" });
+router.post(anModel.annotationsUrl, 
+  passport.authenticate("bearer", { session: false }),
+  (req: Request, resp: Response) => {
+    const errors = validator.validateAnRecord(req.body);
+    if (errors) {
+      responses.clientErr(resp, errors);
+    } else {
+      const annotation = req.body as anModel.AnRecord;
+      db.addAnnotation(annotation).then(
+        newAn => {
+          if (newAn) { // annotation saved
+            responses.created(resp, newAn.id, newAn);
+          } else { // annotation already exists
+            responses.forbidden(resp, { message: "Annotation already exists" });
+          }
         }
-      }
-    ).catch(
-      err => responses.serverErr(resp, err, "Internal server error")
-    );
-  }
-});
+      ).catch(
+        err => responses.serverErr(resp, err, "Internal server error")
+      );
+    }
+  });
 
 // Edit an annotation
-router.patch(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
-  const anId = req.params.id;
-  const errors = validator.validateAnRecordOpt(req.body);
-  if (errors) {
-    responses.clientErr(resp, errors);
-  } else {
-    const changes = req.body as Record<keyof anModel.AnRecord, string>;
-    db.updateAnnotation(anId, changes).then(
-      modified => {
-        if (modified > 0) { // operation successful 
-          responses.ok(resp);
-        } else { // annotation not found
+router.patch(anModel.annotationsUrl + "/:id", 
+  passport.authenticate("bearer", { session: false }),
+  (req: Request, resp: Response) => {
+    const anId = req.params.id;
+    const errors = validator.validateAnRecordOpt(req.body);
+    if (errors) {
+      responses.clientErr(resp, errors);
+    } else {
+      const changes = req.body as Record<keyof anModel.AnRecord, string>;
+      db.updateAnnotation(anId, changes).then(
+        modified => {
+          if (modified > 0) { // operation successful 
+            responses.ok(resp);
+          } else { // annotation not found
+            responses.notFound(resp);
+          }
+        }
+      ).catch(
+        err => responses.serverErr(resp, err, "Internal server error")
+      );
+    }
+  });
+
+// Delete an annotation
+router.delete(anModel.annotationsUrl + "/:id", 
+  passport.authenticate("bearer", { session: false }),
+  (req: Request, resp: Response) => {
+    const anId = req.params.id;
+    db.deleteAnnotation(anId).then(
+      deletedNo => {
+        if (deletedNo > 0) { // annotation deleted
+          responses.ok(resp, { message: "Deleted successfuly" });
+        } else { // id does not exist
           responses.notFound(resp);
         }
       }
     ).catch(
       err => responses.serverErr(resp, err, "Internal server error")
     );
-  }
-});
-
-// Delete an annotation
-router.delete(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
-  const anId = req.params.id;
-  db.deleteAnnotation(anId).then(
-    deletedNo => {
-      if (deletedNo > 0) { // annotation deleted
-        responses.ok(resp, { message: "Deleted successfuly" });
-      } else { // id does not exist
-        responses.notFound(resp);
-      }
-    }
-  ).catch(
-    err => responses.serverErr(resp, err, "Internal server error")
-  );
-});
+  });
 
 // Search annotations
 router.get(sModel.searchUrl, (req: Request, resp: Response) => {
