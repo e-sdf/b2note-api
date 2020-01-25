@@ -56,7 +56,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
       if (mbUser) {
         done(null, dbUsers.record2user(mbUser));
       } else {
-        done(new Error("Cannot find user with id=" + id + "in the database"));
+        done(new Error("Cannot find user with id=" + id + " in the database"));
       }
     });
   });
@@ -67,6 +67,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
 
   app.get("/api/auth_callback", (req: Request, resp: Response) => {
     // As B2ACCESS does not support cookies, we must retrieve the session info manually from DB
+    console.log(req.sessionID);
     dbUsers.getClient().then(dbClient => {
       // TODO: OK, this is messy, how do we identify the right session record?
       dbClient.db().collection("sessions").findOne({ session: { "$regex": /.*b2access.*/ } })
