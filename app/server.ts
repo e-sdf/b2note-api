@@ -8,7 +8,9 @@ import * as responses from "./responses";
 import { logError } from "./logging";
 import { User } from "./core/profile";
 import * as dbUsers from "./db/users";
+import { popB2AccessSession } from "./db/sessions";
 
+const b2accessSessionKey = "b2access";
 // Read env variables
 
 const configurationURL = process.env.B2ACCESS_CONFIGURATION_URL;
@@ -38,7 +40,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
   const strategy = new OpenIdStrategy(
     {
       client: b2accessClient,
-      sessionKey: "b2access",
+      sessionKey: b2accessSessionKey,
       params: { scope: "openid profile email"}
     },
     (tokenSet: TokenSet, userInfo: UserinfoResponse, done: (err: any, user?: any) => void) => {
@@ -63,39 +65,36 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
   
   passport.use("b2access", strategy);
 
-  app.get("/api/login", passport.authenticate("b2access", { session: false }));
+  app.get("/api/login", (req: Request, resp: Response) => {
+    passport.authenticate("b2access", { session: false })(req, resp);
+  });
 
   app.get("/api/auth_callback", (req: Request, resp: Response) => {
     // As B2ACCESS does not support cookies, we must retrieve the session info manually from DB
-    console.log(req.sessionID);
-    dbUsers.getClient().then(dbClient => {
-      // TODO: OK, this is messy, how do we identify the right session record?
-      dbClient.db().collection("sessions").findOne({ session: { "$regex": /.*b2access.*/ } })
-      .then(sessionRecord => {
-        const b2accessRecord = JSON.parse(sessionRecord.session)?.b2access;
-        if (b2accessRecord) {
-          if (req.session) {
-            req.session.b2access = b2accessRecord;
-            passport.authenticate("b2access")(req, resp, () => {
-              responses.windowWithMessage(resp, JSON.stringify(req.user));
-            });
+    popB2AccessSession(req.query.state)
+    .then(b2accessRecord => {
+      if (req.session) {
+        req.session[b2accessSessionKey] = b2accessRecord;
+        passport.authenticate("b2access")(req, resp, (err: any) => {
+          if (err) {
+            logError(err);
+            responses.serverErr(resp, "Error processing auth callback");
+          } else {
+            responses.windowWithMessage(resp, JSON.stringify(req.user));
           }
-        } else {
-          logError("Failed parsing b2access session item");
-        }
-      })
-      .catch(err => logError("Failed retrieving b2access session from DB: " + err));
-    });  
+        });
+      } else { logError("Session support missing"); }
+    })
+    .catch(err => logError("Failed retrieving b2access session from DB: " + err));
   });
 
   passport.use(new BearerStrategy(
     (token, done) => {
       dbUsers.getUserByToken(token).then(user => {
         if (!user) { 
-          console.log("Bearer Authorization failed");
           return done(null, false);
         } else {
-          console.log("Bearer Authorization user: " + user.id);
+          // console.log("Bearer Authorization user: " + user.id);
           return done(null, user);
         }
       });
@@ -105,9 +104,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
   app.get('/api/logout', 
     passport.authenticate("bearer", { session: false }),
     (req: Request, resp: Response) => {
-      console.log(req.user);
       req.logout();
-      console.log(req.user);
       responses.ok(resp, { message: "You are logged out"});
     });
 
