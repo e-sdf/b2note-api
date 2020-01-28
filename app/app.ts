@@ -9,7 +9,8 @@ import connectMongo from "connect-mongo";
 import logger from "morgan";
 import { OpenApiValidator } from "express-openapi-validator";
 import { apiUrl } from "./core/server";
-import router from "./router";
+import annotationsRouter from "./routers/annotations";
+import profileRouter from "./routers/profile";
 import "source-map-support/register";
 import { logError } from "./logging";
 import * as db from "./db/client";
@@ -68,6 +69,7 @@ app.use(express.static(path.join(__dirname, "public"), { index: false }));
 app.use("/favicon.ico", express.static("favicon.ico"));
 app.use(apiUrl + "/spec", express.static("api.yaml"));
 
-app.use(apiUrl, router);
+app.use(apiUrl, annotationsRouter);
+app.use(apiUrl, profileRouter);
 
 export default app;

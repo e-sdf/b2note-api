@@ -1,13 +1,13 @@
 import { Request, Response, Router } from "express";
 import passport from "passport";
-import { logError } from "./logging";
-import * as validator from "./validator";
-import * as anModel from "./core/annotationsModel";
-import * as sModel from "./core/searchModel";
-import * as searchQueryParser from "./core/searchQueryParser";
-import * as responses from "./responses";
-import * as db from "./db/annotations";
-import * as rdf from "./core/rdf";
+import { logError } from "../logging";
+import * as validator from "../validators/annotations";
+import * as anModel from "../core/annotationsModel";
+import * as sModel from "../core/searchModel";
+import * as searchQueryParser from "../core/searchQueryParser";
+import * as responses from "../responses";
+import * as db from "../db/annotations";
+import * as rdf from "../core/rdf";
 
 const router = Router();
 
@@ -84,8 +84,7 @@ router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
 });
 
 // Create a new annotation 
-router.post(anModel.annotationsUrl, 
-  passport.authenticate("bearer", { session: false }),
+router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const errors = validator.validateAnRecord(req.body);
     if (errors) {
@@ -107,8 +106,7 @@ router.post(anModel.annotationsUrl,
   });
 
 // Edit an annotation
-router.patch(anModel.annotationsUrl + "/:id", 
-  passport.authenticate("bearer", { session: false }),
+router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
     const errors = validator.validateAnRecordOpt(req.body);
@@ -131,8 +129,7 @@ router.patch(anModel.annotationsUrl + "/:id",
   });
 
 // Delete an annotation
-router.delete(anModel.annotationsUrl + "/:id", 
-  passport.authenticate("bearer", { session: false }),
+router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
     db.deleteAnnotation(anId).then(

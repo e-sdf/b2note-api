@@ -1,12 +1,11 @@
 import * as http  from "http";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import passport from "passport";
 import app from "./app";
 import { Issuer, Strategy as OpenIdStrategy, TokenSet, UserinfoResponse } from "openid-client";
-import { Strategy as BearerStrategy, VerifyFunction } from "passport-http-bearer";
+import { Strategy as BearerStrategy } from "passport-http-bearer";
 import * as responses from "./responses";
 import { logError } from "./logging";
-import { User } from "./core/profile";
 import * as dbUsers from "./db/users";
 import { popB2AccessSession } from "./db/sessions";
 
@@ -43,22 +42,22 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
       sessionKey: b2accessSessionKey,
       params: { scope: "openid profile email"}
     },
-    (tokenSet: TokenSet, userInfo: UserinfoResponse, done: (err: any, user?: any) => void) => {
-      dbUsers.upsertUserFromAuth(userInfo, tokenSet)
+    (tokenSet: TokenSet, userInfo: UserinfoResponse, done: (err: Error|null, user: dbUsers.User) => void) => {
+      dbUsers.upsertUserProfileFromAuth(userInfo, tokenSet)
       .then((userRecord) => done(null, dbUsers.record2user(userRecord)));
     }
   );
 
-  passport.serializeUser((user: User, done) => {
+  passport.serializeUser((user: dbUsers.User, done: (err: Error|null, id: string) => void) => {
     done(null, user.id);
   });
 
-  passport.deserializeUser((id: string, done) => {
-    dbUsers.getUserById(id).then(mbUser => {
+  passport.deserializeUser((id: string, done: (err: Error|null, user: dbUsers.User|null) => void) => {
+    dbUsers.getUserById(id).then((mbUser: dbUsers.User|null) => {
       if (mbUser) {
-        done(null, dbUsers.record2user(mbUser));
+        done(null, mbUser);
       } else {
-        done(new Error("Cannot find user with id=" + id + " in the database"));
+        done(new Error("Cannot find user with id=" + id + " in the database"), null);
       }
     });
   });
