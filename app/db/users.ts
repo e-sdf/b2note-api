@@ -1,7 +1,7 @@
 import { MongoClient, Collection } from "mongodb";
 import { getClient } from "./client";
 import { TokenSet, UserinfoResponse } from "openid-client";
-import { UserProfile, Experience } from "../core/profile";
+import { User, UserProfile, Experience } from "../core/user";
 
 export interface UserRecord {
   id: string;
@@ -15,14 +15,12 @@ export interface UserRecord {
   experience: Experience;
 }
 
-export interface User {
-  id: string;
-}
-
-export function record2user(record: UserRecord): User {
-  return {
-    id: record.id
-  };
+export function record2user(record: UserRecord): User|null {
+  const mbAccessToken = record.tokenSet.access_token;
+  return mbAccessToken ? {
+    id: record.id,
+    accessToken: mbAccessToken
+  } : null;
 }
 
 export function record2profile(record: UserRecord): UserProfile {
@@ -75,12 +73,22 @@ export async function upsertUserProfileFromAuth(userInfo: UserinfoResponse, toke
   return userRecord;
 }
 
-export async function getUserById(userId: string): Promise<User|null> {
+export async function getUserRecordById(userId: string): Promise<UserRecord|null> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const userRecord = await anCol.findOne({ id: userId });
   await dbClient.close();
-  return record2user(userRecord);
+  return userRecord;
+}
+
+export async function getUserById(userId: string): Promise<User|null> {
+  const userRecord = await getUserRecordById(userId);
+  return userRecord ? record2user(userRecord) : null;
+}
+
+export async function getUserProfileById(userId: string): Promise<UserProfile|null> {
+  const userRecord = await getUserRecordById(userId);
+  return userRecord ? record2profile(userRecord) : null;
 }
 
 export async function getUserByToken(token: string): Promise<User|null> {
@@ -91,10 +99,10 @@ export async function getUserByToken(token: string): Promise<User|null> {
   return record2user(userRecord);
 }
 
-export async function updateUserProfile(id: string, userProfileChanges: Record<keyof UserProfile, string>): Promise<number> {
+export async function updateUserProfile(userId: string, userProfileChanges: Record<keyof UserProfile, string>): Promise<number> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
-  const res = await anCol.updateOne({ id }, { "$set": userProfileChanges });
+  const res = await anCol.updateOne({ id: userId }, { "$set": userProfileChanges });
   await dbClient.close();
-  return Promise.resolve(res.modifiedCount);
+  return Promise.resolve(res.matchedCount);
 }

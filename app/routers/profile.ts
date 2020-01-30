@@ -1,12 +1,32 @@
 import { Request, Response, Router } from "express";
 import passport from "passport";
-import { logError } from "../logging";
+import { User } from "../core/user";
 import * as responses from "../responses";
-import * as profile from "../core/profile";
+import * as profile from "../core/user";
 import * as validator from "../validators/profile";
-import * as db from "../db/users";
+import * as dbUsers from "../db/users";
 
 const router = Router();
+
+// Get profile
+router.get(profile.profileUrl, passport.authenticate("bearer", { session: false }),
+  (req: Request, resp: Response) => {
+    const userId: string = (req.user as User)?.id;
+    if (!userId) {
+      responses.serverErr(resp, "Something is wrong, no user in request.");
+    } else {
+      dbUsers.getUserProfileById(userId)
+      .then(userProfile => {
+        if (userProfile) {
+          responses.ok(resp, userProfile);
+        } else {
+          responses.notFound(resp);
+        }
+      })
+      .catch(err => responses.serverErr(resp, err));
+    }
+  }
+);
 
 // Edit profile
 router.patch(profile.profileUrl, passport.authenticate("bearer", { session: false }),
@@ -22,25 +42,29 @@ router.patch(profile.profileUrl, passport.authenticate("bearer", { session: fals
         if (changes.email) {
           responses.clientErr(resp, { errors: "email is given by B2ACCESS and cannot be updated" });
         } else {
-          console.log(req.user);
-          responses.ok(resp);
-          // const userId: string = req.user?.id;
-          // if (!userId) {
-          //   logError("Something is wrong, no user in request.");
-          //   responses.serverErr(resp, "Internal server error");
-          // } else {
-          //   db.updateUserProfile(userId, changes)
-          //   .then(modified => {
-          //       if (modified > 0) { // operation successful 
-          //         responses.ok(resp);
-          //       } else { // annotation not found
-          //         logError("Something is wrong, user id=" + userId + "not found in DB.");
-          //         responses.serverErr(resp, "Internal server error")
-          //       }
-          //     }
-          //   )
-          //   .catch(err => responses.serverErr(resp, err, "Internal server error"));
-          // }
+          const userId: string = (req.user as User)?.id;
+          if (!userId) {
+            responses.serverErr(resp, "Something is wrong, no user in request.");
+          } else {
+            dbUsers.updateUserProfile(userId, changes)
+            .then(modified => {
+                if (modified > 0) { // operation successful 
+                  dbUsers.getUserProfileById(userId)
+                  .then(mbNewProfile => {
+                    if (mbNewProfile) {
+                      responses.ok(resp, mbNewProfile);
+                    } else {
+                      responses.serverErr(resp, "User profile not found, this is weird.");
+                    }
+                  })
+                  .catch(err => responses.serverErr(resp, err));
+                } else { // profile not updated
+                  responses.serverErr(resp, "Something went wrong, user profile id=" + userId + " was not updated");
+                }
+              }
+            )
+            .catch(err => responses.serverErr(resp, err));
+          }
         }
       }
     }

@@ -133,7 +133,7 @@ export async function updateAnnotation(anId: string, changes: Record<keyof anMod
   const anCol = getCollection(dbClient);
   const res = await anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes });
   await dbClient.close();
-  return Promise.resolve(res.modifiedCount);
+  return Promise.resolve(res.matchedCount);
 }
 
 export async function deleteAnnotation(anId: string): Promise<number> {
@@ -279,6 +279,6 @@ export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promis
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
   // console.log(JSON.stringify(withSynonymExprs, null, 2));
   const dbQuery = mkExprDBQuery(withSynonymExprs);
-  console.log(JSON.stringify(dbQuery, null, 2));
+  // console.log(JSON.stringify(dbQuery, null, 2));
   return anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
 }

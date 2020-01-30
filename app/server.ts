@@ -2,10 +2,11 @@ import * as http  from "http";
 import { Request, Response } from "express";
 import passport from "passport";
 import app from "./app";
+import { logError } from "./logging";
 import { Issuer, Strategy as OpenIdStrategy, TokenSet, UserinfoResponse } from "openid-client";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
+import { User } from "./core/user";
 import * as responses from "./responses";
-import { logError } from "./logging";
 import * as dbUsers from "./db/users";
 import { popB2AccessSession } from "./db/sessions";
 
@@ -42,18 +43,27 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
       sessionKey: b2accessSessionKey,
       params: { scope: "openid profile email"}
     },
-    (tokenSet: TokenSet, userInfo: UserinfoResponse, done: (err: Error|null, user: dbUsers.User) => void) => {
+    (tokenSet: TokenSet, userInfo: UserinfoResponse, done: (err: Error|null, user: User|null) => void) => {
       dbUsers.upsertUserProfileFromAuth(userInfo, tokenSet)
-      .then((userRecord) => done(null, dbUsers.record2user(userRecord)));
+      .then((userRecord) => {
+        const mbUser = dbUsers.record2user(userRecord);
+        if (!mbUser) {
+          logError("Access token missing");
+          done(new Error("Access token missing"), null);
+        } else {
+          done(null, mbUser);
+        }
+      })
+      .catch(err => done(err, null));
     }
   );
 
-  passport.serializeUser((user: dbUsers.User, done: (err: Error|null, id: string) => void) => {
+  passport.serializeUser((user: User, done: (err: Error|null, id: string) => void) => {
     done(null, user.id);
   });
 
-  passport.deserializeUser((id: string, done: (err: Error|null, user: dbUsers.User|null) => void) => {
-    dbUsers.getUserById(id).then((mbUser: dbUsers.User|null) => {
+  passport.deserializeUser((id: string, done: (err: Error|null, user: User|null) => void) => {
+    dbUsers.getUserById(id).then((mbUser: User|null) => {
       if (mbUser) {
         done(null, mbUser);
       } else {
@@ -79,7 +89,17 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
             logError(err);
             responses.serverErr(resp, "Error processing auth callback");
           } else {
-            responses.windowWithMessage(resp, JSON.stringify(req.user));
+            if (req.user) {
+              dbUsers.getUserProfileById((req.user as User).id).then(mbUserProfile => {
+                if (!mbUserProfile) {
+                  responses.serverErr(resp, "user profile emtpy for " + req.user);
+                } else {
+                  responses.windowWithMessage(resp, JSON.stringify(mbUserProfile));
+                }
+              });
+            } else {
+              responses.serverErr(resp, "req.user is empty");
+            }
           }
         });
       } else { logError("Session support missing"); }
