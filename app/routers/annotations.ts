@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import passport from "passport";
 import { logError } from "../logging";
+import { User } from "../core/user";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
 import * as sModel from "../core/searchModel";
@@ -91,17 +92,21 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
       responses.clientErr(resp, errors);
     } else {
       const annotation = req.body as anModel.AnRecord;
-      db.addAnnotation(annotation).then(
-        newAn => {
-          if (newAn) { // annotation saved
-            responses.created(resp, newAn.id, newAn);
-          } else { // annotation already exists
-            responses.forbidden(resp, { message: "Annotation already exists" });
+      if (annotation.creator.id !== (req.user as User).id) {
+        responses.forbidden(resp, { message: "Creator id does not match the logged user"});
+      } else {
+        db.addAnnotation(annotation).then(
+          newAn => {
+            if (newAn) { // annotation saved
+              responses.created(resp, newAn.id, newAn);
+            } else { // annotation already exists
+              responses.forbidden(resp, { message: "Annotation already exists" });
+            }
           }
-        }
-      ).catch(
-        err => responses.serverErr(resp, err, "Internal server error")
-      );
+        ).catch(
+          err => responses.serverErr(resp, err, "Internal server error")
+        );
+      }
     }
   });
 

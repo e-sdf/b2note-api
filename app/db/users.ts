@@ -8,7 +8,6 @@ export interface UserRecord {
   userInfo: UserinfoResponse;
   tokenSet: TokenSet;
   // additional B2NOTE-specific items
-  nickname: string;
   organisation: string;
   jobTitle: string;
   country: string;
@@ -27,7 +26,6 @@ export function record2profile(record: UserRecord): UserProfile {
   return {
     id: record.id,
     name: record.userInfo.name || "",
-    nickname: record.nickname,
     email: record.userInfo.email || "",
     organisation: record.organisation,
     jobTitle: record.jobTitle,
@@ -62,7 +60,6 @@ export async function upsertUserProfileFromAuth(userInfo: UserinfoResponse, toke
     userInfo: userRecordPartial.userInfo,
     tokenSet: userRecordPartial.tokenSet,
     // additional B2NOTE-specific items may be missing if first-time 
-    nickname: userRecordPartial.nickname || "",
     organisation: userRecordPartial.organisation || "",
     jobTitle: userRecordPartial.jobTitle || "",
     country: userRecordPartial.country || "",

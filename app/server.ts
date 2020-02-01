@@ -90,13 +90,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
             responses.serverErr(resp, "Error processing auth callback");
           } else {
             if (req.user) {
-              dbUsers.getUserProfileById((req.user as User).id).then(mbUserProfile => {
-                if (!mbUserProfile) {
-                  responses.serverErr(resp, "user profile emtpy for " + req.user);
-                } else {
-                  responses.windowWithMessage(resp, JSON.stringify(mbUserProfile));
-                }
-              });
+              responses.windowWithMessage(resp, JSON.stringify(req.user));
             } else {
               responses.serverErr(resp, "req.user is empty");
             }
