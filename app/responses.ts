@@ -1,9 +1,9 @@
 import { Response } from "express";
 import { logError } from './logging';
 
-export function clientErr(resp: Response, result: object): void {
+export function clientErr(resp: Response, reason: object): void {
   resp.status(400);
-  resp.json(result);
+  resp.json(reason);
 }
 
 export function serverErr(resp: Response, error: string, msg?: string): void {
@@ -14,7 +14,7 @@ export function serverErr(resp: Response, error: string, msg?: string): void {
 
 export function ok(resp: Response, result?: object): void {
   resp.status(200);
-  resp.json(result || { message: "Success" });
+  resp.json(result || "Success");
 }
 
 export function jsonld(resp: Response, result: Record<string, any>): void {
@@ -34,28 +34,28 @@ export function xml(resp: Response, result: string): void {
   resp.send(result);
 }
 
-export function created(resp: Response, location: string, result?: object): void {
+export function created(resp: Response, location: string, result: object): void {
   resp.status(201);
   resp.setHeader("Content-Type", "application/ld+json");
   resp.setHeader("profile", "http://www.w3.org/ns/anno.jsonld");
   resp.setHeader("Location", location);
   resp.setHeader("Access-Control-Expose-Headers", "Location, profile");
-  resp.json(result || { message: "Created" });
+  resp.json(result);
 }
 
 export function notAuthenticated(resp: Response): void {
   resp.status(401);
-  resp.json( { message: "User not authenticated" });
+  resp.send("User not authenticated");
 }
 
-export function forbidden(resp: Response, result?: object): void {
+export function forbidden(resp: Response, msg: string): void {
   resp.status(403);
-  resp.json(result || { message: "Forbidden" });
+  resp.send(msg);
 }
 
-export function notFound(resp: Response, result?: object): void {
+export function notFound(resp: Response, msg?: string): void {
   resp.status(404);
-  resp.json(result || { message: "Not found" });
+  resp.send(msg || "Not found");
 }
 
 export function windowWithMessage(resp: Response, msg: string): void {

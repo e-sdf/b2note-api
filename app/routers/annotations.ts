@@ -70,7 +70,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
         error => handleError(resp, error)
       );
     }
-  } catch (error) { responses.clientErr(resp, { message: "download parameter is expected to be boolean" } ); }
+  } catch (error) { responses.clientErr(resp, { error: "Download parameter is expected to be boolean" }); }
 });
 
 // Get annotation
@@ -93,14 +93,14 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
     } else {
       const annotation = req.body as anModel.AnRecord;
       if (annotation.creator.id !== (req.user as User).id) {
-        responses.forbidden(resp, { message: "Creator id does not match the logged user"});
+        responses.forbidden(resp, "Creator id does not match the logged user");
       } else {
         db.addAnnotation(annotation).then(
           newAn => {
             if (newAn) { // annotation saved
               responses.created(resp, newAn.id, newAn);
             } else { // annotation already exists
-              responses.forbidden(resp, { message: "Annotation already exists" });
+              responses.forbidden(resp, "Annotation already exists");
             }
           }
         ).catch(
