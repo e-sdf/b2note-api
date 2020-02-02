@@ -1,2 +1,2 @@
 # b2note-nodejs
-NodeJS modern generation of server
+B2NOTE v3 NodeJS API server
