@@ -9,11 +9,14 @@ import connectMongo from "connect-mongo";
 import logger from "morgan";
 import { OpenApiValidator } from "express-openapi-validator";
 import { apiUrl } from "./core/server";
-import annotationsRouter from "./routers/annotations";
-import profileRouter from "./routers/profile";
 import "source-map-support/register";
 import { logError } from "./logging";
 import * as db from "./db/client";
+import annotationsRouter from "./routers/annotations";
+import profileRouter from "./routers/profile";
+import widgetRouter from "./routers/widget";
+
+console.log("Starting webserver at " + __dirname);
 
 const app = express();
 
@@ -68,7 +71,9 @@ app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 app.use("/favicon.ico", express.static("favicon.ico"));
 app.use(apiUrl + "/spec", express.static("api.yaml"));
+app.set("view engine", "ejs");
 
+app.use("/", widgetRouter);
 app.use(apiUrl, annotationsRouter);
 app.use(apiUrl, profileRouter);
 

@@ -6,9 +6,9 @@
   "main": "app/server.js",
   "scripts": {
     "generate": "scripts/generateSchemas.sh",
-    "watch": "nodemon --watch app --ext ts,js,yaml --exec npm run build\\;npm run copy\\;npm run run",
+    "watch": "nodemon --watch app --ext ts,js,ejs,yaml --exec npm run build\\;npm run copy\\;npm run run",
     "build": "rm -rf dist/*; tsc; npm run copy",
-    "copy": "cp .env app/core/api.yaml dist/",
+    "copy": "cp -r .env public app/views app/core/api.yaml dist/; cp -r ../b2note-reactjs/dist dist/public/widget",
     "run": "cd dist; node -r dotenv/config server",
     "clean": "npm cache clean --force"
   },
@@ -48,6 +48,7 @@
     "cors": "^2.8.5",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
+    "ejs": "^3.0.1",
     "express": "^4.17.1",
     "express-openapi-validator": "^3.6.6",
     "express-session": "^1.17.0",

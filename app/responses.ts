@@ -12,9 +12,17 @@ export function serverErr(resp: Response, error: string, msg?: string): void {
   resp.send(msg || "Internal server error");
 }
 
-export function ok(resp: Response, result?: object): void {
+export function ok(resp: Response, result?: object|string): void {
   resp.status(200);
-  resp.json(result || "Success");
+  if (result) {
+    if (typeof result === "string") {
+      resp.send(result);
+    } else {
+      resp.json(result);
+    }
+  } else {
+    resp.send("Success");
+  }
 }
 
 export function jsonld(resp: Response, result: Record<string, any>): void {
@@ -59,7 +67,6 @@ export function notFound(resp: Response, msg?: string): void {
 }
 
 export function windowWithMessage(resp: Response, msg: string): void {
-  if (!process.env.CLIENT_URL) { logError("CLIENT_URL env variable is not defined");}
   resp.status(200);
   resp.setHeader("Content-Type","text/html");
   resp.send(`
@@ -72,7 +79,9 @@ export function windowWithMessage(resp: Response, msg: string): void {
         <p>The page sends message to its opener containing the logged user</p>
       </body>
       <script>
-        window.opener.postMessage('${msg}', '${process.env.CLIENT_URL || ""}');
+        window.opener.postMessage('${msg}', '${process.env.CLIENT_WEBPACK_URL || ""}');
+        window.opener.postMessage('${msg}', '${process.env.CLIENT_SANDBOX_URL || ""}');
+        window.opener.postMessage('${msg}', 'http://localhost');
         console.log("message posted");
       </script>
     </html>

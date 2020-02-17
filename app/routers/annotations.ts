@@ -9,6 +9,7 @@ import * as searchQueryParser from "../core/searchQueryParser";
 import * as responses from "../responses";
 import * as db from "../db/annotations";
 import * as rdf from "../core/rdf";
+import { resolveSourceFilenameFromHandle } from "../utils";
 
 const router = Router();
 
@@ -189,6 +190,21 @@ router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
       ),
       error => handleError(resp, error)
     );
+  }
+});
+
+// Resolve source filename
+// Prepared here for future use once the Target structure is changed to resolvable handles:
+// https://esciencedatalab.atlassian.net/browse/B2NT-137
+router.get(anModel.resolveSourceUrl, (req: Request, resp: Response) => {
+  const handleUrl = req.query.handleUrl;
+  if (!handleUrl) {
+    responses.clientErr(resp, { error: "Missing handleUrl parameter" });
+  } else {
+    resolveSourceFilenameFromHandle(handleUrl).then(
+      res => responses.ok(resp, res),
+      err => responses.serverErr(resp, "Failed resolving handleUrl: " + err)
+    )
   }
 });
 

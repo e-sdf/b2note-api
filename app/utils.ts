@@ -1,0 +1,59 @@
+// Prepared here for future use once the Target structure is changed to resolvable handles:
+// https://esciencedatalab.atlassian.net/browse/B2NT-137
+
+import axios from "axios";
+import { axiosErrToMsg } from "./core/utils";
+import { HandleResp } from "./core/handleModel";
+
+import Ajv from "ajv";
+import { handleRespSchema } from "./core/handleModel.schema";
+const ajv = new Ajv();
+ajv.addSchema(handleRespSchema);
+
+function getHandleFromUrl(handleUrl: string): string|null {
+  const handlePart = "http://hdl.handle.net";
+  const isHandle = handleUrl.includes(handlePart);
+  return isHandle ? handleUrl.substring(handlePart.length) : null;
+}
+
+export function resolveB2ShareFilename(recordUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const b2ShareApiUrl = recordUrl.replace("https://b2share.eudat.eu/records", "https://b2share.eudat.eu/api/records");
+    axios.get(b2ShareApiUrl)
+      .then(resp => {
+        console.log(resp.data);
+        resolve(b2ShareApiUrl);
+      })
+      .catch(error => reject(axiosErrToMsg(error)));
+  });
+}
+
+export function resolveSourceFilenameFromHandle(handleUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const handleResolveURL = "http://hdl.handle.net/api/handles"; 
+    const mbHandle = getHandleFromUrl(handleUrl);
+    if (!mbHandle) {
+      resolve(handleUrl); // not a handle URL, return as is
+    } else {
+      axios.get<HandleResp>(handleResolveURL + mbHandle)
+      .then(resp => { 
+        ajv.validate("handleResp#/definitions/HandleResp", resp.data);
+        if (ajv.errors) {
+          console.error(ajv.errors);
+          reject("B2HANDLE unexpected response format");
+        } else {
+          const handleResp = resp.data;
+          const b2ShareUrl = handleResp.values.find(v => v.type === "URL")?.data.value;
+          if (typeof b2ShareUrl === "string") {
+            return resolveB2ShareFilename(b2ShareUrl);
+          } else {
+            console.error("B2SHARE URL not found in the B2HANDLE response");
+            reject("B2SHARE URL not found in the B2HANDLE response");
+          }
+        }
+      })
+      .catch(error => reject(axiosErrToMsg(error)));
+    }
+  });
+}
+
