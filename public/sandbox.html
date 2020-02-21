@@ -28,7 +28,7 @@
         iframe.style.visibility = 'hidden';
         iframe.style.height = "10px"; // reset to minimal height ...
         // IE opt. for bing/msn needs a bit added or scrollbar appears
-        iframe.style.height = getDocHeight( doc ) + 10 + "px";
+        iframe.style.height = getDocHeight( doc ) + 20 + "px";
         iframe.style.visibility = 'visible';
         iframe.subject_tofeed=subject;
       }
@@ -40,7 +40,7 @@
       function show_iframe() {
         window.parent.document.getElementById('b2note_iframe').style.visibility = "visible";
         window.parent.document.getElementById('b2note_iframe').style.overflow = "hidden";
-        window.parent.document.getElementById('b2note_iframe').style.width = "360px";
+        window.parent.document.getElementById('b2note_iframe').style.width = "354px";
         window.parent.document.getElementById('b2note_iframe').style.border = "2px solid gray";
       }
 
