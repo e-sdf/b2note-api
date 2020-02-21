@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  b2note-nodejs:
+    image: b2note-nodejs
+    restart: always
+    network_mode: host
+    depends_on: 
+      - mongo
+    build: .
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3050:3050
+  mongo:
+    image: mongo
+    restart: always
+    network_mode: host
+    volumes:
+      - type: volume
+        source: mongodbdata
+        target: /data/db
+    ports:
+      - 27017:27017
+
+volumes:
+  mongodbdata:
