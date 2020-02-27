@@ -11,7 +11,7 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - 3050:3050
+      - 3060:3060
   mongo:
     image: mongo
     restart: always

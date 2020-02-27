@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.7'
 
 services:
   b2note-nodejs:
@@ -7,6 +7,6 @@ services:
     environment:
       NODE_ENV: development
     ports:
-      - 3050:3050
+      - 3060:3060
       - 9229:9229
     command: node --inspect=0.0.0.0:9229 dist/server.js
