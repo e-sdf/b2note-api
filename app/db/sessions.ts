@@ -1,5 +1,5 @@
-import { MongoClient, Collection } from "mongodb";
-import { getClient, DBQuery } from "./client";
+import type { MongoClient, Collection } from "mongodb";
+import { getClient } from "./client";
 
 // DB Access {{{1
 

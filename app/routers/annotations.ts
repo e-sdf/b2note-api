@@ -1,7 +1,8 @@
-import { Request, Response, Router } from "express";
+import type { Request, Response } from "express";
+import { Router } from "express";
 import passport from "passport";
 import { logError } from "../logging";
-import { User } from "../core/user";
+import type { User } from "../core/user";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
 import * as sModel from "../core/searchModel";

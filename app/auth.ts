@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import * as responses from "./responses";
 
 export function authenticated(req: Request, resp: Response, next: NextFunction): void {

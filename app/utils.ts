@@ -3,7 +3,7 @@
 
 import axios from "axios";
 import { axiosErrToMsg } from "./core/utils";
-import { HandleResp } from "./core/handleModel";
+import type { HandleResp } from "./core/handleModel";
 
 import Ajv from "ajv";
 import { handleRespSchema } from "./core/handleModel.schema";

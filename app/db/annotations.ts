@@ -1,11 +1,15 @@
 import _ from "lodash";
 import { matchSwitch } from "@babakness/exhaustive-type-checking";
-import { MongoClient, Collection, ObjectId } from "mongodb";
-import { getClient, DBQuery } from "./client";
+import type { MongoClient, Collection } from "mongodb";
+import { ObjectId } from "mongodb";
+import type { DBQuery } from "./client";
+import { getClient } from "./client";
 import { endpointUrl, apiUrl } from "../core/server";
 import * as anModel from "../core/annotationsModel";
-import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, TagExpr, isBinaryExpr, isUnaryExpr, isTagExpr, Sexpr } from "../core/searchModel";
-import { OntologyDict, OntologyInfo, getOntologies } from "../core/ontologyRegister";
+import type { TagExpr, Sexpr } from "../core/searchModel";
+import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
+import type { OntologyDict, OntologyInfo } from "../core/ontologyRegister";
+import { getOntologies } from "../core/ontologyRegister";
 
 // DB Access {{{1
 

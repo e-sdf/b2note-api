@@ -1,4 +1,5 @@
-import { Request, Response, Router } from "express";
+import type { Request, Response } from "express";
+import { Router } from "express";
 import * as responses from "../responses";
 
 const router = Router();

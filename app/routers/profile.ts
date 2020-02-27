@@ -1,6 +1,7 @@
-import { Request, Response, Router } from "express";
+import type { Request, Response } from "express";
+import { Router } from "express";
 import passport from "passport";
-import { User } from "../core/user";
+import type { User } from "../core/user";
 import * as responses from "../responses";
 import * as profile from "../core/user";
 import * as validator from "../validators/profile";

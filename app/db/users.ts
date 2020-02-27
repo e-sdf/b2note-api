@@ -1,7 +1,7 @@
-import { MongoClient, Collection } from "mongodb";
+import type { MongoClient, Collection } from "mongodb";
 import { getClient } from "./client";
-import { TokenSet, UserinfoResponse } from "openid-client";
-import { User, UserProfile, Experience } from "../core/user";
+import type { TokenSet, UserinfoResponse } from "openid-client";
+import type { User, UserProfile, Experience } from "../core/user";
 
 export interface UserRecord {
   id: string;
