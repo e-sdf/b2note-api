@@ -82,7 +82,6 @@ export function windowWithMessage(resp: Response, msg: string): void {
         window.opener.postMessage('${msg}', '${process.env.CLIENT_WEBPACK_URL || ""}');
         window.opener.postMessage('${msg}', '${process.env.CLIENT_SANDBOX_URL || ""}');
         window.opener.postMessage('${msg}', 'http://localhost');
-        console.log("Bearer Token ${msg} posted as a message to window.opener");
       </script>
     </html>
   `);
