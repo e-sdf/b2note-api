@@ -1,80 +1,243 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: http://b2note.ngrok.io/api
 
-# b2note
+# B2NOTE
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+B2NOTE is an annotation service.
 
-## Questions Collection [/questions]
+## Annotations [/annotations{?type%5B%5D,creator,target_source,value,format,download}]
 
-### List All Questions [GET]
+### List Annotations [GET]
+
+The annotations conform to [Web Annotation Data Model](https://www.w3.org/TR/annotation-model). There are 3 types of annotations:
+- Semantic
+- Free-text keyword
+- Comment
+
+The presented example shows a response with these 3 types.
+
++ Parameters
+    + type%5B%5D: `semantic` (enum[string], optional) - type of annotations to include in the result
+        + Members
+            + `semantic`
+            + `keyword`
+            + `comment`
+    + creator (string, optional) - include just annotations created by this creator ID. The creator ID is the EUDAT ID that is acquired by the UI from [B2ACCESS](https://eudat.eu/services/b2access) on user signup.
+    + target_source (string, optional) - get list of annotations of the specified target source URL
+    + value (string, optional) - get annotations with a specific tag value; for more complex queries based on values see "Search"
+    + format (enum[string], optional) - format of the result
+        + Members
+            + `json-ld`
+            + `rdf-xml`
+    + download (boolean, optional) - if set, the response is has headers indicating the result to be downloaded as a file
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
-
-### Create a New Question [POST]
-
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
-
-+ Request (application/json)
-
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
     + Body
-
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
+    
+            [
+              {
+                "_id": "5e0f9a09ed95dbc6321b1125",
+                "@context": "http://www.w3.org/ns/anno/jsonld",
+                "body": {
+                  "type": "Composite",
+                  "items": [
                     {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
+                      "type": "SpecificResource",
+                      "source": "http://purl.bioontology.org/ontology/LNC/LP17794-6"
+                    },
+                    {
+                      "type": "SpecificResource",
+                      "source": "http://purl.bioontology.org/ontology/SNMI/A-30320"
+                    },
+                    {
+                      "type": "SpecificResource",
+                      "source": "http://purl.bioontology.org/ontology/SNOMEDCT/33352006"
+                    },
+                    {
+                      "type": "TextualBody",
+                      "value": "ax"
                     }
-                ]
-            }
+                  ],
+                  "purpose": "tagging"
+                },
+                "target": {
+                  "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                  "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                  "type": "SpecificResource"
+                },
+                "created": "2020-01-03T19:46:17.430Z",
+                "creator": {
+                  "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                  "type": "Person"
+                },
+                "generated": "2020-01-03T19:46:17.430Z",
+                "generator": {
+                  "type": "Software",
+                  "homepage": "https://b2note.bsc.es/b2note/",
+                  "name": "B2Note v3.0"
+                },
+                "id": "https://b2note.bsc.es/api/annotations/5e0f9a09ed95dbc6321b1125",
+                "motivation": "tagging",
+                "type": "Annotation"
+              },
+              {
+                "_id": "5df7b4d7d188c59ea515ee2d",
+                "@context": "http://www.w3.org/ns/anno/jsonld",
+                "body": {
+                  "type": "TextualBody",
+                  "value": "keyword annotation",
+                  "purpose": "tagging"
+                },
+                "target": {
+                  "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                  "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                  "type": "SpecificResource"
+                },
+                "created": "2019-12-16T16:46:15.319Z",
+                "creator": {
+                  "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                  "type": "Person"
+                },
+                "generated": "2019-12-16T16:46:15.319Z",
+                "generator": {
+                  "type": "Software",
+                  "homepage": "https://b2note.bsc.es/b2note/",
+                  "name": "B2Note v3.0"
+                },
+                "id": "https://b2note.bsc.es/api/annotations/5df7b4d7d188c59ea515ee2d",
+                "motivation": "tagging",
+                "type": "Annotation"
+              },
+              {
+                "_id": "5df7b4dcd188c59ea515ee2e",
+                "@context": "http://www.w3.org/ns/anno/jsonld",
+                "body": {
+                  "type": "TextualBody",
+                  "value": "comment annotation",
+                  "purpose": "commenting"
+                },
+                "target": {
+                  "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                  "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                  "type": "SpecificResource"
+                },
+                "created": "2019-12-16T16:46:20.630Z",
+                "creator": {
+                  "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                  "type": "Person"
+                },
+                "generated": "2019-12-16T16:46:20.630Z",
+                "generator": {
+                  "type": "Software",
+                  "homepage": "https://b2note.bsc.es/b2note/",
+                  "name": "B2Note v3.0"
+                },
+                "id": "https://b2note.bsc.es/api/annotations/5df7b4dcd188c59ea515ee2e",
+                "motivation": "commenting",
+                "type": "Annotation"
+              }
+            ]
+            
+
+## Annotation [/annotations]
+
+### Create an Annotation [POST]
+
++ Request
+
+        # see "List Annotations"; the `id` field is left empty
+
+
++ Response 201 (application/ld+json)
+    
+    + Headers
+    
+            profile: http://www.w3.org/ns/anno.jsonld
+            Location: https://b2note.bsc.es/api/annotations/5df7b4dcd188c59ea515ee2e
+            Access-Control-Expose-Headers: Location, profile
+    
+    + Body
+    
+            # The created annotation is returned with the `id` field filled-in
+
++ Response 401 (text/plain)
+
+        User not authenticated
+
++ Response 403 (text/plain)
+
+        Creator id does not match the logged user
+        Annotation already exists
+
+## Annotation [/annotations/{annotation_id}]
+
+### Get a Specific Annotation [GET]
+
++ Parameters
+    + annotation_id: `https://b2note.bsc.es/api/annotations/5df7b4dcd188c59ea515ee2e` (string) - ID of the annotation
+
+
++ Response 200 (application/json)
+
+            # see "List Annotations"
+
++ Response 404 (text/plain)
+
+        Not Found
+
+### Update an Annotation [PATCH]
+
++ Response 200 (text/plain)
+        
+        Success
+
++ Response 404 (text/plain)
+
+        Not Found
+
+### Delete an Annotation [DELETE]
+
++ Response 200 (text/plain)
+        
+        Success
+
++ Response 404 (text/plain)
+
+        Not Found
+        
+## Search [/search/{?expression}]
+
+### Search Annotations [GET]
+
++ Parameters
+    + expression: `s:semantic1 AND (k:keyword1 OR c:"comment words") XOR r:/regex/` (string) - search expression
+
++ Response 200 (application/json)
+
+            # See "List Annotations"
+            
++ Response 400 (application/json)
+
+            { "error": "reason or object with the expression parse error" }
+            
+## Get Targets [/targets/{?tag}]
+
+### Get Targets of a Tag [GET]
+
++ Parameters
+    + tag: `Axon` (string) - tag value
+
++ Response 200 (application/json)
+
+            [
+              {
+                "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                "type": "SpecificResource"
+              }
+            ]
+            
++ Response 400 (application/json)
+
+            { "error": "reason or object with the expression parse error" }
