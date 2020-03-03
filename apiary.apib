@@ -7,7 +7,8 @@ B2NOTE is an annotation service.
 
 ## Login [/login]
 
-A new window is opened with [B2ACCESS](https://eudat.eu/services/b2access) login. Upon successful login, a Bearer Token is send to the opening window using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+A new window is opened with [B2ACCESS](https://eudat.eu/services/b2access) login. Upon successful login, a user record with user's EUDAT ID and a Bearer Token is send to the opening window using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) in the following format:
+```{id: "e4619431-6087-43bb-a241-1c48674f5156", accessToken: "cnwoYanx0cdFStYSUyasBQtvOBcU3V2CIY7gaNx4aRs"}```
 
 ### Login [GET]
 
@@ -263,10 +264,43 @@ The presented example shows a response with these 3 types.
             
 + Response 400 (application/json)
 
-            { "error": "reason or object with the expression parse error" }
+            { "error": "reason (string) or object with the expression parse error" }
             
 ## Profile [/profile]
 
-### Get Profile [GET]
+### Get the Profile [GET]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer XXX
 
 + Response 200 (application/json)
+
+            {
+              "id": "e4619431-6087-43bb-a241-1c48674f5156",
+              "name": "Robert Pergl",
+              "email": "perglr@fit.cvut.cz",
+              "organisation": "CTU",
+              "jobTitle": "docent",
+              "country": "Czech Republic",
+              "experience": "advanced",
+              "accessToken": "cnwoYanx0cdFStYSUyasBQtvOBcU3V2CIY7gaNx4aRs"
+            }
+
+### Update the Profile [PATCH]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer XXX
+
++ Response 200 (application/json)
+        
+        # The updated profile (see above)
+
++ Response 400 (application/json)
+
+        { "error": "indication of the error - string/object" }
