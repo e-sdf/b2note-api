@@ -142,7 +142,7 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
     db.deleteAnnotation(anId).then(
       deletedNo => {
         if (deletedNo > 0) { // annotation deleted
-          responses.ok(resp, { message: "Deleted successfuly" });
+          responses.ok(resp);
         } else { // id does not exist
           responses.notFound(resp);
         }
