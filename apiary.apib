@@ -5,6 +5,15 @@ HOST: http://b2note.ngrok.io/api
 
 B2NOTE is an annotation service.
 
+## Login [/login]
+
+A new window is opened with [B2ACCESS](https://eudat.eu/services/b2access) login. Upon successful login, a Bearer Token is send to the opening window using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+
+### Login [GET]
+
++ Response 200 (text/html)
+            
+
 ## Annotations [/annotations{?type%5B%5D,creator,target_source,value,format,download}]
 
 ### List Annotations [GET]
@@ -146,8 +155,13 @@ The presented example shows a response with these 3 types.
 
 + Request
 
-        # see "List Annotations"; the `id` field is left empty
+    + Headers
 
+            Authorization: Bearer XXX
+    
+    + Body
+
+            # see "List Annotations"; the `id` field is left empty
 
 + Response 201 (application/ld+json)
     
@@ -170,6 +184,7 @@ The presented example shows a response with these 3 types.
         Creator id does not match the logged user
         Annotation already exists
 
+
 ## Annotation [/annotations/{annotation_id}]
 
 ### Get a Specific Annotation [GET]
@@ -187,6 +202,12 @@ The presented example shows a response with these 3 types.
         Not Found
 
 ### Update an Annotation [PATCH]
+
++ Request
+
+    + Headers
+
+            Authorization: Bearer XXX
 
 + Response 200 (text/plain)
         
@@ -206,6 +227,7 @@ The presented example shows a response with these 3 types.
 
         Not Found
         
+
 ## Search [/search/{?expression}]
 
 ### Search Annotations [GET]
@@ -221,6 +243,7 @@ The presented example shows a response with these 3 types.
 
             { "error": "reason or object with the expression parse error" }
             
+
 ## Get Targets [/targets/{?tag}]
 
 ### Get Targets of a Tag [GET]
@@ -241,3 +264,9 @@ The presented example shows a response with these 3 types.
 + Response 400 (application/json)
 
             { "error": "reason or object with the expression parse error" }
+            
+## Profile [/profile]
+
+### Get Profile [GET]
+
++ Response 200 (application/json)
