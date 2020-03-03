@@ -76,13 +76,13 @@ export function windowWithMessage(resp: Response, msg: string): void {
       <title>B2NOTE Authorization Response</title>
     </head>
       <body>
-        <p>The page sends message to its opener containing the logged user</p>
+        <p>The page sends message to its opener containing the logged user Bearer Token</p>
       </body>
       <script>
         window.opener.postMessage('${msg}', '${process.env.CLIENT_WEBPACK_URL || ""}');
         window.opener.postMessage('${msg}', '${process.env.CLIENT_SANDBOX_URL || ""}');
         window.opener.postMessage('${msg}', 'http://localhost');
-        console.log("message posted");
+        console.log("Bearer Token ${msg} posted as a message to window.opener");
       </script>
     </html>
   `);
