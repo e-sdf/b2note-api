@@ -1,6 +1,7 @@
 import * as http  from "http";
 import { Request, Response } from "express";
 import passport from "passport";
+import config from "./config";
 import app from "./app";
 import { logError } from "./logging";
 import { Issuer, Strategy as OpenIdStrategy, TokenSet, UserinfoResponse } from "openid-client";
@@ -11,30 +12,19 @@ import * as dbUsers from "./db/users";
 import { popB2AccessSession } from "./db/sessions";
 
 const b2accessSessionKey = "b2access";
-// Read env variables
 
-const configurationURL = process.env.B2ACCESS_CONFIGURATION_URL;
-if (!configurationURL) { logError("B2ACCESS_CONFIGURATION_URL env variable missing"); }
-
-const  clientID = process.env.B2ACCESS_CLIENT_ID;
-if (!clientID) { logError("B2ACCESS_CLIENT_ID env variable missing"); }
-
-const  clientSecret = process.env.B2ACCESS_CLIENT_SECRET;
-if (!clientSecret) { logError("B2ACCESS_CLIENT_SECRET env variable missing"); }
-
-const  callbackURL = process.env.B2ACCESS_REDIRECT_URL;
-if (!callbackURL) { logError("B2ACCESS_REDIRECT_URL env variable missing"); }
+config.dumpConfig();
 
 // Initialise B2ACCESS auth
 
-Issuer.discover(configurationURL || "").then(b2accessInfo => {
+Issuer.discover(config.b2accessUrl + config.b2accessConfigurationPath).then(b2accessInfo => {
   console.log("Received B2ACCESS OIDC Configuration Response");
   app.use(passport.initialize());
   app.use(passport.session());
   const b2accessClient = new b2accessInfo.Client({
-    client_id: clientID || "",
-    client_secret: clientSecret || "",
-    redirect_uris: [callbackURL || ""],
+    client_id: config.b2accessClientId,
+    client_secret: config.b2accessClientSecret,
+    redirect_uris: [config.b2accessRedirectUrl],
     response_types: ["code"],
   });
   const strategy = new OpenIdStrategy(
@@ -132,7 +122,7 @@ Issuer.discover(configurationURL || "").then(b2accessInfo => {
   }
 
   const server = http.createServer(app);
-  const port = process.env.PORT || 3050;
+  const port = config.b2notePort;
   app.set("port", port);
   server.on("listening", onListening);
   server.listen(port);

@@ -1,5 +1,6 @@
 **/app
 **/.dockerignore
+**/.env
 **/.git
 **/.gitignore
 **/.project

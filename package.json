@@ -6,11 +6,12 @@
   "main": "app/server.js",
   "scripts": {
     "generate": "scripts/generateSchemas.sh",
-    "watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run run",
+    "watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run run",
     "build": "rm -rf dist/*; tsc; npm run copy",
-    "copy": "cp -r .env public app/views app/core/api.yaml dist/; cp -r ../b2note-reactjs/dist dist/public/widget",
+    "copy": "cp -rv .env public app/views app/core/api.yaml dist/; cp -rv ../b2note-reactjs/dist dist/public/widget",
     "run": "cd dist; node -r dotenv/config server",
     "docker-build": "docker-compose build",
+    "docker-push": "docker push b2note/b2note-nodejs:3.0-alpha2",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
     "clean": "npm cache clean --force"

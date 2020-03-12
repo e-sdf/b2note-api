@@ -26,7 +26,7 @@
         var doc = iframe.contentDocument? iframe.contentDocument:
           iframe.contentWindow.document;
         iframe.style.visibility = 'hidden';
-        iframe.style.height = "10px"; // reset to minimal height ...
+        iframe.style.height = "130px"; // reset to minimal height ...
         // IE opt. for bing/msn needs a bit added or scrollbar appears
         iframe.style.height = getDocHeight( doc ) + 20 + "px";
         iframe.style.visibility = 'visible';
@@ -166,10 +166,10 @@ footer {
     <div class = "container">
       <h3>The list of files:</h3>
       <!-- http://stackoverflow.com/questions/12102464/how-do-i-make-iframes-load-only-on-a-button-click -->
-      <iframe id="b2note_iframe" name="b2note_iframe" src="/interface_main.html" onload="load_iframe('')" style="float:right" scrolling="yes"></iframe>
+      <iframe id="b2note_iframe" name="b2note_iframe" src="/widget" onload="load_iframe('')" style="float:right" scrolling="yes"></iframe>
       <table>
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
           <tr class="row1" colspan="2">
             <td></td>
@@ -194,7 +194,7 @@ footer {
         </form>
 
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
           <tr class="row1" colspan="2">
             <td></td>
@@ -220,7 +220,7 @@ footer {
 
 
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
 
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
 
@@ -267,7 +267,7 @@ footer {
 
 
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
 
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
 
@@ -314,7 +314,7 @@ footer {
 
 
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
 
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
 
@@ -361,7 +361,7 @@ footer {
 
 
         <!-- For the production version the url will be pointing to https://b2note.bsc.es/api/create_annotation -->
-        <form action="/interface_main.html" method="post" target="b2note_iframe" onsubmit="show_iframe()">
+        <form action="/widget" method="post" target="b2note_iframe" onsubmit="show_iframe()">
 
           <input type='hidden' name='csrfmiddlewaretoken' value='8eaUAYAzvQrhpyu8V0hmaL8oc1jJXmgJ' />
 

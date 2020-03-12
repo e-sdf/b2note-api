@@ -8,6 +8,7 @@ import session from "express-session";
 import connectMongo from "connect-mongo";
 import logger from "morgan";
 import { OpenApiValidator } from "express-openapi-validator";
+import config from "./config";
 import { apiUrl } from "./core/server";
 import "source-map-support/register";
 import { logError } from "./logging";
@@ -31,12 +32,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // app.use(cookieParser());
-const sessionSecret = process.env.SESSION_SECRET;
-if (!sessionSecret) { logError("SESSION_SECRET env variable not found."); }
 
 const MongoStore = connectMongo(session);
 app.use(session({
-  secret: sessionSecret || "default b2note secret",
+  secret: config.sessionSecret,
   cookie: { secure: false },
   resave: false,
   saveUninitialized: false,
