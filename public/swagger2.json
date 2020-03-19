@@ -1,0 +1,516 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "B2NOTE is an annotation service.",
+    "title": "B2NOTE",
+    "version": ""
+  },
+  "host": "b2note.ngrok.io",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/annotations": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "description": "type of annotations to include in the result",
+            "enum": [
+              "semantic",
+              "keyword",
+              "comment"
+            ],
+            "in": "query",
+            "name": "type%5B%5D",
+            "required": false,
+            "type": "string",
+            "x-example": "semantic"
+          },
+          {
+            "description": "include just annotations created by this creator ID. The creator ID is the EUDAT ID that is acquired by the UI from [B2ACCESS](https://eudat.eu/services/b2access) on user signup.",
+            "in": "query",
+            "name": "creator",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "get list of annotations of the specified target source URL",
+            "in": "query",
+            "name": "target_source",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "get annotations with a specific tag value; for more complex queries based on values see \"Search\"",
+            "in": "query",
+            "name": "value",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "format of the result",
+            "enum": [
+              "json-ld",
+              "rdf-xml"
+            ],
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "if set, the response is has headers indicating the result to be downloaded as a file",
+            "in": "query",
+            "name": "download",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "application/json": [
+                {
+                  "@context": "http://www.w3.org/ns/anno/jsonld",
+                  "_id": "5e0f9a09ed95dbc6321b1125",
+                  "body": {
+                    "items": [
+                      {
+                        "source": "http://purl.bioontology.org/ontology/LNC/LP17794-6",
+                        "type": "SpecificResource"
+                      },
+                      {
+                        "source": "http://purl.bioontology.org/ontology/SNMI/A-30320",
+                        "type": "SpecificResource"
+                      },
+                      {
+                        "source": "http://purl.bioontology.org/ontology/SNOMEDCT/33352006",
+                        "type": "SpecificResource"
+                      },
+                      {
+                        "type": "TextualBody",
+                        "value": "ax"
+                      }
+                    ],
+                    "purpose": "tagging",
+                    "type": "Composite"
+                  },
+                  "created": "2020-01-03T19:46:17.430Z",
+                  "creator": {
+                    "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                    "type": "Person"
+                  },
+                  "generated": "2020-01-03T19:46:17.430Z",
+                  "generator": {
+                    "homepage": "https://b2note.bsc.es/b2note/",
+                    "name": "B2Note v3.0",
+                    "type": "Software"
+                  },
+                  "id": "https://b2note.bsc.es/api/annotations/5e0f9a09ed95dbc6321b1125",
+                  "motivation": "tagging",
+                  "target": {
+                    "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                    "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                    "type": "SpecificResource"
+                  },
+                  "type": "Annotation"
+                },
+                {
+                  "@context": "http://www.w3.org/ns/anno/jsonld",
+                  "_id": "5df7b4d7d188c59ea515ee2d",
+                  "body": {
+                    "purpose": "tagging",
+                    "type": "TextualBody",
+                    "value": "keyword annotation"
+                  },
+                  "created": "2019-12-16T16:46:15.319Z",
+                  "creator": {
+                    "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                    "type": "Person"
+                  },
+                  "generated": "2019-12-16T16:46:15.319Z",
+                  "generator": {
+                    "homepage": "https://b2note.bsc.es/b2note/",
+                    "name": "B2Note v3.0",
+                    "type": "Software"
+                  },
+                  "id": "https://b2note.bsc.es/api/annotations/5df7b4d7d188c59ea515ee2d",
+                  "motivation": "tagging",
+                  "target": {
+                    "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                    "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                    "type": "SpecificResource"
+                  },
+                  "type": "Annotation"
+                },
+                {
+                  "@context": "http://www.w3.org/ns/anno/jsonld",
+                  "_id": "5df7b4dcd188c59ea515ee2e",
+                  "body": {
+                    "purpose": "commenting",
+                    "type": "TextualBody",
+                    "value": "comment annotation"
+                  },
+                  "created": "2019-12-16T16:46:20.630Z",
+                  "creator": {
+                    "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                    "type": "Person"
+                  },
+                  "generated": "2019-12-16T16:46:20.630Z",
+                  "generator": {
+                    "homepage": "https://b2note.bsc.es/b2note/",
+                    "name": "B2Note v3.0",
+                    "type": "Software"
+                  },
+                  "id": "https://b2note.bsc.es/api/annotations/5df7b4dcd188c59ea515ee2e",
+                  "motivation": "commenting",
+                  "target": {
+                    "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                    "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                    "type": "SpecificResource"
+                  },
+                  "type": "Annotation"
+                }
+              ]
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "The annotations conform to [Web Annotation Data Model](https://www.w3.org/TR/annotation-model). There are 3 types of annotations:\n\n- Semantic\n\n- Free-text keyword\n\n- Comment\n\nThe presented example shows a response with these 3 types.",
+        "operationId": "List Annotations",
+        "summary": "List Annotations"
+      },
+      "post": {
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "examples": {},
+            "headers": {
+              "Access-Control-Expose-Headers": {
+                "type": "string"
+              },
+              "Location": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "examples": {
+              "text/plain": "User not authenticated\n"
+            },
+            "headers": {}
+          },
+          "403": {
+            "description": "Forbidden",
+            "examples": {
+              "text/plain": "Creator id does not match the logged user\nAnnotation already exists\n"
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "oauth2": []
+          }
+        ],
+        "tags": [],
+        "description": "",
+        "operationId": "Create an Annotation",
+        "summary": "Create an Annotation"
+      }
+    },
+    "/annotations/{annotation_id}": {
+      "delete": {
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "text/plain": "Success\n"
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "examples": {
+              "text/plain": "Not Found\n"
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Delete an Annotation",
+        "summary": "Delete an Annotation"
+      },
+      "get": {
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "description": "ID of the annotation",
+            "in": "path",
+            "name": "annotation_id",
+            "required": true,
+            "type": "string",
+            "x-example": "https://b2note.bsc.es/api/annotations/5df7b4dcd188c59ea515ee2e"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {},
+            "headers": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "examples": {
+              "text/plain": "Not Found\n"
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Get a Specific Annotation",
+        "summary": "Get a Specific Annotation"
+      },
+      "patch": {
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "text/plain": "Success\n"
+            },
+            "headers": {}
+          },
+          "404": {
+            "description": "Not Found",
+            "examples": {
+              "text/plain": "Not Found\n"
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "oauth2": []
+          }
+        ],
+        "tags": [],
+        "description": "",
+        "operationId": "Update an Annotation",
+        "summary": "Update an Annotation"
+      }
+    },
+    "/login": {
+      "get": {
+        "produces": [
+          "text/html"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "text/html": ""
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Login",
+        "summary": "Login"
+      }
+    },
+    "/profile": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "application/json": {
+                "accessToken": "cnwoYanx0cdFStYSUyasBQtvOBcU3V2CIY7gaNx4aRs",
+                "country": "Czech Republic",
+                "email": "perglr@fit.cvut.cz",
+                "experience": "advanced",
+                "id": "e4619431-6087-43bb-a241-1c48674f5156",
+                "jobTitle": "docent",
+                "name": "Robert Pergl",
+                "organisation": "CTU"
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "oauth2": []
+          }
+        ],
+        "tags": [],
+        "description": "",
+        "operationId": "Get the Profile",
+        "summary": "Get the Profile"
+      },
+      "patch": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {},
+            "headers": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "examples": {
+              "application/json": {
+                "error": "indication of the error - string/object"
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "oauth2": []
+          }
+        ],
+        "tags": [],
+        "description": "",
+        "operationId": "Update the Profile",
+        "summary": "Update the Profile"
+      }
+    },
+    "/search/": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "description": "search expression",
+            "in": "query",
+            "name": "expression",
+            "required": true,
+            "type": "string",
+            "x-example": "s:semantic1 AND (k:keyword1 OR c:\"comment words\") XOR r:/regex/"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {},
+            "headers": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "examples": {
+              "application/json": {
+                "error": "reason or object with the expression parse error"
+              }
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Search Annotations",
+        "summary": "Search Annotations"
+      }
+    },
+    "/targets/": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "description": "tag value",
+            "in": "query",
+            "name": "tag",
+            "required": true,
+            "type": "string",
+            "x-example": "Axon"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "examples": {
+              "application/json": [
+                {
+                  "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
+                  "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
+                  "type": "SpecificResource"
+                }
+              ]
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "Bad Request",
+            "examples": {
+              "application/json": {
+                "error": "reason (string) or object with the expression parse error"
+              }
+            },
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Get Targets of a Tag",
+        "summary": "Get Targets of a Tag"
+      }
+    }
+  },
+  "definitions": {
+    "Annotation": {},
+    "Annotations": {},
+    "Get Targets": {},
+    "Login": {},
+    "Profile": {},
+    "Search": {}
+  },
+  "securityDefinitions": {
+    "oauth2": {
+      "authorizationUrl": "",
+      "flow": "accessCode",
+      "scopes": {},
+      "tokenUrl": "",
+      "type": "oauth2"
+    }
+  },
+  "tags": []
+}
