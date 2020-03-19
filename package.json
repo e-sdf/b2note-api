@@ -11,7 +11,8 @@
     "copy": "cp -rv .env public app/views app/core/api.yaml dist/; cp -rv ../b2note-reactjs/dist dist/public/widget",
     "run": "cd dist; node -r dotenv/config server",
     "docker-build": "docker-compose build",
-    "docker-push": "docker push b2note/b2note-nodejs:3.0-alpha2",
+    "docker-tag": "docker tag b2note/b2note-nodejs b2note/b2note-nodejs:3.0-alpha4",
+    "docker-push": "docker push b2note/b2note-nodejs",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
     "clean": "npm cache clean --force"
@@ -29,7 +30,8 @@
     "@types/passport-http-bearer": "^1.0.34",
     "@types/pegjs": "^0.10.1",
     "@types/source-map-support": "^0.5.1",
-    "@types/uuid": "^7.0.0"
+    "@types/uuid": "^7.0.0",
+    "api-spec-converter": "^2.11.0"
   },
   "repository": {
     "type": "git",
