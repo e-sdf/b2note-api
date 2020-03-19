@@ -4,9 +4,15 @@ import * as responses from "../responses";
 
 const router = Router();
 
+
 // Get the widget info version
 router.get("/widget", (req: Request, resp: Response) => {
   resp.render("widgetInfo");
+});
+
+// Old redirect
+router.post("/interface_main.html", (req: Request, resp: Response) => {
+  resp.redirect(307, "/widget");
 });
 
 // Return widget; from historical reasons, loading a widget with a Target is POST
