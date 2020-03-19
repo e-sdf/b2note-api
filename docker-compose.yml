@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   b2note-nodejs:
-    image: b2note/b2note-nodejs:3.0-alpha2
+    image: b2note/b2note-nodejs
     restart: always
     network_mode: host
     depends_on: 
