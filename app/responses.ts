@@ -80,15 +80,7 @@ export function windowWithMessage(resp: Response, msg: string): void {
         <p>The page sends message to its opener containing the logged user Bearer Token</p>
       </body>
       <script>
-        window.opener.postMessage('${msg}', 'http://localhost:8080');
-        window.opener.postMessage('${msg}', 'http://localhost');
-        window.opener.postMessage('${msg}', 'http://localhost:${config.b2notePort}');
-        window.opener.postMessage('${msg}', 'http://b2note-dev.bsc.es');
-        window.opener.postMessage('${msg}', 'https://b2note-dev.bsc.es');
-        window.opener.postMessage('${msg}', 'http://b2note-staging.bsc.es');
-        window.opener.postMessage('${msg}', 'https://b2note-staging.bsc.es');
-        window.opener.postMessage('${msg}', 'http://b2note.eudat.eu');
-        window.opener.postMessage('${msg}', 'https://b2note.eudat.eu');
+        window.opener.postMessage('${msg}', '*');
       </script>
     </html>
   `);
