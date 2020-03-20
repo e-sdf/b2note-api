@@ -279,7 +279,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
 }
 
 export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
-  //console.log(JSON.stringify(sExpr, null, 2));
+  // console.log(JSON.stringify(sExpr, null, 2));
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
   // console.log(JSON.stringify(withSynonymExprs, null, 2));
   const dbQuery = mkExprDBQuery(withSynonymExprs);

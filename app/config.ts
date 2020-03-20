@@ -5,6 +5,7 @@ import { logError } from './logging';
 interface Config {
   b2notePort: string;
   mongodbUrl: string;
+  solrUrl: string;
   sessionSecret: string;
   b2access: boolean;
   b2accessConfigurationUrl: string;
@@ -21,6 +22,7 @@ interface Config {
 const globalConfig: Config = {
   b2notePort: process.env.B2NOTE_PORT || "",
   mongodbUrl: process.env.MONGODB_URL || "",
+  solrUrl: process.env.SOLR_URL || "",
   sessionSecret: process.env.SESSION_SECRET || "",
   b2access: process.env.B2ACCESS == "true",
   b2accessConfigurationUrl: process.env.B2ACCESS_CONFIGURATION_URL || "",
