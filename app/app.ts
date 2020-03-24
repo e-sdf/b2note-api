@@ -15,6 +15,7 @@ import { logError } from "./logging";
 import * as db from "./db/client";
 import annotationsRouter from "./routers/annotations";
 import profileRouter from "./routers/profile";
+import homeRouter from "./routers/home";
 import widgetRouter from "./routers/widget";
 
 console.log("Starting webserver at " + __dirname);
@@ -67,11 +68,11 @@ app.use((err: any, req: Request, resp: Response, next: NextFunction) => {
 });
 
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
-
-app.use("/favicon.ico", express.static("favicon.ico"));
-app.use(apiUrl + "/spec", express.static("api.yaml"));
 app.set("view engine", "ejs");
 
+app.use("/favicon.ico", express.static("favicon.ico"));
+
+app.use("/", homeRouter);
 app.use("/", widgetRouter);
 app.use(apiUrl, annotationsRouter);
 app.use(apiUrl, profileRouter);

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>B2NOTE Home Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/sticky-footer.css">
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-md navbar-dark navbar-custom">
+        <a class="navbar-brand" href="#">
+          <img src="/img/logo-cropped.png" height="50px" alt="logo">
+        </a>
+        <span style="color: white; font-size: 20px; margin-left: 25px;">The EUDAT and EOSC-Hub annotation service</span>
+      </nav>
+    </header>
+
+    <main role="main" class="container mt-3">
+      <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="pills-about-tab" data-toggle="pill" href="#pills-about" role="tab"
+            aria-controls="pills-about" aria-selected="true">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="pills-sandbox-tab" data-toggle="pill" href="#pills-sandbox" role="tab"
+            aria-controls="pills-sandbox" aria-selected="false">Sandbox</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="pills-b2share-tab" data-toggle="pill" href="#pills-b2share" role="tab"
+            aria-controls="pills-b2share" aria-selected="false">B2SHARE Integration</a>
+        </li>
+      </ul>
+      <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-about" role="tabpanel" aria-labelledby="pills-about-tab">
+          <%- include("about"); %>
+        </div>
+        <div class="tab-pane fade" id="pills-sandbox" role="tabpanel" aria-labelledby="pills-sandbox-tab">
+          <%- include("sandbox"); %>
+        </div>
+        <div class="tab-pane fade" id="pills-b2share" role="tabpanel" aria-labelledby="pills-b2share-tab">
+          <%- include("b2share"); %>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="text-muted pt-2" style="display: inline-block">
+              EUDAT received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 654065. 
+              <a href="http://www.eudat.eu/legal-notice" target="_blank">Legal Notice</a>
+              <br>
+              EOSC-Hub receives funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 777536.
+              <a href="https://www.eosc-hub.eu/" target="_blank">EOSC-Hub</a>
+      </div>
+    </footer>
+  </body>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sandbox.js"></script>
+</html>

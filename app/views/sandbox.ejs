@@ -1,0 +1,36 @@
+<p>
+  This is the sandbox for B2NOTE. Here you can experiment and learn, but no guarantee is provided on the preservation of
+  annotations.
+</p>
+<div class="d-flex flex-row">
+  <form id="fform" action="/widget" method="post" target="b2note-iframe" onsubmit="showIframe()"></form>
+  <table class="table">
+  <% fileItems.forEach(item => { %>
+    <tr>
+      <td>
+        <input 
+          type="hidden"
+          readonly="readonly"
+          form="fform"
+          name="subject_tofeed"
+          value=<%= item.subjectUrl %>
+        </input>
+        <a href=<%= item.subjectUrl %> target="_blank"><%= item.name %></a>
+        <input 
+          type="hidden"
+          readonly="readonly"
+          form="fform"
+          name="pid_tofeed"
+          value=<%= item.pidUrl %>
+        </input>
+        <br>
+        <a href="<%= item.pidUrl %>" _target="blank"><%= item.pidUrl %></a>
+      </td>
+      <td style="padding-left: 10px; vertical-align: middle">
+        <input type="submit" form="fform" value="Annotate" title="Click to annotate using B2NOTE."></input>
+      </td>
+    </tr>
+  <% }); %>
+  </table>
+  <iframe id="b2note-iframe" name="b2note-iframe" src="/widget" scrolling="yes"></iframe>
+</div>
