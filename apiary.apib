@@ -233,8 +233,28 @@ The presented example shows a response with these 3 types.
 
 ### Search Annotations [GET]
 
+The expression consists of terms representing tags and logical operators. All binary operators have the same precedence; it is possible to change it using parentheses. An example of a search expression (syntax explained below):
+
+`s:semantic1 AND (k:keyword1 OR c:"comment words") XOR r:/regex/`
+
+#### Terms
+Term type is denoted by `x:`, where `x` specifies the type:
+
+- `s:aSemanticTag` ... semantic tag value
+- `k:aKeywordTag` ... free-text keyword tag
+- `c:aComment` ... comment tag
+- `r:/regex/` ... regular expression matching any tag
+
+The `s:`, `k:` and `c:` terms must not contain spaces, or must be enclosed in double quotes, e.g. `k:"two words"`.
+
+#### Operators
+The terms are connected by operators:
+
+- Unary operator: `NOT` ... a logical negation, i.e. the following term must not be used as the annotation
+- Binary operators: `AND` (conjunction), `OR` (disjunction), `XOR` (exclusive OR)
+
 + Parameters
-    + expression: `s:semantic1 AND (k:keyword1 OR c:"comment words") XOR r:/regex/` (string) - search expression
+    + expression: `r:/axon/` (string) - search expression
 
 + Response 200 (application/json)
 
