@@ -31,6 +31,9 @@
           <a class="nav-link" id="pills-b2share-tab" data-toggle="pill" href="#pills-b2share" role="tab"
             aria-controls="pills-b2share" aria-selected="false">B2SHARE Integration</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" id="pills-documentation-tab" href="https://e-sdf.github.io/b2note-docs" target="_blank">Documentation</a>
+        </li>
       </ul>
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-about" role="tabpanel" aria-labelledby="pills-about-tab">
@@ -41,6 +44,9 @@
         </div>
         <div class="tab-pane fade" id="pills-b2share" role="tabpanel" aria-labelledby="pills-b2share-tab">
           <%- include("b2share"); %>
+        </div>
+        <div class="tab-pane fade" id="pills-documentation" role="tabpanel" aria-labelledby="pills-documentation-tab">
+          <%- include("documentation"); %>
         </div>
       </div>
     </main>
