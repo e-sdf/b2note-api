@@ -11,7 +11,7 @@
     "copy": "cp -rv .env public app/views dist/; cp -v node_modules/bootstrap/dist/css/bootstrap.min.css dist/public/css/; cp -v node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dist/public/js/; cp -v node_modules/jquery/dist/jquery.min.js dist/public/js/; cp -rv ../b2note-reactjs/dist dist/public/widget/",
     "run": "cd dist; node -r dotenv/config server",
     "docker-build": "docker-compose build",
-    "docker-tag": "docker tag b2note/b2note-nodejs b2note/b2note-nodejs:3.0-alpha7",
+    "docker-tag": "docker tag b2note/b2note-nodejs b2note/b2note-nodejs:3.0-beta1",
     "docker-push": "docker push b2note/b2note-nodejs",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
