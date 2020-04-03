@@ -7,7 +7,6 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import connectMongo from "connect-mongo";
 import logger from "morgan";
-import { OpenApiValidator } from "express-openapi-validator";
 import config from "./config";
 import { apiUrl } from "./core/server";
 import "source-map-support/register";
@@ -15,8 +14,6 @@ import { logError } from "./logging";
 import * as db from "./db/client";
 import annotationsRouter from "./routers/annotations";
 import profileRouter from "./routers/profile";
-import homeRouter from "./routers/home";
-import widgetRouter from "./routers/widget";
 
 console.log("Starting webserver at " + __dirname);
 
@@ -67,13 +64,9 @@ app.use((err: any, req: Request, resp: Response, next: NextFunction) => {
   });
 });
 
-app.use(express.static(path.join(__dirname, "public"), { index: false }));
-app.set("view engine", "ejs");
+const publicDir = path.join(__dirname, "public/");
 
-app.use("/favicon.ico", express.static("favicon.ico"));
-
-app.use("/", homeRouter);
-app.use("/", widgetRouter);
+app.use(apiUrl, express.static(publicDir + "openapi3.json"));
 app.use(apiUrl, annotationsRouter);
 app.use(apiUrl, profileRouter);
 

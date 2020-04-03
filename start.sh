@@ -6,4 +6,4 @@ SERVER_URL=`[ -z "$SERVER_URL" ] && echo "http://localhost:3060" || echo "$SERVE
 SOLR_URL=`[ -z "$SOLR_URL" ] && echo "https://b2note.eudat.eu/solr/b2note_index/select" || echo "$SOLR_URL"` 
 echo -n "window.b2note = { serverUrl: '"$SERVER_URL"', solrUrl: '"$SOLR_URL"' };" > $C
 
-cd dist; npm run run
+cd dist; npm run start

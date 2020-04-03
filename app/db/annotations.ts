@@ -175,7 +175,7 @@ function mkCommentDBQuery(value: string): DBQuery {
   return {
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY,
     "motivation": anModel.PurposeType.COMMENTING,
-    "body.value": value
+    "body.value": { "$regex": value, "$options": "i" }
   };
 }
 
