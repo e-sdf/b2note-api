@@ -25,7 +25,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(cookieParser());
 
-app.use(logger("dev"));
+if (process.env.NODE_ENV == "production") {
+  app.use(logger("common"));
+} else {
+  app.use(logger("dev"));
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

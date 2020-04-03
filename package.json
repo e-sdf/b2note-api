@@ -1,6 +1,6 @@
 {
   "name": "b2note-server",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "B2NOTE server",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "copy": "cp -rv .env public dist/",
     "start": "cd dist; node -r dotenv/config server",
     "docker-build": "docker-compose build; docker image prune -f",
-    "docker-tag": "docker tag b2note/b2note-api b2note/b2note-api:3.1.0",
+    "docker-tag": "docker tag b2note/b2note-api b2note/b2note-api:3.1.1",
     "docker-push": "docker push b2note/b2note-api",
     "docker-deploy": "npm run docker-build && npm run docker-tag && npm run docker-push",
     "docker-run": "docker-compose up --build",
