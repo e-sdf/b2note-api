@@ -4,6 +4,7 @@ import type { MongoClient, Collection } from "mongodb";
 import { ObjectId } from "mongodb";
 import type { DBQuery } from "./client";
 import { getClient } from "./client";
+import config from "../config";
 import { endpointUrl, apiUrl } from "../core/server";
 import * as anModel from "../core/annotationsModel";
 import type { TagExpr, Sexpr } from "../core/searchModel";
@@ -248,7 +249,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologiesDict: OntologyDict = await getOntologies(tagExpr.value);
+          const ontologiesDict: OntologyDict = await getOntologies(config.solrUrl, tagExpr.value);
           const ontologies = ontologiesDict[tagExpr.value.toLocaleLowerCase()];
           const synonyms = ontologies.reduce(
             (acc: Array<string>, o: OntologyInfo) => [ ...acc,  ...o.synonyms  ],
