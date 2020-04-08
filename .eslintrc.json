@@ -12,6 +12,7 @@
   "rules": {
     "semi": 2,
     "no-console": "off",
+    "no-explicit-any": "off",
     "no-use-before-define": 0
   },
   "parser": "@typescript-eslint/parser",
