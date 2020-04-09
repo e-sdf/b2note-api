@@ -3,7 +3,8 @@ import { logError } from './logging';
 // import prodConfig from "./config.prod";
 
 interface Config {
-  b2notePort: string;
+  serverPort: string;
+  annotationUrl: string;
   mongodbUrl: string;
   solrUrl: string;
   sessionSecret: string;
@@ -20,7 +21,8 @@ interface Config {
 };
 
 const globalConfig: Config = {
-  b2notePort: process.env.B2NOTE_PORT || "",
+  serverPort: process.env.SERVER_PORT || "",
+  annotationUrl: process.env.ANNOTATION_URL || "",
   mongodbUrl: process.env.MONGODB_URL || "",
   solrUrl: process.env.SOLR_URL || "",
   sessionSecret: process.env.SESSION_SECRET || "",

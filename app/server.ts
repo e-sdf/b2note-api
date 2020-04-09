@@ -157,7 +157,7 @@ Issuer.discover(config.b2accessConfigurationUrl).then(authInfo => {
   }
 
   const server = http.createServer(app);
-  const port = config.b2notePort;
+  const port = config.serverPort;
   app.set("port", port);
   server.on("listening", onListening);
   server.listen(port);

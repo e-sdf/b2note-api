@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 import type { DBQuery } from "./client";
 import { getClient } from "./client";
 import config from "../config";
-import { endpointUrl, apiUrl } from "../core/server";
+import { apiUrl } from "../core/server";
 import * as anModel from "../core/annotationsModel";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
@@ -125,7 +125,7 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<anMod
     const newId = res.insertedId as string;
     const newAn = await anCol.findOneAndUpdate(
       { _id: newId },
-      { "$set": { id: endpointUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
+      { "$set": { id: config.annotationUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
       { returnOriginal: false }
     );  
     await dbClient.close();
