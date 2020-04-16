@@ -15,7 +15,7 @@ A new window is opened with [B2ACCESS](https://eudat.eu/services/b2access) login
 + Response 200 (text/html)
             
 
-## Annotations [/annotations{?type%5B%5D,creator,target_source,value,format,download}]
+## Annotations [/annotations{?type%5B%5D,creator,target_source,value,format,skip,limit,download}]
 
 ### List Annotations [GET]
 
@@ -39,6 +39,8 @@ The presented example shows a response with these 3 types.
         + Members
             + `json-ld`
             + `rdf-xml`
+    + skip (number, optional) - number of items to skip in the result; used for pagination
+    + limit (number, optional) - number of items to include in the result; used for pagination
     + download (boolean, optional) - if set, the response is has headers indicating the result to be downloaded as a file
 
 + Response 200 (application/json)
