@@ -105,7 +105,7 @@ Issuer.discover(config.b2accessConfigurationUrl).then(authInfo => {
 
   app.get("/api/b2access/auth_callback", (req: Request, resp: Response) => {
     // As B2ACCESS does not support cookies, we must retrieve the session info manually from DB
-    popB2AccessSession(req.query.state)
+    popB2AccessSession(req.query.state as string)
     .then(authRecord => {
       if (req.session) {
         req.session[b2accessSessionKey] = authRecord;

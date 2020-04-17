@@ -107,7 +107,14 @@ export async function getAnnotations(anCol: Collection, query: anModel.GetQuery)
     ...mkValueFilter(query)
   };
   const dbQuery = isEmptyFilter(filter) ? {} : filter;
-  const anl = await anCol.find(dbQuery).toArray();
+  const skipNo = query.skip;
+  const limitNo = query.limit;
+  const anl = 
+    skipNo && limitNo ?
+      await anCol.find(dbQuery).skip(skipNo).limit(limitNo).toArray()
+    : skipNo ? await anCol.find(dbQuery).skip(skipNo).toArray()
+    : limitNo ? await anCol.find(dbQuery).limit(limitNo).toArray()
+    : await anCol.find(dbQuery).toArray();
   const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
   return res;
 }

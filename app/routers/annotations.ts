@@ -45,7 +45,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   try {
     const query2 = {
       ... req.query,
-      download: req.query.download ? JSON.parse(req.query.download) : false
+      download: req.query.download ? JSON.parse(req.query.download as string) : false
     };
     const errors = validator.validateGetQuery(query2);
     if (errors) {
@@ -158,7 +158,7 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   if (!expr) {
     responses.clientErr(resp, { error: "parameter missing: expression" });
   } else {
-    const parseResult = searchQueryParser.parse(expr);
+    const parseResult = searchQueryParser.parse(expr as string);
     if (parseResult.error) {
       responses.clientErr(resp, { error: "expression syntax error", details: parseResult.error });
     } else {
@@ -183,7 +183,7 @@ router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
   if (errors) {
     responses.clientErr(resp, errors);
   } else {
-    const query = req.query as anModel.TargetsQuery;
+    const query = req.query as unknown as anModel.TargetsQuery;
     db.getClient().then(
       client => db.getAnnotationsForTag(db.getCollection(client), query.tag).then(
         annotations => responses.ok(resp, annotations.map(a => a.target)),
@@ -198,7 +198,7 @@ router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
 // Prepared here for future use once the Target structure is changed to resolvable handles:
 // https://esciencedatalab.atlassian.net/browse/B2NT-137
 router.get(anModel.resolveSourceUrl, (req: Request, resp: Response) => {
-  const handleUrl = req.query.handleUrl;
+  const handleUrl = req.query.handleUrl as string;
   if (!handleUrl) {
     responses.clientErr(resp, { error: "Missing handleUrl parameter" });
   } else {
