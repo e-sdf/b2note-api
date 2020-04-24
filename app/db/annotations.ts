@@ -166,7 +166,6 @@ export async function deleteAnnotation(anId: string): Promise<number> {
 function mkSemanticDBQuery(value: string): DBQuery {
   return {
     "body.type": anModel.AnBodyItemType.COMPOSITE,
-    // "body.items": { "$elemMatch": { "$regex": value, "$options": "i" } }
     "body.items": { "$elemMatch": { value } }
   };
 }
