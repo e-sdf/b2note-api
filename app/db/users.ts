@@ -32,8 +32,7 @@ export function record2profile(record: UserRecord): UserProfile {
     organisation: record.organisation,
     jobTitle: record.jobTitle,
     country: record.country,
-    experience: record.experience,
-    accessToken: record.tokenSet.access_token || ""
+    experience: record.experience
   };
 }
 
