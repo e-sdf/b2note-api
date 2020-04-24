@@ -1,6 +1,6 @@
 {
   "name": "b2note-server",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "B2NOTE server",
   "private": true,
   "scripts": {
