@@ -3,7 +3,6 @@ import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import path from "path";
 import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
 import session from "express-session";
 import connectMongo from "connect-mongo";
 import logger from "morgan";
@@ -23,8 +22,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(cookieParser());
-
 if (process.env.NODE_ENV == "production") {
   app.use(logger("common"));
 } else {
@@ -33,8 +30,6 @@ if (process.env.NODE_ENV == "production") {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// app.use(cookieParser());
 
 const MongoStore = connectMongo(session);
 app.use(session({
@@ -47,12 +42,6 @@ app.use(session({
 
 app.use(cors());
 app.options("*", cors());
-
-//new OpenApiValidator({
-  //apiSpec: "api.yaml",
-  //validateRequests: true, 
-  //validateResponses: false
-//}).install(app);
 
 // Add Allow header middleware
 // app.use((req: Request, resp: Response, next: NextFunction) => {
