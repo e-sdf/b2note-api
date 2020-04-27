@@ -9,7 +9,8 @@ import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
 import * as responses from "../responses";
 import * as db from "../db/annotations";
-import * as rdf from "../core/rdf";
+import * as rdf from "../core/export/rdf";
+import * as ttl from "../core/export/turtle";
 import { resolveSourceFilenameFromHandle } from "../utils";
 
 const router = Router();
@@ -63,6 +64,8 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
               responses.jsonld(resp, anl);
             } else if (query3.format === anModel.Format.RDF) {
               responses.xml(resp, rdf.mkRDF(anl));
+            } else if (query3.format === anModel.Format.TTL) {
+              responses.xml(resp, ttl.anRecords2ttl(anl));
             } else {
               throw new Error("Unknown download format");
             }
