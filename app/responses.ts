@@ -52,9 +52,9 @@ export function created(resp: Response, location: string, result: object): void 
   resp.json(result);
 }
 
-export function notAuthenticated(resp: Response): void {
+export function notAuthenticated(resp: Response, msg?: string): void {
   resp.status(401);
-  resp.send("User not authenticated");
+  resp.send(msg || "User not authenticated");
 }
 
 export function forbidden(resp: Response, msg: string): void {

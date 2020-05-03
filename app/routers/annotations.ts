@@ -97,8 +97,8 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
       responses.clientErr(resp, errors);
     } else {
       const annotation = req.body as anModel.AnRecord;
-      if (annotation.creator.id !== (req.user as User).id) {
-        responses.forbidden(resp, "Creator id does not match the logged user");
+      if (annotation.creator.email !== (req.user as User).email) {
+        responses.forbidden(resp, "Creator email does not match the user");
       } else {
         db.addAnnotation(annotation).then(
           newAn => {

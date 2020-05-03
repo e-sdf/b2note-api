@@ -12,11 +12,11 @@ const router = Router();
 // Get profile
 router.get(profile.profileUrl, passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
-    const userId: string = (req.user as User)?.id;
-    if (!userId) {
-      responses.serverErr(resp, "Something is wrong, no user in request.");
+    const email: string = (req.user as User)?.email;
+    if (!email) {
+      responses.clientErr(resp, { error: "No user in request." });
     } else {
-      dbUsers.getUserProfileById(userId)
+      dbUsers.getUserProfileByEmail(email)
       .then(userProfile => {
         if (userProfile) {
           responses.ok(resp, userProfile);
@@ -43,14 +43,14 @@ router.patch(profile.profileUrl, passport.authenticate("bearer", { session: fals
         if (changes.email) {
           responses.clientErr(resp, { errors: "email is given by B2ACCESS and cannot be updated" });
         } else {
-          const userId: string = (req.user as User)?.id;
-          if (!userId) {
+          const email: string = (req.user as User)?.email;
+          if (!email) {
             responses.serverErr(resp, "Something is wrong, no user in request.");
           } else {
-            dbUsers.updateUserProfile(userId, changes)
+            dbUsers.updateUserProfile(email, changes)
             .then(modified => {
                 if (modified > 0) { // operation successful 
-                  dbUsers.getUserProfileById(userId)
+                  dbUsers.getUserProfileByEmail(email)
                   .then(mbNewProfile => {
                     if (mbNewProfile) {
                       responses.ok(resp, mbNewProfile);
@@ -60,7 +60,7 @@ router.patch(profile.profileUrl, passport.authenticate("bearer", { session: fals
                   })
                   .catch(err => responses.serverErr(resp, err));
                 } else { // profile not updated
-                  responses.serverErr(resp, "Something went wrong, user profile id=" + userId + " was not updated");
+                  responses.serverErr(resp, "Something went wrong, user " + email + " was not updated");
                 }
               }
             )
