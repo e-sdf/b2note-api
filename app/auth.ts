@@ -5,6 +5,7 @@ import type { Method } from "axios";
 import { axiosErrToMsg } from "./core/utils";
 import * as qs from "qs";
 import { v4 as uuidv4 } from "uuid";
+import jwt from "jsonwebtoken";
 import config from "./config";
 import * as responses from "./responses";
 import * as db from "./db/users";
@@ -25,43 +26,17 @@ export type OIDCconfig = Record<keyof typeof OIDCkeysEnum, string>;
 
 export type Token = string;
 
-export interface UserinfoResponse {
-  sub: string;
-  name?: string;
-  given_name?: string;
-  family_name?: string;
-  middle_name?: string;
-  nickname?: string;
-  preferred_username?: string;
-  profile?: string;
-  picture?: string;
-  website?: string;
+export interface JWT {
   email?: string;
-  email_verified?: boolean;
-  gender?: string;
-  birthdate?: string;
-  zoneinfo?: string;
-  locale?: string;
-  phone_number?: string;
-  updated_at?: number;
-  address?: {
-    formatted?: string;
-    street_address?: string;
-    locality?: string;
-    region?: string;
-    postal_code?: string;
-    country?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
 }
 
-export function authenticated(req: Request, resp: Response, next: NextFunction): void {
-  if (req.isAuthenticated()) {
-    return next(); 
-  } else {
-    responses.notAuthenticated(resp);
-  }
+export interface B2accessUserinfoResponse {
+  name: string;
+  email: string;
+}
+
+function formUrlEncode(value: string): string {
+  return encodeURIComponent(value).replace(/%20/g, '+');
 }
 
 function checkFields(data: Record<string, string>): string[] {
@@ -108,64 +83,83 @@ export function authorizeRoute(oidcConfig: OIDCconfig, resp: Response): void {
   storeState(state).then(() => resp.redirect(oidcConfig.authorization_endpoint + "?" + qs.stringify(params)));
 }
 
-export async function verifyStatePm(state: string): Promise<boolean> {
-  const client = await getClient();
-  const col = getCollection(client);
-  const res = await col.findOneAndDelete({ state });
-  return res.value != null;
-}
+export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Response): void {
 
-export function loginUserPm(b2accessAuthConf: OIDCconfig, code: string): Promise<any> {
+  async function verifyStatePm(state: string): Promise<boolean> {
+    const client = await getClient();
+    const col = getCollection(client);
+    const res = await col.findOneAndDelete({ state });
+    return res.value != null;
+  }
 
-  function retrieveTokenPm() : Promise<string> {
+  function retrieveTokenPm(code: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const data = { 
-        client_id: config.b2accessClientId,
-        client_secret: config.b2accessClientSecret,
         grant_type: "authorization_code",
         code,
         redirect_uri: config.b2accessRedirectUrl,
       };
+      const authEncoded = `${formUrlEncode(config.b2accessClientId)}:${formUrlEncode(config.b2accessClientSecret)}`;
+      const auth = Buffer.from(authEncoded).toString("base64");
       const options = {
         url: b2accessAuthConf.token_endpoint,
         method: "POST" as Method,
-        headers: { "content-type": "application/x-www-form-urlencoded" },
+        headers: { 
+          "Authorization": "Basic " + auth,
+          "content-type": "application/x-www-form-urlencoded"
+        },
         data: qs.stringify(data),
       };
       axios(options).then(
         resp => {
-          console.log("token:");
-          console.log(resp.data);
-          resolve(resp.data);
+          if (!resp.data.access_token) {
+            reject("access_token not present in response");
+          } else {
+            resolve(resp.data.access_token);
+          }
         }
       )
       .catch(error => reject(axiosErrToMsg(error)));
     });
   }
 
-  function retrieveProfilePm(token: string) : Promise<UserinfoResponse> {
+  function retrieveProfilePm(token: string): Promise<B2accessUserinfoResponse> {
     return new Promise((resolve, reject) => {
-      const params = { code: token };
-      axios.get(b2accessAuthConf.userinfo_endpoint, { params }).then(
+      const options = {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      };
+      axios.get(b2accessAuthConf.userinfo_endpoint, options).then(
         resp => resolve(resp.data)
       )
       .catch(error => reject(axiosErrToMsg(error)));
     });
   }
 
-  return new Promise((resolve, reject) => {
-    retrieveTokenPm().then(
+  const state = req.query.state as string|null;
+  const code = req.query.code as string|null;
+
+  if (!state) {
+    responses.notAuthorized(resp, "auth callback did not return state");
+  } else if (!verifyStatePm(state)) {
+    responses.notAuthorized(resp, "auth callback contained wrong state.");
+  } else if (!code) {
+    responses.notAuthorized(resp, "auth callback did not return code.");
+  } else {
+    retrieveTokenPm(code).then(
       t => retrieveProfilePm(t).then(
-        profile => {
-          console.log("profile:");
-          console.log(profile);
-          db.upsertUserProfile(profile).then(
-            () => resolve("some jwt"),
-            err => reject(err)
-          )
-        }
+        profile => db.upsertUserProfileFromB2ACCESS(profile).then(
+          () => {
+            const token = jwt.sign({ email: profile.email }, config.jwtSecret);
+            responses.windowWithMessage(resp, token);
+          },
+          err => {
+            responses.forbidden(resp, err);
+          }
+        )
       ),
-      err => reject(err)
+      err => responses.serverErr(resp, err, true)
     );
-  });
+  }
 }

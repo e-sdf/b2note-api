@@ -3,14 +3,10 @@ import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import path from "path";
 import bodyParser from "body-parser";
-//import session from "express-session";
-import connectMongo from "connect-mongo";
 import logger from "morgan";
-import config from "./config";
 import { apiUrl } from "./core/server";
 import "source-map-support/register";
 import { logError } from "./logging";
-import * as db from "./db/client";
 import annotationsRouter from "./routers/annotations";
 import profileRouter from "./routers/profile";
 
@@ -30,15 +26,6 @@ if (process.env.NODE_ENV == "production") {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-//const MongoStore = connectMongo(session);
-//app.use(session({
-  //secret: config.sessionSecret,
-  //cookie: { secure: false },
-  //resave: false,
-  //saveUninitialized: false,
-  //store: new MongoStore({ clientPromise: db.getClient() })
-//}));
 
 app.use(cors());
 app.options("*", cors());
