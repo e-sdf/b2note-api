@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://b2note.ngrok.io/api"
+      "url": "http://b2note-dev.bsc.es/api"
     }
   ],
   "paths": {
@@ -64,9 +64,28 @@
             "schema": {
               "enum": [
                 "json-ld",
-                "rdf-xml"
+                "rdf-xml",
+                "rdf-ttl"
               ],
               "type": "string"
+            }
+          },
+          {
+            "description": "number of items to skip in the result; used for pagination",
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "description": "number of items to include in the result; used for pagination",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
             }
           },
           {
@@ -470,7 +489,7 @@
         "parameters": [
           {
             "description": "search expression",
-            "example": "s:semantic1 AND (k:keyword1 OR c:\"comment words\") XOR r:/regex/",
+            "example": "r:/axon/",
             "in": "query",
             "name": "expression",
             "required": true,
@@ -501,7 +520,7 @@
           }
         },
         "tags": [],
-        "description": "",
+        "description": "The expression consists of terms representing tags and logical operators. All binary operators have the same precedence; it is possible to change it using parentheses. An example of a search expression (syntax explained below):\n\n`s:semantic1 AND (k:keyword1 OR c:\"comment words\") XOR r:/regex/`\n\n#### Terms\n\nTerm type is denoted by `x:`, where `x` specifies the type:\n\n- `s:aSemanticTag` ... semantic tag value\n\n- `k:aKeywordTag` ... free-text keyword tag\n\n- `c:aComment` ... comment tag\n\n- `r:/regex/` ... regular expression matching any tag\n\nThe `s:`, `k:` and `c:` terms must not contain spaces, or must be enclosed in double quotes, e.g. `k:\"two words\"`.\n\n#### Operators\n\nThe terms are connected by operators:\n\n- Unary operator: `NOT` ... a logical negation, i.e. the following term must not be used as the annotation\n\n- Binary operators: `AND` (conjunction), `OR` (disjunction), `XOR` (exclusive OR)",
         "operationId": "Search Annotations",
         "summary": "Search Annotations"
       }
