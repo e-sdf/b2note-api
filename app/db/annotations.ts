@@ -300,7 +300,7 @@ export async function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.AnR
   // console.log(JSON.stringify(withSynonymExprs, null, 2));
   const dbQuery = mkExprDBQuery(withSynonymExprs);
   // console.log(JSON.stringify(dbQuery, null, 2));
-  const res = anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
+  const res = await anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
   await dbClient.close();
   return res;
 }

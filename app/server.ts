@@ -21,22 +21,6 @@ config.dumpConfig();
 console.log("Sending B2ACCESS OIDC Configuration Request to: ");
 console.log(config.b2accessConfigurationUrl);
 
-  //passport.serializeUser((user: User, done: (err: Error|null, id: string) => void) => {
-    //done(null, user.id);
-  //});
-
-  //passport.deserializeUser((id: string, done: (err: Error|null, user: User|null) => void) => {
-    //dbUsers.getUserById(id).then((mbUser: User|null) => {
-      //if (mbUser) {
-        //done(null, mbUser);
-      //} else {
-        //done(new Error("Cannot find user with id=" + id + " in the database"), null);
-      //}
-    //});
-  //});
-  
-  //passport.use("b2access", strategy);
-
 auth.retrieveConfigurationPm(config.b2accessConfigurationUrl).then(
   b2accessAuthConf => {
 
@@ -52,30 +36,28 @@ auth.retrieveConfigurationPm(config.b2accessConfigurationUrl).then(
 
     passport.use(new BearerStrategy(
       (token: string, done: (x: any, y: boolean|UserProfile) => void) => {
-        const decoded = jwt.verify(token, config.jwtSecret) as JWT;
-        const email = decoded.email;
-        if (!email) {
-          throw new Error("email not present in the JWT token"); 
-          return done(null, false);
-        } else {
-          dbUsers.getUserProfileByEmail(email).then(userProfile => {
-            if (!userProfile) { 
-              logError(`JWT verification failed: User with email ${email} does not exist`);
+        jwt.verify(token, config.jwtSecret, (err, decoded) => {
+          if (err) {
+            done(null, false);
+          } else {
+            const email = (decoded as JWT).email;
+            if (!email) {
+              throw new Error("email not present in the JWT token"); 
               return done(null, false);
             } else {
-              return done(null, userProfile);
+              dbUsers.getUserProfileByEmail(email).then(userProfile => {
+                if (!userProfile) { 
+                  logError(`JWT verification failed: User with email ${email} does not exist`);
+                  return done(null, false);
+                } else {
+                  return done(null, userProfile);
+                }
+              });
             }
-          });
-        }
+          }
+        });
       }
     ));
-
-    app.get("/api/logout", 
-      passport.authenticate("bearer", { session: false }),
-      (req: Request, resp: Response) => {
-        req.logout();
-        responses.ok(resp, { message: "You are logged out"});
-      });
 
     // Server initialisation
 

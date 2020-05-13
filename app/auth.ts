@@ -137,6 +137,10 @@ export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Resp
     });
   }
 
+  function mkToken(email: string): string {
+    return jwt.sign({ email }, config.jwtSecret, { expiresIn: "14d" });
+  }
+
   const state = req.query.state as string|null;
   const code = req.query.code as string|null;
 
@@ -151,7 +155,7 @@ export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Resp
       t => retrieveProfilePm(t).then(
         profile => db.upsertUserProfileFromB2ACCESS(profile).then(
           () => {
-            const token = jwt.sign({ email: profile.email }, config.jwtSecret);
+            const token = mkToken(profile.email); 
             responses.windowWithMessage(resp, token);
           },
           err => {
