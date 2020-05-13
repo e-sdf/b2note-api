@@ -23,18 +23,18 @@
     "@types/lodash": "^4.14.150",
     "@types/mongodb": "^3.5.16",
     "@types/morgan": "^1.9.0",
-    "@types/node": "^13.13.5",
+    "@types/node": "^14.0.1",
     "@types/passport": "^1.0.3",
     "@types/passport-http-bearer": "^1.0.35",
     "@types/pegjs": "^0.10.1",
     "@types/source-map-support": "^0.5.1",
     "@types/uuid": "^7.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.31.0",
-    "@typescript-eslint/parser": "^2.31.0",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
     "api-spec-converter": "^2.11.0",
-    "eslint": "^6.8.0",
+    "eslint": "^7.0.0",
     "ts-enum-util": "^4.0.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.2"
   },
   "dependencies": {
     "@babakness/exhaustive-type-checking": "^0.1.3",
