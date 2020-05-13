@@ -1,16 +1,48 @@
 import { Response } from "express";
 import { logError } from './logging';
-import config from "./config";
 
-export function clientErr(resp: Response, reason: object): void {
-  resp.status(400);
-  resp.json(reason);
+export interface RestError {
+  error: string;
+  message: string;
 }
 
-export function serverErr(resp: Response, error: string, msg?: string): void {
-  logError(error);
+export enum ErrorCodes { 
+  SERVER_ERR = "InternalServerError",
+  NOT_AUTHORIZED = "NotAuthorized",
+  FORBIDDEN = "Forbidden",
+  NO_USER_IN_REQUEST = "NoUserInRequest",
+  REQ_FORMAT_ERR = "RequestFormatError",
+  SYNTAX_ERR = "RequestParameterSyntaxError",
+  NOT_FOUND = "NotFound"
+};
+
+function mkErr(code: ErrorCodes, message: string): RestError {
+  return {
+    error: code,
+    message
+  };
+}
+
+export function clientErr(resp: Response, code: ErrorCodes, message: string): void {
+  resp.status(400);
+  resp.json(mkErr(code, message));
+}
+
+export function reqErr(resp: Response, errors: Record<any, any>): void {
+  clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, JSON.stringify(errors));
+}
+
+export function syntaxErr(resp: Response, errors: Record<any, any>): void {
+  clientErr(resp, ErrorCodes.SYNTAX_ERR, JSON.stringify(errors));
+}
+export function serverErr(resp: Response, logMsg: string, fatal = false): void {
+  if (fatal) {
+    throw new Error(logMsg);
+  } else {
+    logError(logMsg);
+  }
   resp.status(500);
-  resp.send(msg || "Internal server error");
+  resp.json(mkErr(ErrorCodes.SERVER_ERR, "Internal server error"));
 }
 
 export function ok(resp: Response, result?: object|string): void {
@@ -52,19 +84,19 @@ export function created(resp: Response, location: string, result: object): void 
   resp.json(result);
 }
 
-export function notAuthenticated(resp: Response): void {
+export function notAuthorized(resp: Response, message: string): void {
   resp.status(401);
-  resp.send("User not authenticated");
+  resp.json(mkErr(ErrorCodes.NOT_AUTHORIZED, message));
 }
 
-export function forbidden(resp: Response, msg: string): void {
+export function forbidden(resp: Response, message: string): void {
   resp.status(403);
-  resp.send(msg);
+  resp.json(mkErr(ErrorCodes.FORBIDDEN, message));
 }
 
-export function notFound(resp: Response, msg?: string): void {
+export function notFound(resp: Response, message: string): void {
   resp.status(404);
-  resp.send(msg || "Not found");
+  resp.json(mkErr(ErrorCodes.NOT_FOUND, message));
 }
 
 export function windowWithMessage(resp: Response, msg: string): void {
@@ -77,7 +109,7 @@ export function windowWithMessage(resp: Response, msg: string): void {
       <title>B2NOTE Authorization Response</title>
     </head>
       <body>
-        <p>The page sends message to its opener containing the logged user Bearer Token</p>
+        <p>The page sends message to its opener containing the logged user Bearer token</p>
       </body>
       <script>
         window.opener.postMessage('${msg}', '*');

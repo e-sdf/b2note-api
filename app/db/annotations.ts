@@ -75,31 +75,37 @@ export async function getSemanticAnnotation(anCol: Collection, tag: string): Pro
   return res[0];
 }
 
-export function getAnnotationsForTag(anCol: Collection, value: string): Promise<Array<anModel.AnRecord>> {
-  return anCol.find({
+export async function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRecord>> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
+  const res = await anCol.find({
     "$or": [
       { "body.value": value },
       { "body.items": { "$elemMatch": { value } } }
     ]
   }).toArray();
+  await dbClient.close();
+  return res;
 }
 
 // DB API {{{1
 
-export function getAnnotation(anCol: Collection, anId: string): Promise<anModel.AnRecord|null> {
-  try {
-    const _id = new ObjectId(anId);
-    return anCol.findOne({ _id });
-  } catch(error) { 
-    return Promise.resolve(null);
-  }
+export async function getAnnotation(anId: string): Promise<anModel.AnRecord|null> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
+  const _id = new ObjectId(anId);
+  const res = await anCol.findOne({ _id });
+  await dbClient.close();
+  return res;
 }
 
 function sort(ans: Array<anModel.AnRecord>): Array<anModel.AnRecord> {
   return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
 }
     
-export async function getAnnotations(anCol: Collection, query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
+export async function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
@@ -116,6 +122,7 @@ export async function getAnnotations(anCol: Collection, query: anModel.GetQuery)
     : limitNo ? await anCol.find(dbQuery).limit(limitNo).toArray()
     : await anCol.find(dbQuery).toArray();
   const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
+  await dbClient.close();
   return res;
 }
 
@@ -140,7 +147,7 @@ export async function addAnnotation(annotation: anModel.AnRecord): Promise<anMod
   }
 }
 
-export async function updateAnnotation(anId: string, changes: Record<keyof anModel.AnRecord, string>): Promise<number> {
+export async function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord>): Promise<number> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
   const res = await anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes });
@@ -285,11 +292,15 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export async function searchAnnotations(anCol: Collection, sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
+export async function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
+  const dbClient = await getClient();
+  const anCol = getCollection(dbClient);
   // console.log(JSON.stringify(sExpr, null, 2));
   const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
   // console.log(JSON.stringify(withSynonymExprs, null, 2));
   const dbQuery = mkExprDBQuery(withSynonymExprs);
   // console.log(JSON.stringify(dbQuery, null, 2));
-  return anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
+  const res = await anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
+  await dbClient.close();
+  return res;
 }

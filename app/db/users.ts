@@ -1,40 +1,10 @@
+import { v5 as uuidv5 } from "uuid";
 import type { MongoClient, Collection } from "mongodb";
+import config from "../config";
 import { getClient } from "./client";
-import type { TokenSet, UserinfoResponse } from "openid-client";
-import type { User, UserProfile, Experience } from "../core/user";
-
-export interface UserRecord {
-  id: string;
-  userInfo: UserinfoResponse;
-  tokenSet: TokenSet;
-  // additional B2NOTE-specific items
-  orcid: string;
-  organisation: string;
-  jobTitle: string;
-  country: string;
-  experience: Experience;
-}
-
-export function record2user(record: UserRecord): User|null {
-  const mbAccessToken = record.tokenSet.access_token;
-  return mbAccessToken ? {
-    id: record.id,
-    accessToken: mbAccessToken
-  } : null;
-}
-
-export function record2profile(record: UserRecord): UserProfile {
-  return {
-    id: record.id,
-    name: record.userInfo.name || "",
-    email: record.userInfo.email || "",
-    orcid: record.orcid, 
-    organisation: record.organisation,
-    jobTitle: record.jobTitle,
-    country: record.country,
-    experience: record.experience
-  };
-}
+import type { B2accessUserinfoResponse } from "../auth";
+import type { UserProfile } from "../core/user";
+import { Experience } from "../core/user";
 
 // DB Access {{{1
 
@@ -44,64 +14,53 @@ export function getCollection(dbClient: MongoClient): Collection {
   return dbClient.db().collection("users");
 }
 
+// Utils {{{1
+
+function mkId(email: string): string {
+  return uuidv5(email, config.uuidNs);
+}
+
 // User queries {{{1
 
-export async function upsertUserProfileFromAuth(userInfo: UserinfoResponse, tokenSet: TokenSet): Promise<UserRecord> {
+export async function getUserProfileByEmail(email: string): Promise<UserProfile|null> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
-  const id = userInfo.sub;
-  await anCol.updateOne(
-    { id },
-    { "$set": { id, userInfo, tokenSet } },
-    { upsert: true }
-  );
-  const userRecordPartial: any = await anCol.findOne({ id });
-  const userRecord: UserRecord = {
-    id: userRecordPartial.id,
-    userInfo: userRecordPartial.userInfo,
-    tokenSet: userRecordPartial.tokenSet,
-    // additional B2NOTE-specific items may be missing if first-time 
-    orcid: userRecordPartial.orcid || "",
-    organisation: userRecordPartial.organisation || "",
-    jobTitle: userRecordPartial.jobTitle || "",
-    country: userRecordPartial.country || "",
-    experience: userRecordPartial.experience || ""
-  };
-  await anCol.replaceOne({ id }, userRecord);
+  const userRecord = await anCol.findOne({ "email": email });
   await dbClient.close();
   return userRecord;
 }
 
-export async function getUserRecordById(userId: string): Promise<UserRecord|null> {
+export async function upsertUserProfileFromB2ACCESS(userInfo: B2accessUserinfoResponse): Promise<UserProfile> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
-  const userRecord = await anCol.findOne({ id: userId });
-  await dbClient.close();
-  return userRecord;
+  const userProfile = await getUserProfileByEmail(userInfo.email);
+  if (!userProfile) {
+    const newProfile: UserProfile = {
+      id: mkId(userInfo.email),
+      email: userInfo.email,
+      name: userInfo.name,
+      orcid: "",
+      organisation: "",
+      jobTitle: "",
+      country: "",
+      experience: Experience.NULL
+    };
+    await anCol.insertOne(newProfile);
+    return newProfile;
+  } else {
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      name: userProfile.name === "" ? userInfo.name : userProfile.name
+    };
+    await anCol.replaceOne({ email: userProfile.email }, updatedProfile);
+    return updatedProfile;
+  }
 }
 
-export async function getUserById(userId: string): Promise<User|null> {
-  const userRecord = await getUserRecordById(userId);
-  return userRecord ? record2user(userRecord) : null;
-}
-
-export async function getUserProfileById(userId: string): Promise<UserProfile|null> {
-  const userRecord = await getUserRecordById(userId);
-  return userRecord ? record2profile(userRecord) : null;
-}
-
-export async function getUserByToken(token: string): Promise<User|null> {
+export async function updateUserProfile(email: string, userProfileChanges: Partial<UserProfile>): Promise<number> {
   const dbClient = await getClient();
   const anCol = getCollection(dbClient);
-  const userRecord = await anCol.findOne({ "tokenSet.access_token": token });
+  const res = await anCol.updateOne({ email }, { "$set": userProfileChanges });
   await dbClient.close();
-  return record2user(userRecord);
-}
-
-export async function updateUserProfile(userId: string, userProfileChanges: Record<keyof UserProfile, string>): Promise<number> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const res = await anCol.updateOne({ id: userId }, { "$set": userProfileChanges });
-  await dbClient.close();
-  return Promise.resolve(res.matchedCount);
+  return res.matchedCount;
 }

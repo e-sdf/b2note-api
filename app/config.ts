@@ -7,7 +7,8 @@ interface Config {
   annotationUrl: string;
   mongodbUrl: string;
   solrUrl: string;
-  sessionSecret: string;
+  jwtSecret: string;
+  uuidNs: string;
   b2access: boolean;
   b2accessConfigurationUrl: string;
   b2accessClientId: string;
@@ -25,7 +26,8 @@ const globalConfig: Config = {
   annotationUrl: process.env.ANNOTATION_URL || "",
   mongodbUrl: process.env.MONGODB_URL || "",
   solrUrl: process.env.SOLR_URL || "",
-  sessionSecret: process.env.SESSION_SECRET || "",
+  jwtSecret: process.env.JWT_SECRET || "",
+  uuidNs: process.env.UUID_NS || "",
   b2access: process.env.B2ACCESS == "true",
   b2accessConfigurationUrl: process.env.B2ACCESS_CONFIGURATION_URL || "",
   b2accessClientId: process.env.B2ACCESS_CLIENT_ID || "",
