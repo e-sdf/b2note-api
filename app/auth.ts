@@ -1,12 +1,12 @@
 import { $enum } from "ts-enum-util";
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 import axios from "axios";
 import type { Method } from "axios";
 import { axiosErrToMsg } from "./core/utils";
 import * as qs from "qs";
-import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import config from "./config";
+import { mkUuid, deleteUuid } from "./db/uuid";
 import * as responses from "./responses";
 import * as db from "./db/users";
 import * as dbClient from "./db/client";
@@ -62,23 +62,26 @@ export function retrieveConfigurationPm(url: string): Promise<OIDCconfig> {
   });
 }
 
-async function storeState(state: string): Promise<any> {
+function storeState(state: string): Promise<any> {
   return withCollection(
     stateCol => stateCol.insertOne( { state } )
   );
 }
 
 export function authorizeRoute(oidcConfig: OIDCconfig, resp: Response): void {
-  const state = uuidv4();
-  const params = {
-    scope: "openid profile email",
-    redirect_uri: config.b2accessRedirectUrl,
-    response_type: "code",
-    client_id: config.b2accessClientId,
-    state,
-    session: false
-  };
-  storeState(state).then(() => resp.redirect(oidcConfig.authorization_endpoint + "?" + qs.stringify(params)));
+  mkUuid().then(
+    state => {
+      const params = {
+        scope: "openid profile email",
+        redirect_uri: config.b2accessRedirectUrl,
+        response_type: "code",
+        client_id: config.b2accessClientId,
+        state,
+        session: false
+      };
+      storeState(state).then(() => resp.redirect(oidcConfig.authorization_endpoint + "?" + qs.stringify(params)));
+    }
+  );
 }
 
 export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Response): void {
@@ -87,7 +90,7 @@ export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Resp
     return withCollection(
       stateCol => new Promise((resolve) => {
         stateCol.findOneAndDelete({ state }).then(
-          res => resolve(res.value != null)
+          res => deleteUuid(state).then(() => resolve(res.value != null))
         );
       })
     );
