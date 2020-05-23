@@ -9,13 +9,11 @@ import jwt from "jsonwebtoken";
 import config from "./config";
 import * as responses from "./responses";
 import * as db from "./db/users";
-import type { MongoClient, Collection } from "mongodb";
-import { getClient } from "./db/client";
+import * as dbClient from "./db/client";
 
-function getCollection(dbClient: MongoClient): Collection {
-  return dbClient.db().collection("oauth");
+function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
+  return dbClient.withCollection("oauth", dbOp);
 }
-
 enum OIDCkeysEnum { 
   authorization_endpoint = "authorization_endpoint",
   token_endpoint = "token_endpoint",
@@ -65,9 +63,9 @@ export function retrieveConfigurationPm(url: string): Promise<OIDCconfig> {
 }
 
 async function storeState(state: string): Promise<any> {
-  const client = await getClient();
-  const col = getCollection(client);
-  return col.insertOne( { state } );
+  return withCollection(
+    stateCol => stateCol.insertOne( { state } )
+  );
 }
 
 export function authorizeRoute(oidcConfig: OIDCconfig, resp: Response): void {
@@ -85,11 +83,14 @@ export function authorizeRoute(oidcConfig: OIDCconfig, resp: Response): void {
 
 export function loginUser(b2accessAuthConf: OIDCconfig, req: Request, resp: Response): void {
 
-  async function verifyStatePm(state: string): Promise<boolean> {
-    const client = await getClient();
-    const col = getCollection(client);
-    const res = await col.findOneAndDelete({ state });
-    return res.value != null;
+  function verifyStatePm(state: string): Promise<boolean> {
+    return withCollection(
+      stateCol => new Promise((resolve) => {
+        stateCol.findOneAndDelete({ state }).then(
+          res => resolve(res.value != null)
+        );
+      })
+    );
   }
 
   function retrieveTokenPm(code: string): Promise<string> {

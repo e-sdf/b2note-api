@@ -1,9 +1,9 @@
 import _ from "lodash";
 import { matchSwitch } from "@babakness/exhaustive-type-checking";
-import type { MongoClient, Collection } from "mongodb";
+import type { Collection } from "mongodb";
+import * as dbClient from "./client";
 import { ObjectId } from "mongodb";
 import type { DBQuery } from "./client";
-import { getClient } from "./client";
 import config from "../config";
 import { apiUrl } from "../core/server";
 import * as anModel from "../core/annotationsModel";
@@ -14,10 +14,8 @@ import { getOntologies } from "../core/ontologyRegister";
 
 // DB Access {{{1
 
-export { getClient } from "./client";
-
-export function getCollection(dbClient: MongoClient): Collection {
-  return dbClient.db().collection("annotations");
+function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
+  return dbClient.withCollection("users", dbOp);
 }
 
 // Filters {{{1
@@ -75,37 +73,32 @@ export async function getSemanticAnnotation(anCol: Collection, tag: string): Pro
   return res[0];
 }
 
-export async function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRecord>> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const res = await anCol.find({
+export function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRecord>> {
+  const query = {
     "$or": [
       { "body.value": value },
       { "body.items": { "$elemMatch": { value } } }
     ]
-  }).toArray();
-  await dbClient.close();
-  return res;
+  };
+  return withCollection(
+    anCol => anCol.find(query).toArray()
+  );
 }
 
 // DB API {{{1
 
-export async function getAnnotation(anId: string): Promise<anModel.AnRecord|null> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
+export function getAnnotation(anId: string): Promise<anModel.AnRecord|null> {
   const _id = new ObjectId(anId);
-  const res = await anCol.findOne({ _id });
-  await dbClient.close();
-  return res;
+  return withCollection(
+    anCol => anCol.findOne({ _id })
+  );
 }
 
 function sort(ans: Array<anModel.AnRecord>): Array<anModel.AnRecord> {
   return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
 }
-    
-export async function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
+
+export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
@@ -115,57 +108,75 @@ export async function getAnnotations(query: anModel.GetQuery): Promise<Array<anM
   const dbQuery = isEmptyFilter(filter) ? {} : filter;
   const skipNo = query.skip;
   const limitNo = query.limit;
-  const anl = 
-    skipNo && limitNo ?
-      await anCol.find(dbQuery).skip(skipNo).limit(limitNo).toArray()
-    : skipNo ? await anCol.find(dbQuery).skip(skipNo).toArray()
-    : limitNo ? await anCol.find(dbQuery).limit(limitNo).toArray()
-    : await anCol.find(dbQuery).toArray();
-  const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
-  await dbClient.close();
-  return res;
+  return withCollection(
+    anCol => new Promise((resolve, reject) => {
+      const anlPm = 
+        skipNo && limitNo ?
+          anCol.find(dbQuery).skip(skipNo).limit(limitNo).toArray()
+        : skipNo ? anCol.find(dbQuery).skip(skipNo).toArray()
+        : limitNo ? anCol.find(dbQuery).limit(limitNo).toArray()
+        : anCol.find(dbQuery).toArray();
+      anlPm.then(
+        anl => {
+          const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
+          resolve(res);
+        },
+        err => reject(err)
+      );
+    })
+  );
 }
 
-export async function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnRecord|null> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const annotations = await findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source);
-  const existing = annotations.find((an: anModel.AnRecord) => anModel.getLabel(an) === anModel.getLabel(annotation));
-  if (existing) {
-    await dbClient.close();
-    return null;
-  } else {
-    const res = await anCol.insertOne(annotation);
-    const newId = res.insertedId as string;
-    const newAn = await anCol.findOneAndUpdate(
-      { _id: newId },
-      { "$set": { id: config.annotationUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
-      { returnOriginal: false }
-    );  
-    await dbClient.close();
-    return newAn.value;
-  }
+export function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnRecord|null> {
+  return withCollection(
+    anCol => new Promise((resolve, reject) => {
+      findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source).then(
+        annotations => {
+          const existing = annotations.find((an: anModel.AnRecord) => anModel.getLabel(an) === anModel.getLabel(annotation));
+          if (existing) {
+            resolve(null);
+          } else {
+            anCol.insertOne(annotation).then(
+              res => {
+                const newId = res.insertedId as string;
+                anCol.findOneAndUpdate(
+                  { _id: newId },
+                  { "$set": { id: config.annotationUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
+                  { returnOriginal: false }
+                ).then(
+                  newAn => resolve(newAn.value),
+                  err => reject(err)
+                );
+              }
+            );
+          }
+        }
+      );
+    })
+  );
 }
 
-export async function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord>): Promise<number> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const res = await anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes });
-  await dbClient.close();
-  return Promise.resolve(res.matchedCount);
+export function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord>): Promise<number> {
+  return withCollection(
+    anCol => new Promise((resolve, reject) => {
+      anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes }).then(
+        res => resolve(res.matchedCount),
+        err => reject(err)
+      );
+    })
+  );
 }
 
-export async function deleteAnnotation(anId: string): Promise<number> {
-  try {
-    const _id = new ObjectId(anId);
-    const dbClient = await getClient();
-    const anCol = getCollection(dbClient);
-    const res = await anCol.deleteOne({ _id });
-    await dbClient.close();
-    return Promise.resolve(res.result.n || 0);
-  } catch(error) { 
-    return Promise.resolve(0);
-  }
+export function deleteAnnotation(anId: string): Promise<number> {
+  const _id = new ObjectId(anId);
+  return withCollection(
+    anCol => new Promise((resolve) => {
+      anCol.deleteOne({ _id }).then(
+        res => resolve(res.result.n || 0),
+        err => resolve(0)
+      );
+    })
+  );
 }
 
 // Searching {{{1
@@ -292,15 +303,19 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export async function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  // console.log(JSON.stringify(sExpr, null, 2));
-  const withSynonymExprs = await enrichExprWithSynonyms(sExpr);
-  // console.log(JSON.stringify(withSynonymExprs, null, 2));
-  const dbQuery = mkExprDBQuery(withSynonymExprs);
-  // console.log(JSON.stringify(dbQuery, null, 2));
-  const res = await anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray();
-  await dbClient.close();
-  return res;
+export function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
+  return withCollection(
+    anCol => new Promise((resolve, reject) => {
+      // console.log(JSON.stringify(sExpr, null, 2));
+      enrichExprWithSynonyms(sExpr).then(
+        withSynonymExprs => {
+          // console.log(JSON.stringify(withSynonymExprs, null, 2));
+          const dbQuery = mkExprDBQuery(withSynonymExprs);
+          // console.log(JSON.stringify(dbQuery, null, 2));
+          resolve(anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray());
+        },
+        err => reject(err)
+      );
+    })
+  );
 }

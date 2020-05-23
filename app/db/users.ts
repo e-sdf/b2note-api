@@ -1,17 +1,14 @@
 import { v5 as uuidv5 } from "uuid";
-import type { MongoClient, Collection } from "mongodb";
 import config from "../config";
-import { getClient } from "./client";
+import * as dbClient from "./client";
 import type { B2accessUserinfoResponse } from "../auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
 
 // DB Access {{{1
 
-export { getClient } from "./client";
-
-export function getCollection(dbClient: MongoClient): Collection {
-  return dbClient.db().collection("users");
+function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
+  return dbClient.withCollection("users", dbOp);
 }
 
 // Utils {{{1
@@ -22,45 +19,56 @@ function mkId(email: string): string {
 
 // User queries {{{1
 
-export async function getUserProfileByEmail(email: string): Promise<UserProfile|null> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const userRecord = await anCol.findOne({ "email": email });
-  await dbClient.close();
-  return userRecord;
+export function getUserProfileByEmail(email: string): Promise<UserProfile|null> {
+  return withCollection(
+    usersCol => usersCol.findOne({ "email": email })
+  );
 }
 
-export async function upsertUserProfileFromB2ACCESS(userInfo: B2accessUserinfoResponse): Promise<UserProfile> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const userProfile = await getUserProfileByEmail(userInfo.email);
-  if (!userProfile) {
-    const newProfile: UserProfile = {
-      id: mkId(userInfo.email),
-      email: userInfo.email,
-      name: userInfo.name,
-      orcid: "",
-      organisation: "",
-      jobTitle: "",
-      country: "",
-      experience: Experience.NULL
-    };
-    await anCol.insertOne(newProfile);
-    return newProfile;
-  } else {
-    const updatedProfile: UserProfile = {
-      ...userProfile,
-      name: userProfile.name === "" ? userInfo.name : userProfile.name
-    };
-    await anCol.replaceOne({ email: userProfile.email }, updatedProfile);
-    return updatedProfile;
-  }
+
+export function upsertUserProfileFromB2ACCESS(userInfo: B2accessUserinfoResponse): Promise<UserProfile> {
+  return withCollection(
+    usersCol => new Promise((resolve, reject) => {
+      getUserProfileByEmail(userInfo.email).then(
+        userProfile => {
+          if (!userProfile) {
+            const newProfile: UserProfile = {
+              id: mkId(userInfo.email),
+              email: userInfo.email,
+              name: userInfo.name,
+              orcid: "",
+              organisation: "",
+              jobTitle: "",
+              country: "",
+              experience: Experience.NULL
+            };
+            usersCol.insertOne(newProfile).then(
+              () => resolve(newProfile),
+              err => reject(err)
+            );
+          } else {
+            const updatedProfile: UserProfile = {
+              ...userProfile,
+              name: userProfile.name === "" ? userInfo.name : userProfile.name
+            };
+            usersCol.replaceOne({ email: userProfile.email }, updatedProfile).then(
+              () => resolve(updatedProfile),
+              err => reject(err)
+            );
+          }
+        }
+      );
+    })
+  );
 }
 
 export async function updateUserProfile(email: string, userProfileChanges: Partial<UserProfile>): Promise<number> {
-  const dbClient = await getClient();
-  const anCol = getCollection(dbClient);
-  const res = await anCol.updateOne({ email }, { "$set": userProfileChanges });
-  await dbClient.close();
-  return res.matchedCount;
+  return withCollection(
+    usersCol => new Promise((resolve, reject) => {
+      usersCol.updateOne({ email }, { "$set": userProfileChanges }).then(
+        res => resolve(res.matchedCount),
+        err => reject(err)
+      );
+    })
+  );
 }
