@@ -4,11 +4,10 @@ import cors from "cors";
 import path from "path";
 import bodyParser from "body-parser";
 import logger from "morgan";
-import { apiUrl } from "./core/server";
 import "source-map-support/register";
-import { logError } from "./logging";
+import config from "./config";
 import annotationsRouter from "./routers/annotations";
-import profileRouter from "./routers/profile";
+import usersRouter from "./routers/users";
 
 console.log("Starting webserver at " + __dirname);
 
@@ -37,18 +36,19 @@ app.options("*", cors());
 // });
 
 // Register error handler
-app.use((err: any, req: Request, resp: Response, next: NextFunction) => {
-  logError(err);
-  resp.status(err.status || 500).json({
-    message: err.message,
-    errors: err.errors,
-  });
-});
+//app.use((err: any, req: Request, resp: Response) => {
+  //logError(err);
+  //console.error(err);
+  //resp.status(err.status || 500).json({
+    //message: err.message,
+    //errors: err.errors,
+  //});
+//});
 
 const publicDir = path.join(__dirname, "public/");
 
-app.use(apiUrl, express.static(publicDir + "openapi3.json"));
-app.use(apiUrl, annotationsRouter);
-app.use(apiUrl, profileRouter);
+app.use(config.serverPath, express.static(publicDir + "openapi3.json"));
+app.use(config.serverPath, annotationsRouter);
+app.use(config.serverPath, usersRouter);
 
 export default app;

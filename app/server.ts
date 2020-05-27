@@ -6,33 +6,26 @@ import config from "./config";
 import app from "./app";
 import { logError } from "./logging";
 import { Strategy as BearerStrategy } from "passport-http-bearer";
-import type { JWT } from "./auth";
+import type { JWT } from "./auth/auth";
+import * as b2access from "./auth/b2access";
+import * as openaire from "./auth/openaire";
 import type { UserProfile } from "./core/user";
-import * as auth from "./auth";
-import * as responses from "./responses";
 import * as dbUsers from "./db/users";
-
-const b2accessSessionKey = "b2access";
 
 config.dumpConfig();
 
-// Initialise B2ACCESS auth
+// Initialise auth service providers
 
-console.log("Sending B2ACCESS OIDC Configuration Request to: ");
-console.log(config.b2accessConfigurationUrl);
+const authConfPms = [
+  b2access.retrieveConfigurationPm(config.b2accessConfigurationUrl),
+  openaire.retrieveConfigurationPm(config.openaireConfigurationUrl)
+];
 
-auth.retrieveConfigurationPm(config.b2accessConfigurationUrl).then(
-  b2accessAuthConf => {
+Promise.all(authConfPms).then(
+  ([b2accessAuthConf, openaireAuthConf]) => {
 
-    console.log("Received B2ACCESS OIDC Configuration Response");
-
-    app.get("/api/b2access/login", (req: Request, resp: Response) => {
-      auth.authorizeRoute(b2accessAuthConf, resp);
-    });
-
-    app.get("/api/b2access/auth_callback", (req: Request, resp: Response) => {
-      auth.loginUser(b2accessAuthConf, req, resp);
-    });
+    app.use(config.serverPath, b2access.router(b2accessAuthConf));
+    app.use(config.serverPath, openaire.router(openaireAuthConf));
 
     passport.use(new BearerStrategy(
       (token: string, done: (x: any, y: boolean|UserProfile) => void) => {
@@ -76,5 +69,5 @@ auth.retrieveConfigurationPm(config.b2accessConfigurationUrl).then(
     server.listen(port);
   },
 
-  err => logError("Failed receiving B2ACCESS OIDC Configuration Response: " + err)
+  err => logError("Failed receiving an OIDC Configuration Response: " + err)
 );

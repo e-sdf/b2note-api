@@ -4,17 +4,20 @@ import { logError } from './logging';
 
 interface Config {
   serverPort: string;
-  annotationUrl: string;
+  serverPath: string;
+  domainUrl: string;
   mongodbUrl: string;
   solrUrl: string;
   jwtSecret: string;
   uuidNs: string;
-  b2access: boolean;
   b2accessConfigurationUrl: string;
   b2accessClientId: string;
   b2accessClientSecret: string;
   b2accessRedirectUrl: string;
-  gAuth: boolean;
+  openaireConfigurationUrl: string;
+  openaireClientId: string;
+  openaireClientSecret: string;
+  openaireRedirectUrl: string;
   gAuthConfigurationUrl: string;
   gAuthClientId: string;
   gAuthClientSecret: string;
@@ -23,17 +26,20 @@ interface Config {
 
 const globalConfig: Config = {
   serverPort: process.env.SERVER_PORT || "",
-  annotationUrl: process.env.ANNOTATION_URL || "",
+  serverPath: process.env.SERVER_PATH || "",
+  domainUrl: process.env.DOMAIN_URL || "",
   mongodbUrl: process.env.MONGODB_URL || "",
   solrUrl: process.env.SOLR_URL || "",
   jwtSecret: process.env.JWT_SECRET || "",
   uuidNs: process.env.UUID_NS || "",
-  b2access: process.env.B2ACCESS == "true",
   b2accessConfigurationUrl: process.env.B2ACCESS_CONFIGURATION_URL || "",
   b2accessClientId: process.env.B2ACCESS_CLIENT_ID || "",
   b2accessClientSecret: process.env.B2ACCESS_CLIENT_SECRET || "",
   b2accessRedirectUrl: process.env.B2ACCESS_REDIRECT_URL || "",
-  gAuth: process.env.GAUTH == "true",
+  openaireConfigurationUrl: process.env.OPENAIRE_CONFIGURATION_URL || "",
+  openaireClientId: process.env.OPENAIRE_CLIENT_ID || "",
+  openaireClientSecret: process.env.OPENAIRE_CLIENT_SECRET || "",
+  openaireRedirectUrl: process.env.OPENAIRE_REDIRECT_URL || "",
   gAuthConfigurationUrl: process.env.GAUTH_CONFIGURATION_URL || "",
   gAuthClientId: process.env.GAUTH_CLIENT_ID || "",
   gAuthClientSecret: process.env.GAUTH_CLIENT_SECRET || "",

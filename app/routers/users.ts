@@ -2,16 +2,16 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
 import type { UserProfile } from "../core/user";
+import * as user from "../core/user";
 import { ErrorCodes } from "../responses";
 import * as responses from "../responses";
-import * as profile from "../core/user";
 import * as validator from "../validators/profile";
 import * as dbUsers from "../db/users";
 
 const router = Router();
 
 // Get profile
-router.get(profile.profileUrl, passport.authenticate("bearer", { session: false }),
+router.get(user.usersUrl, passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     if (!req.user) {
       responses.serverErr(resp, "No user in request", true);
@@ -23,7 +23,7 @@ router.get(profile.profileUrl, passport.authenticate("bearer", { session: false 
 );
 
 // Edit profile
-router.patch(profile.profileUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const errors = validator.validateUserProfileOpt(req.body);
   if (errors) {
     responses.reqErr(resp, errors);

@@ -1,7 +1,7 @@
 import { v5 as uuidv5 } from "uuid";
 import config from "../config";
 import * as dbClient from "./client";
-import type { B2accessUserinfoResponse } from "../auth";
+import type { OIDUserinfo } from "../auth/auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
 
@@ -26,7 +26,7 @@ export function getUserProfileByEmail(email: string): Promise<UserProfile|null> 
 }
 
 
-export function upsertUserProfileFromB2ACCESS(userInfo: B2accessUserinfoResponse): Promise<UserProfile> {
+export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<UserProfile> {
   return withCollection(
     usersCol => new Promise((resolve, reject) => {
       getUserProfileByEmail(userInfo.email).then(
@@ -36,6 +36,8 @@ export function upsertUserProfileFromB2ACCESS(userInfo: B2accessUserinfoResponse
               id: mkId(userInfo.email),
               email: userInfo.email,
               name: userInfo.name,
+              givenName: userInfo.given_name || "",
+              familyName: userInfo.family_name || "",
               orcid: "",
               organisation: "",
               jobTitle: "",

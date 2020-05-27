@@ -2,10 +2,12 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
 import type { UserProfile } from "../core/user";
+import config from "../config";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
+import * as user from "../core/user";
 import { ErrorCodes } from "../responses";
 import * as responses from "../responses";
 import * as db from "../db/annotations";
@@ -34,6 +36,17 @@ function setDownloadHeader(resp: Response, fname: string, format: anModel.Format
   resp.setHeader("filename", fname + "." + ext);
 }
 
+function urlize(an: anModel.AnRecord): anModel.AnRecord {
+  return {
+    ...an,
+    id: config.domainUrl + anModel.annotationsUrl + "/" + an.id,
+    creator: {
+      ...an.creator,
+      id: config.domainUrl + user.usersUrl + "/" + an.creator.id
+    }
+  };
+}
+
 // Handlers {{{1
 
 // Get list of annotations
@@ -49,7 +62,8 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
     } else {
       const query3 = query2 as anModel.GetQuery;
       db.getAnnotations(query3).then(
-        anl => {
+        anlRecs => {
+          const anl = anlRecs.map(urlize);
           const format = query3.format || anModel.Format.JSONLD;
           if (query3.download) {
             setDownloadHeader(resp, "annotations_" + anModel.mkTimestamp(), format);
@@ -57,9 +71,9 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
           if (format === anModel.Format.JSONLD) {
             responses.jsonld(resp, anl);
           } else if (query3.format === anModel.Format.RDF) {
-            responses.xml(resp, rdf.mkRDF(anl));
+            responses.xml(resp, rdf.mkRDF(anl, config.domainUrl));
           } else if (query3.format === anModel.Format.TTL) {
-            responses.xml(resp, ttl.anRecords2ttl(anl));
+            responses.xml(resp, ttl.anRecords2ttl(anl, config.domainUrl));
           } else {
             throw new Error("Unknown download format");
           }
@@ -74,7 +88,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
 router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
   const anId = req.params.id;
   db.getAnnotation(anId).then(
-    an => an ? responses.jsonld(resp, an) : responses.notFound(resp, `Annotation with id=${anId}) not found`),
+    an => an ? responses.jsonld(resp, urlize(an)) : responses.notFound(resp, `Annotation with id=${anId}) not found`),
     error => responses.serverErr(resp, error)
   );
 });

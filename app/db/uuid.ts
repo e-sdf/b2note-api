@@ -19,11 +19,11 @@ function storeUuid(uuid: Uuid): Promise<any> {
   );
 }
 
-export async function mkUuid(): Promise<Uuid> {
+export async function genUuid(): Promise<Uuid> {
   const uuid = uuidv4();
   const exists = await findUuid(uuid);
   if (exists) {
-    return mkUuid();
+    return genUuid();
   } else {
     await storeUuid(uuid);
     return uuid;

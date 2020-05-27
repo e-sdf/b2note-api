@@ -5,18 +5,32 @@ import * as dbClient from "./client";
 import { ObjectId } from "mongodb";
 import type { DBQuery } from "./client";
 import config from "../config";
-import { apiUrl } from "../core/server";
 import * as anModel from "../core/annotationsModel";
+import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
 import type { OntologyDict, OntologyInfo } from "../core/ontologyRegister";
 import { getOntologies } from "../core/ontologyRegister";
 
+// Definitions {{{1
+
+export enum VisibilityEnum {
+  PRIVATE = "private",
+  PUBLIC = "public",
+  SHARED = "shared"
+}
+
+export interface AnItem extends anModel.AnRecord {
+  visibility: VisibilityEnum;
+  sharingCol?: anModel.PID[];
+}
+
 // DB Access {{{1
 
 function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
-  return dbClient.withCollection("users", dbOp);
+  return dbClient.withCollection("annotations", dbOp);
 }
+
 
 // Filters {{{1
 
@@ -88,9 +102,8 @@ export function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRec
 // DB API {{{1
 
 export function getAnnotation(anId: string): Promise<anModel.AnRecord|null> {
-  const _id = new ObjectId(anId);
   return withCollection(
-    anCol => anCol.findOne({ _id })
+    anCol => anCol.findOne({ id: anId })
   );
 }
 
@@ -139,13 +152,17 @@ export function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnR
             anCol.insertOne(annotation).then(
               res => {
                 const newId = res.insertedId as string;
-                anCol.findOneAndUpdate(
-                  { _id: newId },
-                  { "$set": { id: config.annotationUrl + apiUrl + anModel.annotationsUrl + "/" + newId } },
-                  { returnOriginal: false }
-                ).then(
-                  newAn => resolve(newAn.value),
-                  err => reject(err)
+                genUuid().then(
+                  uuid => {
+                    anCol.findOneAndUpdate(
+                      { _id: newId },
+                      { "$set": { id: uuid } },
+                      { returnOriginal: false }
+                    ).then(
+                      newAn => resolve(newAn.value),
+                      err => reject(err)
+                    );
+                  }
                 );
               }
             );
@@ -159,7 +176,7 @@ export function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnR
 export function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord>): Promise<number> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
-      anCol.updateOne({ _id: new ObjectId(anId) }, { "$set": changes }).then(
+      anCol.updateOne({ id: anId }, { "$set": changes }).then(
         res => resolve(res.matchedCount),
         err => reject(err)
       );
@@ -168,10 +185,9 @@ export function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord
 }
 
 export function deleteAnnotation(anId: string): Promise<number> {
-  const _id = new ObjectId(anId);
   return withCollection(
     anCol => new Promise((resolve) => {
-      anCol.deleteOne({ _id }).then(
+      anCol.deleteOne({ id: anId }).then(
         res => resolve(res.result.n || 0),
         err => resolve(0)
       );
