@@ -35,7 +35,7 @@ export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<Us
             const newProfile: UserProfile = {
               id: mkId(userInfo.email),
               email: userInfo.email,
-              name: userInfo.name,
+              name: userInfo.name || (userInfo.given_name || "") + " " + (userInfo.family_name || ""),
               givenName: userInfo.given_name || "",
               familyName: userInfo.family_name || "",
               orcid: "",
