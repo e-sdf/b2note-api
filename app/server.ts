@@ -1,5 +1,4 @@
 import * as http from "http";
-import type { Request, Response } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import config from "./config";
@@ -17,15 +16,15 @@ config.dumpConfig();
 // Initialise auth service providers
 
 const authConfPms = [
-  b2access.retrieveConfigurationPm(config.b2accessConfigurationUrl),
-  openaire.retrieveConfigurationPm(config.openaireConfigurationUrl)
+  b2access.retrieveConfigurationPm(),
+  openaire.retrieveConfigurationPm()
 ];
 
 Promise.all(authConfPms).then(
-  ([b2accessAuthConf, openaireAuthConf]) => {
+  ([b2accessOIDConfig, openaireOIDConfig]) => {
 
-    app.use(config.serverPath, b2access.router(b2accessAuthConf));
-    app.use(config.serverPath, openaire.router(openaireAuthConf));
+    app.use(config.serverPath, b2access.router(b2accessOIDConfig));
+    app.use(config.serverPath, openaire.router(openaireOIDConfig));
 
     passport.use(new BearerStrategy(
       (token: string, done: (x: any, y: boolean|UserProfile) => void) => {
