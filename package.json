@@ -1,6 +1,6 @@
 {
   "name": "b2note-api",
-  "version": "3.7.0",
+  "version": "3.8.0",
   "build": "1",
   "description": "B2NOTE server",
   "private": true,
@@ -10,7 +10,7 @@
     "build": "rm -rf dist/*; tsc && npm run copy",
     "copy": "cp -rv .env public dist/",
     "start": "cd dist; node -r dotenv/config server",
-    "docker-deploy": "scripts/git-tag.sh; scripts/docker-build.sh; scripts/docker-tag.sh; scripts/docker-push.sh",
+    "deploy": "scripts/git-tag.sh; scripts/docker-build.sh; scripts/docker-tag.sh; scripts/docker-push.sh",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
     "clean": "npm cache clean --force"
