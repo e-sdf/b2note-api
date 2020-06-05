@@ -10,10 +10,7 @@
     "build": "rm -rf dist/*; tsc && npm run copy",
     "copy": "cp -rv .env public dist/",
     "start": "cd dist; node -r dotenv/config server",
-    "docker-build": "scripts/docker-build.sh",
-    "docker-tag": "scripts/docker-run.sh",
-    "docker-push": "scripts/git-tag.sh; scripts/docker-tag.sh",
-    "docker-deploy": "scripts/docker-deploy.sh",
+    "docker-deploy": "scripts/git-tag.sh; scripts/docker-build.sh; scripts/docker-tag.sh; scripts/docker-push.sh",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
     "clean": "npm cache clean --force"
