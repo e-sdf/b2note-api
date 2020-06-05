@@ -35,7 +35,7 @@ export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<Us
             const newProfile: UserProfile = {
               id: mkId(userInfo.email),
               email: userInfo.email,
-              name: userInfo.name || (userInfo.given_name || "") + " " + (userInfo.family_name || ""),
+              personName: userInfo.name || (userInfo.given_name || "") + " " + (userInfo.family_name || ""),
               givenName: userInfo.given_name || "",
               familyName: userInfo.family_name || "",
               orcid: "",
@@ -51,7 +51,7 @@ export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<Us
           } else {
             const updatedProfile: UserProfile = {
               ...userProfile,
-              name: userProfile.name === "" ? userInfo.name : userProfile.name
+              personName: userProfile.personName === "" ? userInfo.name : userProfile.personName
             };
             usersCol.replaceOne({ email: userProfile.email }, updatedProfile).then(
               () => resolve(updatedProfile),
