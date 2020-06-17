@@ -4,6 +4,7 @@ import * as dbClient from "./client";
 import type { OIDUserinfo } from "../auth/auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
+import { extractId } from "../core/utils";
 
 // DB Access {{{1
 
@@ -38,7 +39,7 @@ export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<Us
               personName: userInfo.name || ((userInfo.given_name || "") + " " + (userInfo.family_name || "")),
               givenName: userInfo.given_name || "",
               familyName: userInfo.family_name || "",
-              orcid: "",
+              orcid: userInfo.orcid ? extractId(userInfo.orcid) : "",
               organisation: "",
               jobTitle: "",
               country: "",

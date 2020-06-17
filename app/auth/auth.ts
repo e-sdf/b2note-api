@@ -36,6 +36,7 @@ export interface OIDUserinfo {
   given_name?: string;
   family_name?: string;
   email: string;
+  orcid?: string;
 }
 
 export function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
@@ -87,7 +88,7 @@ export function authorize(authConfig: AuthConfig, oidConfig: OIDCconfig, resp: R
   genUuid().then(
     state => {
       const params = {
-        scope: "openid profile email",
+        scope: "openid profile email orcid",
         redirect_uri: authConfig.redirectUrl,
         response_type: "code",
         client_id: authConfig.clientId,
