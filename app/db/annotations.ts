@@ -2,7 +2,6 @@ import _ from "lodash";
 import { matchSwitch } from "@babakness/exhaustive-type-checking";
 import type { Collection } from "mongodb";
 import * as dbClient from "./client";
-import { ObjectId } from "mongodb";
 import type { DBQuery } from "./client";
 import config from "../config";
 import * as anModel from "../core/annotationsModel";
@@ -20,9 +19,8 @@ export enum VisibilityEnum {
   SHARED = "shared"
 }
 
-export interface AnItem extends anModel.AnRecord {
+export interface AnItem extends anModel.Annotation {
   visibility: VisibilityEnum;
-  sharingCol?: anModel.PID[];
 }
 
 // DB Access {{{1
@@ -35,15 +33,15 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 // Filters {{{1
 
 function mkTypeFilter(query: anModel.GetQuery): DBQuery {
-  const semanticFilter = query["type"]?.includes(anModel.AnRecordType.SEMANTIC) ? {
+  const semanticFilter = query["type"]?.includes(anModel.AnnotationType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
-  const keywordFilter = query["type"]?.includes(anModel.AnRecordType.KEYWORD) ? {
+  const keywordFilter = query["type"]?.includes(anModel.AnnotationType.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
-  const commentFilter = query["type"]?.includes(anModel.AnRecordType.COMMENT) ? { 
+  const commentFilter = query["type"]?.includes(anModel.AnnotationType.COMMENT) ? { 
     motivation: anModel.PurposeType.COMMENTING ,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
   } : {};
@@ -77,17 +75,17 @@ function isEmptyFilter(filter: DBQuery): boolean {
 
 // Queries {{{1
 
-function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.AnRecord>> {
+function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.Annotation>> {
   const query = { "target.id": id, "target.source": source };
   return anCol.find(query).toArray();
 }
 
-export async function getSemanticAnnotation(anCol: Collection, tag: string): Promise<anModel.AnRecord|null> {
+export async function getSemanticAnnotation(anCol: Collection, tag: string): Promise<anModel.Annotation|null> {
   const res = await anCol.find({ "body.items": { "$elemMatch": { value: tag } } }).toArray();
   return res[0];
 }
 
-export function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRecord>> {
+export function getAnnotationsForTag(value: string): Promise<Array<anModel.Annotation>> {
   const query = {
     "$or": [
       { "body.value": value },
@@ -101,17 +99,17 @@ export function getAnnotationsForTag(value: string): Promise<Array<anModel.AnRec
 
 // DB API {{{1
 
-export function getAnnotation(anId: string): Promise<anModel.AnRecord|null> {
+export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   return withCollection(
     anCol => anCol.findOne({ id: anId })
   );
 }
 
-function sort(ans: Array<anModel.AnRecord>): Array<anModel.AnRecord> {
+function sort(ans: Array<anModel.Annotation>): Array<anModel.Annotation> {
   return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
 }
 
-export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.AnRecord>> {
+export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.Annotation>> {
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
@@ -131,7 +129,7 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
         : anCol.find(dbQuery).toArray();
       anlPm.then(
         anl => {
-          const res = sort(_.uniqBy(anl, (a: anModel.AnRecord) => anModel.getLabel(a)));
+          const res = sort(_.uniqBy(anl, (a: anModel.Annotation) => anModel.getLabel(a)));
           resolve(res);
         },
         err => reject(err)
@@ -140,12 +138,12 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
   );
 }
 
-export function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnRecord|null> {
+export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.Annotation|null> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source).then(
         annotations => {
-          const existing = annotations.find((an: anModel.AnRecord) => anModel.getLabel(an) === anModel.getLabel(annotation));
+          const existing = annotations.find((an: anModel.Annotation) => anModel.getLabel(an) === anModel.getLabel(annotation));
           if (existing) {
             resolve(null);
           } else {
@@ -173,7 +171,7 @@ export function addAnnotation(annotation: anModel.AnRecord): Promise<anModel.AnR
   );
 }
 
-export function updateAnnotation(anId: string, changes: Partial<anModel.AnRecord>): Promise<number> {
+export function updateAnnotation(anId: string, changes: Partial<anModel.Annotation>): Promise<number> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       anCol.updateOne({ id: anId }, { "$set": changes }).then(
@@ -319,7 +317,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.AnRecord>> {
+export function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.Annotation>> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       // console.log(JSON.stringify(sExpr, null, 2));

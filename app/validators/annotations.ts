@@ -1,15 +1,15 @@
 import Ajv from "ajv";
 import { getQuerySchema } from "../core/getQuery.schema";
-import { anRecordSchema } from "../core/anRecord.schema";
-import { anRecordOptSchema } from "../core/anRecord.opt.schema";
+import { annotationSchema } from "../core/annotation.schema";
+import { annotationOptSchema } from "../core/annotation.opt.schema";
 import { targetsQuerySchema } from "../core/targetsQuery.schema";
 
 type Item = Record<string, any>;
 
 const ajv = new Ajv();
 ajv.addSchema(getQuerySchema);
-ajv.addSchema(anRecordSchema);
-ajv.addSchema(anRecordOptSchema);
+ajv.addSchema(annotationSchema);
+ajv.addSchema(annotationOptSchema);
 ajv.addSchema(targetsQuerySchema);
 
 export function validateGetQuery(query: Item): Array<Ajv.ErrorObject> | null | undefined {
@@ -17,13 +17,13 @@ export function validateGetQuery(query: Item): Array<Ajv.ErrorObject> | null | u
   return ajv.errors;
 }
 
-export function validateAnRecord(anRecord: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("anRecord#/definitions/AnRecord", anRecord);
+export function validateAnnotation(annotation: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("annotation#/definitions/Annotation", annotation);
   return ajv.errors;
 }
 
-export function validateAnRecordOpt(anRecord: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("anRecordOpt#/definitions/AnRecord", anRecord);
+export function validateAnnotationOpt(annotation: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("annotationOpt#/definitions/Annotation", annotation);
   return ajv.errors;
 }
 

@@ -36,7 +36,7 @@ function setDownloadHeader(resp: Response, fname: string, format: anModel.Format
   resp.setHeader("filename", fname + "." + ext);
 }
 
-function urlize(an: anModel.AnRecord): anModel.AnRecord {
+function urlize(an: anModel.Annotation): anModel.Annotation {
   return {
     ...an,
     id: config.domainUrl + anModel.annotationsUrl + "/" + an.id,
@@ -73,7 +73,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
           } else if (query3.format === anModel.Format.RDF) {
             responses.xml(resp, rdf.mkRDF(anl, config.domainUrl));
           } else if (query3.format === anModel.Format.TTL) {
-            responses.xml(resp, ttl.anRecords2ttl(anl, config.domainUrl));
+            responses.xml(resp, ttl.annotations2ttl(anl, config.domainUrl));
           } else {
             throw new Error("Unknown download format");
           }
@@ -96,11 +96,11 @@ router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
 // Create a new annotation 
 router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
-    const errors = validator.validateAnRecord(req.body);
+    const errors = validator.validateAnnotation(req.body);
     if (errors) {
       responses.reqErr(resp, errors);
     } else {
-      const annotation = req.body as anModel.AnRecord;
+      const annotation = req.body as anModel.Annotation;
       if (annotation.creator.id !== (req.user as UserProfile).id) {
         responses.forbidden(resp, "Creator id does not match the logged user");
       } else {
@@ -123,11 +123,11 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
 router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
-    const errors = validator.validateAnRecordOpt(req.body);
+    const errors = validator.validateAnnotationOpt(req.body);
     if (errors) {
       responses.reqErr(resp, errors);
     } else {
-      const changes = req.body as Partial<anModel.AnRecord>;
+      const changes = req.body as Partial<anModel.Annotation>;
       db.getAnnotation(anId).then(
         an => 
           an ? 
