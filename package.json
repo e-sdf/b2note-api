@@ -7,7 +7,7 @@
   "scripts": {
     "generate": "scripts/generateSchemas.sh",
     "watch": "nodemon --watch app --ext ts,js --exec npm run build \\&\\& npm run start",
-    "build": "rm -rf dist/*; tsc && npm run copy",
+    "build": "rm -rf dist/*; npx ttsc && npm run copy",
     "copy": "cp -rv .env public dist/",
     "start": "cd dist; node -r dotenv/config server",
     "deploy": "scripts/git-tag.sh; scripts/docker-build.sh; scripts/docker-tag.sh; scripts/docker-push.sh",
@@ -31,6 +31,7 @@
     "@typescript-eslint/parser": "^3.1.0",
     "api-spec-converter": "^2.11.0",
     "eslint": "^7.1.0",
+    "ttypescript": "^1.5.10",
     "typescript": "^3.9.3"
   },
   "dependencies": {
@@ -53,6 +54,7 @@
     "qs": "^6.9.4",
     "source-map-support": "^0.5.19",
     "ts-enum-util": "^4.0.1",
+    "ts-transformer-keys": "^0.4.2",
     "uuid": "^8.1.0",
     "xmlbuilder": "^15.1.1"
   }

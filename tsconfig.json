@@ -15,6 +15,9 @@
     "isolatedModules": true,
     "inlineSourceMap": true,
     "noEmit": false,
+    "plugins": [
+      { "transform": "ts-transformer-keys/transformer" }
+    ]
   },
   "include": [
     "app/**/*"
