@@ -13,22 +13,11 @@ import { getOntologies } from "../core/ontologyRegister";
 
 // Definitions {{{1
 
-export enum VisibilityEnum {
-  PRIVATE = "private",
-  PUBLIC = "public",
-  SHARED = "shared"
-}
-
-export interface AnItem extends anModel.Annotation {
-  visibility: VisibilityEnum;
-}
-
 // DB Access {{{1
 
 function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
   return dbClient.withCollection("annotations", dbOp);
 }
-
 
 // Filters {{{1
 
@@ -99,6 +88,8 @@ export function getAnnotationsForTag(value: string): Promise<Array<anModel.Annot
 
 // DB API {{{1
 
+// Reading {{{2
+
 export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   return withCollection(
     anCol => anCol.findOne({ id: anId })
@@ -128,15 +119,17 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
         : limitNo ? anCol.find(dbQuery).limit(limitNo).toArray()
         : anCol.find(dbQuery).toArray();
       anlPm.then(
-        anl => {
-          const res = sort(_.uniqBy(anl, (a: anModel.Annotation) => anModel.getLabel(a)));
-          resolve(res);
+        (anl: Array<anModel.Annotation>) => {
+          const uniqSorted = sort(_.uniqBy(anl, an => anModel.getLabel(an)));
+          resolve(uniqSorted);
         },
         err => reject(err)
       );
     })
   );
 }
+
+// Modifying {{{2
 
 export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.Annotation|null> {
   return withCollection(
@@ -147,7 +140,11 @@ export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.A
           if (existing) {
             resolve(null);
           } else {
-            anCol.insertOne(annotation).then(
+            const anRecord: anModel.Annotation = {
+              ...annotation,
+              visibility: annotation.visibility || anModel.VisibilityEnum.PUBLIC
+            };
+            anCol.insertOne(anRecord).then(
               res => {
                 const newId = res.insertedId as string;
                 genUuid().then(
@@ -182,6 +179,7 @@ export function updateAnnotation(anId: string, changes: Partial<anModel.Annotati
   );
 }
 
+
 export function deleteAnnotation(anId: string): Promise<number> {
   return withCollection(
     anCol => new Promise((resolve) => {
@@ -193,7 +191,7 @@ export function deleteAnnotation(anId: string): Promise<number> {
   );
 }
 
-// Searching {{{1
+// Searching {{{2
 
 function mkSemanticDBQuery(value: string): DBQuery {
   return {

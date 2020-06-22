@@ -30,6 +30,8 @@ interface AnResponse {
   _status: string;
 }
 
+// Utils {{{1
+
 function setDownloadHeader(resp: Response, fname: string, format: anModel.Format): void {
   const ext = anModel.mkFileExt(format);
   resp.setHeader("Content-Disposition", "attachment");
@@ -49,12 +51,12 @@ function urlize(an: anModel.Annotation): anModel.Annotation {
 
 // Handlers {{{1
 
-// Get list of annotations
+// Get list of annotations {{{2
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   try {
     const query2 = {
       ... req.query,
-      download: req.query.download ? JSON.parse(req.query.download as string) : false
+      download: req.query.download ? JSON.parse(req.query.download as string) : false,
     };
     const errors = validator.validateGetQuery(query2);
     if (errors) {
@@ -84,16 +86,16 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download parameter is expected to be boolean"); }
 });
 
-// Get annotation
+// Get annotation {{{2
 router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
   const anId = req.params.id;
   db.getAnnotation(anId).then(
-    an => an ? responses.jsonld(resp, urlize(an)) : responses.notFound(resp, `Annotation with id=${anId}) not found`),
+    anr => anr ? responses.jsonld(resp, urlize(anr)) : responses.notFound(resp, `Annotation with id=${anId}) not found`),
     error => responses.serverErr(resp, error)
   );
 });
 
-// Create a new annotation 
+// Create a new annotation {{{2
 router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const errors = validator.validateAnnotation(req.body);
@@ -119,7 +121,7 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
     }
   });
 
-// Edit an annotation
+// Edit an annotation {{{2   
 router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
@@ -129,9 +131,9 @@ router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { 
     } else {
       const changes = req.body as Partial<anModel.Annotation>;
       db.getAnnotation(anId).then(
-        an => 
-          an ? 
-            an.creator.id === (req.user as UserProfile).id ?
+        anr => 
+          anr ? 
+            anr.creator.id === (req.user as UserProfile).id ?
               db.updateAnnotation(anId, changes)
               .then(() => responses.ok(resp))
               .catch(err => responses.serverErr(resp, err))
@@ -142,14 +144,14 @@ router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { 
     }
   });
 
-// Delete an annotation
+// Delete an annotation {{{2
 router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
     db.getAnnotation(anId).then(
-      an => 
-        an ? 
-          an.creator.id === (req.user as UserProfile).id ?
+      anr => 
+        anr ? 
+          anr.creator.id === (req.user as UserProfile).id ?
             db.deleteAnnotation(anId)
             .then(() => responses.ok(resp))
             .catch(err => responses.serverErr(resp, err))
@@ -159,7 +161,7 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
     );
   });
 
-// Search annotations
+// Search annotations {{{2
 router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   const expr = req.query.expression;
   if (!expr) {
@@ -181,7 +183,7 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   }
 });
 
-// Get targets for a certain tag
+// Get targets for a certain tag {{{2
 router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
   const errors = validator.validateTargetsQuery(req.query);
   if (errors) {
