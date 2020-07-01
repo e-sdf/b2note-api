@@ -120,8 +120,8 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
         : anCol.find(dbQuery).toArray();
       anlPm.then(
         (anl: Array<anModel.Annotation>) => {
-          const uniqSorted = sort(_.uniqBy(anl, an => anModel.getLabel(an)));
-          resolve(uniqSorted);
+          const sorted = sort(anl);
+          resolve(sorted);
         },
         err => reject(err)
       );
@@ -136,13 +136,13 @@ export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.A
     anCol => new Promise((resolve, reject) => {
       findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source).then(
         annotations => {
-          const existing = annotations.find((an: anModel.Annotation) => anModel.getLabel(an) === anModel.getLabel(annotation));
+          const existing = annotations.find((an: anModel.Annotation) => anModel.isEqual(annotation, an));
           if (existing) {
             resolve(null);
           } else {
             const anRecord: anModel.Annotation = {
               ...annotation,
-              visibility: annotation.visibility || anModel.VisibilityEnum.PUBLIC
+              visibility: annotation.visibility || anModel.VisibilityEnum.PRIVATE
             };
             anCol.insertOne(anRecord).then(
               res => {
@@ -178,7 +178,6 @@ export function updateAnnotation(anId: string, changes: Partial<anModel.Annotati
     })
   );
 }
-
 
 export function deleteAnnotation(anId: string): Promise<number> {
   return withCollection(
