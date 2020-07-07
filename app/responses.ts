@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { logError } from './logging';
+import { logError } from "./logging";
 
 export interface RestError {
   error: string;
@@ -14,7 +14,7 @@ export enum ErrorCodes {
   REQ_FORMAT_ERR = "RequestFormatError",
   SYNTAX_ERR = "RequestParameterSyntaxError",
   NOT_FOUND = "NotFound"
-};
+}
 
 function mkErr(code: ErrorCodes, message: string): RestError {
   return {
