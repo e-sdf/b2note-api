@@ -10,6 +10,7 @@ import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
 import type { OntologyDict, OntologyInfo } from "../core/ontologyRegister";
 import { getOntologies } from "../core/ontologyRegister";
+import { logError } from "../logging";
 
 // Definitions {{{1
 
@@ -64,6 +65,26 @@ function isEmptyFilter(filter: DBQuery): boolean {
 
 // Queries {{{1
 
+export function getAnnotationById(anCol: Collection, anId: string): Promise<anModel.Annotation|null> {
+  return withCollection(
+    anCol => new Promise((resolve, reject) => {
+      const query = { id: anId };
+      anCol.find(query).toArray().then(
+        res => {
+          if (res.length === 0) {
+            resolve(null);
+          } else if (res.length > 1) {
+            logError("Duplicate annotation id: " + anId);
+            reject("Duplicate annotation id: " + anId);
+          } else {
+            resolve(res[0]);
+          }
+        }
+      );
+    })
+  );
+}
+
 function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.Annotation>> {
   const query = { "target.id": id, "target.source": source };
   return anCol.find(query).toArray();
@@ -90,14 +111,14 @@ export function getAnnotationsForTag(value: string): Promise<Array<anModel.Annot
 
 // Reading {{{2
 
-export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
-  return withCollection(
-    anCol => anCol.findOne({ id: anId })
-  );
-}
-
 function sort(ans: Array<anModel.Annotation>): Array<anModel.Annotation> {
   return _.sortBy(ans, (a) => anModel.getLabel(a).toLocaleLowerCase());
+}
+
+export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
+  return withCollection(
+    anCol => getAnnotationById(anCol, anId)
+  );
 }
 
 export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.Annotation>> {
@@ -170,12 +191,31 @@ export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.A
 
 export function updateAnnotation(anId: string, changes: Partial<anModel.Annotation>): Promise<number> {
   return withCollection(
-    anCol => new Promise((resolve, reject) => {
-      anCol.updateOne({ id: anId }, { "$set": changes }).then(
-        res => resolve(res.matchedCount),
-        err => reject(err)
-      );
-    })
+    anCol => new Promise((resolve, reject) => 
+       getAnnotationById(anCol, anId).then(
+         annotation => {
+           if (annotation) {
+             const updatedAn = {...annotation, ...changes};
+             getAnnotationsForTag(anModel.getLabel(updatedAn)).then(
+               sameTagAns => { 
+                 const existing = sameTagAns.find((an: anModel.Annotation) => annotation.id !== an.id && anModel.isEqual(updatedAn, an));
+                 if (existing) {
+                   reject("Same annotation would exist");
+                 } else {
+                   anCol.updateOne({ id: anId }, { "$set": changes }).then(
+                     res => resolve(res.matchedCount),
+                     err => reject(err)
+                   );
+                 }
+               }
+             );
+           } else {
+             reject(`Annotation id=${anId} does not exist`);
+           }
+         },
+         err => reject(err)
+       )
+     )
   );
 }
 

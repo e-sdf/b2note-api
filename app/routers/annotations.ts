@@ -121,7 +121,7 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
     }
   });
 
-// Edit an annotation {{{2   
+// Update an annotation {{{2   
 router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
@@ -131,14 +131,30 @@ router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { 
     } else {
       const changes = req.body as Partial<anModel.Annotation>;
       db.getAnnotation(anId).then(
-        anr => 
-          anr ? 
-            anr.creator.id === (req.user as UserProfile).id ?
+        anr => {
+          if (anr) {
+            if (anr.creator.id === (req.user as UserProfile).id) {
               db.updateAnnotation(anId, changes)
-              .then(() => responses.ok(resp))
-              .catch(err => responses.serverErr(resp, err))
-            : responses.forbidden(resp, "Annotation creator does not match")
-          : responses.notFound(resp, `Annotation with id=${anId} not found`),
+              .then(
+                () => db.getAnnotation(anId).then(
+                  anr2 => {
+                    if (anr2) {
+                      responses.jsonld(resp, urlize(anr2));
+                    } else {
+                      responses.notFound(resp, `Annotation with id=${anId} not found`);
+                    }
+                  },
+                  error => responses.serverErr(resp, error)
+              ),
+              error => responses.forbidden(resp, error)
+              ).catch(err => responses.serverErr(resp, err));
+            } else {
+              responses.forbidden(resp, "Annotation creator does not match");
+            }
+          } else {
+            responses.notFound(resp, `Annotation with id=${anId} not found`);
+          }
+        },
         error => responses.serverErr(resp, error)
       );
     }
@@ -175,7 +191,7 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
         throw new Error("result field expected but missing");
       } else {
         db.searchAnnotations(parseResult.result as sModel.Sexpr).then(
-          anl => responses.ok(resp, anl),
+          anl => responses.ok(resp, anl.map(urlize)),
           error => responses.serverErr(resp, error)
         );
       }
