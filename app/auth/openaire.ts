@@ -3,6 +3,8 @@ import { Router } from "express";
 import config from "../config";
 import type { OIDCconfig } from "./auth";
 import * as auth from "./auth";
+import { ErrorCodes } from "../responses";
+import * as responses from "../responses";
 
 const authConfig: auth.AuthConfig = {
   clientId: config.openaireClientId,
@@ -17,6 +19,26 @@ export function retrieveConfigurationPm(): Promise<OIDCconfig> {
 export function router(oidConfig: OIDCconfig): Router {
   const router = Router();
 
+  router.get("/openaire/take-login", (req: Request, resp: Response) => {
+    if (req.query.token) { // validate the service's token received via client messaging
+      const servicesToken = req.query.token as string;
+      console.log("Received service's token " + servicesToken);
+      auth.loadUserInfoPm(oidConfig, servicesToken).then(
+        userinfo => {
+          const token = auth.mkToken(userinfo);
+          console.log("Verified, sending my token to window");
+          responses.windowWithMessage(resp, token);
+        },
+        err => { // invalid service's token
+          console.log("Verification failed");
+          responses.forbidden(resp, err);
+        }
+      );
+    } else {
+      responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Missing service token parametre");
+    }
+  });
+
   router.get("/openaire/login", (req: Request, resp: Response) => {
     auth.authorize(authConfig, oidConfig, resp);
   });
@@ -27,4 +49,3 @@ export function router(oidConfig: OIDCconfig): Router {
 
   return router;
 }
-

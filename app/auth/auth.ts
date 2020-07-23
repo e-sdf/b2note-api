@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import config from "../config";
 import { genUuid, deleteUuid } from "../db/uuid";
 import * as dbClient from "../db/client";
-import * as qs from "qs";
+import qs from "qs";
 import * as responses from "../responses";
 import * as db from "../db/users";
 
@@ -17,7 +17,7 @@ export interface AuthConfig {
   redirectUrl: string;
 }
 
-export enum OIDCkeysEnum { 
+export enum OIDCkeysEnum {
   authorization_endpoint = "authorization_endpoint",
   token_endpoint = "token_endpoint",
   userinfo_endpoint = "userinfo_endpoint"
@@ -51,8 +51,8 @@ export function checkFields(data: Record<string, string>): string[] {
   return $enum(OIDCkeysEnum).getKeys().reduce((res: string[] , f: string) => data[f] ? res : [...res, f], []);
 }
 
-export function mkToken(email: string): string {
-  return jwt.sign({ email }, config.jwtSecret, { expiresIn: "14d" });
+export function mkToken(userInfo: OIDUserinfo): Token {
+  return jwt.sign({ email: userInfo.email }, config.jwtSecret, { expiresIn: "14d" });
 }
 
 export function retrieveConfigurationPm(url: string): Promise<OIDCconfig> {
@@ -100,6 +100,34 @@ export function authorize(authConfig: AuthConfig, oidConfig: OIDCconfig, resp: R
   );
 }
 
+export function loadUserInfoPm(oidConfig: OIDCconfig, providerToken: Token): Promise<OIDUserinfo> {
+
+  function retrieveProfilePm(oidConfig: OIDCconfig): Promise<OIDUserinfo> {
+    return new Promise((resolve, reject) => {
+      const options = {
+        headers: {
+          "Authorization": "Bearer " + providerToken
+        }
+      };
+      axios.get(oidConfig.userinfo_endpoint, options).then(
+        resp => {
+          resolve(resp.data);
+        }
+      )
+      .catch(error => reject(axiosErrToMsg(error)));
+    });
+  }
+
+  return new Promise((resolve, reject) =>
+    retrieveProfilePm(oidConfig).then(
+      userinfo => db.upsertUserProfileFromUserinfo(userinfo).then(
+        () => resolve(userinfo),
+        err => reject(err)
+      )
+    )
+  );
+}
+
 export function loginUser(authConfig: AuthConfig, oidConfig: OIDCconfig, req: Request, resp: Response): void {
 
   function verifyStatePm(state: string): Promise<boolean> {
@@ -114,7 +142,7 @@ export function loginUser(authConfig: AuthConfig, oidConfig: OIDCconfig, req: Re
 
   function retrieveTokenPm(code: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const data = { 
+      const data = {
         grant_type: "authorization_code",
         code,
         redirect_uri: authConfig.redirectUrl,
@@ -124,7 +152,7 @@ export function loginUser(authConfig: AuthConfig, oidConfig: OIDCconfig, req: Re
       const options = {
         url: oidConfig.token_endpoint,
         method: "POST" as Method,
-        headers: { 
+        headers: {
           "Authorization": "Basic " + cred,
           "content-type": "application/x-www-form-urlencoded"
         },
@@ -143,22 +171,6 @@ export function loginUser(authConfig: AuthConfig, oidConfig: OIDCconfig, req: Re
     });
   }
 
-  function retrieveProfilePm(token: string): Promise<OIDUserinfo> {
-    return new Promise((resolve, reject) => {
-      const options = {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      };
-      axios.get(oidConfig.userinfo_endpoint, options).then(
-        resp => {
-          resolve(resp.data);
-        }
-      )
-      .catch(error => reject(axiosErrToMsg(error)));
-    });
-  }
-
   const state = req.query.state as string|null;
   const code = req.query.code as string|null;
 
@@ -170,16 +182,14 @@ export function loginUser(authConfig: AuthConfig, oidConfig: OIDCconfig, req: Re
     responses.notAuthorized(resp, "auth callback did not return code.");
   } else {
     retrieveTokenPm(code).then(
-      t => retrieveProfilePm(t).then(
-        userinfo => db.upsertUserProfileFromUserinfo(userinfo).then(
-          () => {
-            const token = mkToken(userinfo.email); 
-            responses.windowWithMessage(resp, token);
-          },
-          err => {
-            responses.forbidden(resp, err);
-          }
-        )
+      t => loadUserInfoPm(oidConfig, t).then(
+        userinfo => {
+          const token = mkToken(userinfo);
+          responses.windowWithMessage(resp, token);
+        },
+        err => {
+          responses.forbidden(resp, err);
+        }
       ),
       err => responses.serverErr(resp, err, true)
     );

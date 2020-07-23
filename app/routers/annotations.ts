@@ -121,7 +121,7 @@ router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: f
     }
   });
 
-// Update an annotation {{{2   
+// Update an annotation {{{2
 router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
   (req: Request, resp: Response) => {
     const anId = req.params.id;
@@ -165,8 +165,8 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
   (req: Request, resp: Response) => {
     const anId = req.params.id;
     db.getAnnotation(anId).then(
-      anr => 
-        anr ? 
+      anr =>
+        anr ?
           anr.creator.id === (req.user as UserProfile).id ?
             db.deleteAnnotation(anId)
             .then(() => responses.ok(resp))
