@@ -26,8 +26,8 @@ export function router(oidConfig: OIDCconfig): Router {
       auth.loadUserInfoPm(oidConfig, servicesToken).then(
         userinfo => {
           const token = auth.mkToken(userinfo);
-          console.log("Verified, sending my token to window");
-          responses.windowWithMessage(resp, token);
+          console.log("Verified, sending token");
+          responses.ok(resp, token);
         },
         err => { // invalid service's token
           console.log("Verification failed");

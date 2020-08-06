@@ -6,7 +6,7 @@ export interface RestError {
   message: string;
 }
 
-export enum ErrorCodes { 
+export enum ErrorCodes {
   SERVER_ERR = "InternalServerError",
   NOT_AUTHORIZED = "NotAuthorized",
   FORBIDDEN = "Forbidden",
