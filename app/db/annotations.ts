@@ -5,6 +5,7 @@ import * as dbClient from "./client";
 import type { DBQuery } from "./client";
 import config from "../config";
 import * as anModel from "../core/annotationsModel";
+import * as qModel from "../core/queryModel";
 import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
@@ -22,38 +23,45 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 // Filters {{{1
 
-function mkTypeFilter(query: anModel.GetQuery): DBQuery {
+function mkTypeFilter(query: qModel.GetQuery): DBQuery {
   const semanticFilter = query["type"]?.includes(anModel.AnnotationType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
   const keywordFilter = query["type"]?.includes(anModel.AnnotationType.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
-    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY
   } : {};
-  const commentFilter = query["type"]?.includes(anModel.AnnotationType.COMMENT) ? { 
+  const commentFilter = query["type"]?.includes(anModel.AnnotationType.COMMENT) ? {
     motivation: anModel.PurposeType.COMMENTING ,
-    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY 
+    "body.type": anModel.AnBodyItemType.TEXTUAL_BODY
   } : {};
   const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}].filter(i => { return !_.isEmpty(i); });
   const filter = { "$or": typeFilters};
   return filter;
 }
 
-function mkCreatorFilter(query: anModel.GetQuery): DBQuery {
+function mkCreatorFilter(query: qModel.GetQuery): DBQuery {
   return query.creator ? { "creator.id": query.creator } : {};
 }
 
-function mkTargetSourceFilter(query: anModel.GetQuery): DBQuery {
+function mkTargetIdFilter(query: qModel.GetQuery): DBQuery {
+  const ff = query["target-id"];
+  return (
+    ff ? { "target.id": ff } : { }
+  );
+}
+
+function mkTargetSourceFilter(query: qModel.GetQuery): DBQuery {
   const ff = query["target-source"];
   return (
     ff ? { "target.source": ff } : { }
   );
 }
 
-function mkValueFilter(query: anModel.GetQuery): DBQuery {
+function mkValueFilter(query: qModel.GetQuery): DBQuery {
   return query.value ? { "$or": [
-    { "body.value": query.value }, // keyword and comment 
+    { "body.value": query.value }, // keyword and comment
     { "body.items": { "$elemMatch": { value: query.value } } } // semantic
   ] }
   : {};
@@ -66,27 +74,28 @@ function isEmptyFilter(filter: DBQuery): boolean {
 // Queries {{{1
 
 export function getAnnotationById(anCol: Collection, anId: string): Promise<anModel.Annotation|null> {
-  return withCollection(
-    anCol => new Promise((resolve, reject) => {
-      const query = { id: anId };
-      anCol.find(query).toArray().then(
-        res => {
-          if (res.length === 0) {
-            resolve(null);
-          } else if (res.length > 1) {
-            logError("Duplicate annotation id: " + anId);
-            reject("Duplicate annotation id: " + anId);
-          } else {
-            resolve(res[0]);
-          }
+  return new Promise((resolve, reject) => {
+    const query = { id: anId };
+    anCol.find(query).toArray().then(
+      res => {
+        if (res.length === 0) {
+          resolve(null);
+        } else if (res.length > 1) {
+          logError("Duplicate annotation id: " + anId);
+          reject("Duplicate annotation id: " + anId);
+        } else {
+          resolve(res[0]);
         }
-      );
-    })
-  );
+      }
+    );
+  });
 }
 
-function findAnnotationsOfTarget(anCol: Collection, id: string, source: string): Promise<Array<anModel.Annotation>> {
-  const query = { "target.id": id, "target.source": source };
+function findAnnotationsOfTarget(anCol: Collection, target: anModel.AnTarget): Promise<Array<anModel.Annotation>> {
+  const query = {
+    "target.id": target.id,
+    "$or": [ { "target.source": target.source }, { "target.selector": target.selector } ]
+  };
   return anCol.find(query).toArray();
 }
 
@@ -121,10 +130,11 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   );
 }
 
-export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.Annotation>> {
+export function getAnnotations(query: qModel.GetQuery): Promise<Array<anModel.Annotation>> {
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
+    ...mkTargetIdFilter(query),
     ...mkTargetSourceFilter(query),
     ...mkValueFilter(query)
   };
@@ -133,7 +143,7 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
   const limitNo = query.limit;
   return withCollection(
     anCol => new Promise((resolve, reject) => {
-      const anlPm = 
+      const anlPm =
         skipNo && limitNo ?
           anCol.find(dbQuery).skip(skipNo).limit(limitNo).toArray()
         : skipNo ? anCol.find(dbQuery).skip(skipNo).toArray()
@@ -155,7 +165,7 @@ export function getAnnotations(query: anModel.GetQuery): Promise<Array<anModel.A
 export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.Annotation|null> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
-      findAnnotationsOfTarget(anCol, annotation.target.id, annotation.target.source).then(
+      findAnnotationsOfTarget(anCol, annotation.target).then(
         annotations => {
           const existing = annotations.find((an: anModel.Annotation) => anModel.isEqual(annotation, an));
           if (existing) {
@@ -191,13 +201,13 @@ export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.A
 
 export function updateAnnotation(anId: string, changes: Partial<anModel.Annotation>): Promise<number> {
   return withCollection(
-    anCol => new Promise((resolve, reject) => 
+    anCol => new Promise((resolve, reject) =>
        getAnnotationById(anCol, anId).then(
          annotation => {
            if (annotation) {
              const updatedAn = {...annotation, ...changes};
              getAnnotationsForTag(anModel.getLabel(updatedAn)).then(
-               sameTagAns => { 
+               sameTagAns => {
                  const existing = sameTagAns.find((an: anModel.Annotation) => annotation.id !== an.id && anModel.isEqual(updatedAn, an));
                  if (existing) {
                    reject("Same annotation would exist");
@@ -306,13 +316,13 @@ function mkExprDBQuery(sExpr: Sexpr): DBQuery {
 }
 
 async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
-  
+
   function mkMultiAndExpr(tags: Array<string>): Sexpr {
     if (tags.length === 0) { throw new Error("empty tags array"); }
     return (
       tags.length === 1 ?
         ({ type: SearchType.SEMANTIC, value: tags[0] } as TagExpr)
-      : ({ 
+      : ({
         operator: BiOperatorType.OR,
         lexpr: mkMultiAndExpr([tags[0]]),
         rexpr: mkMultiAndExpr(_.tail(tags))
@@ -349,7 +359,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     const expr1 = sExpr as TagExpr;
     return expandSynonymsToExpr(expr1);
   } else {
-    throw new Error("unexpected Expression type"); 
+    throw new Error("unexpected Expression type");
     return Promise.resolve(sExpr);
   }
 }

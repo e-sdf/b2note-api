@@ -5,6 +5,7 @@ import type { UserProfile } from "../core/user";
 import config from "../config";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
+import * as qModel from "../core/queryModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
 import * as user from "../core/user";
@@ -62,7 +63,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
     if (errors) {
       responses.reqErr(resp, errors);
     } else {
-      const query3 = query2 as anModel.GetQuery;
+      const query3 = query2 as qModel.GetQuery;
       db.getAnnotations(query3).then(
         anlRecs => {
           const anl = anlRecs.map(urlize);
@@ -205,7 +206,7 @@ router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
   if (errors) {
     responses.reqErr(resp, errors);
   } else {
-    const query = req.query as unknown as anModel.TargetsQuery;
+    const query = req.query as unknown as qModel.TargetsQuery;
     db.getAnnotationsForTag(query.tag).then(
       annotations => responses.ok(resp, annotations.map(a => a.target)),
       error => responses.serverErr(resp, error)
