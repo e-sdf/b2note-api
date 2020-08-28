@@ -1,19 +1,19 @@
 import Ajv from "ajv";
-import { getQuerySchema } from "../core/getQuery.schema";
+import { getAnQuerySchema } from "../core/getAnQuery.schema";
 import { annotationSchema } from "../core/annotation.schema";
 import { annotationOptSchema } from "../core/annotation.opt.schema";
-import { targetsQuerySchema } from "../core/targetsQuery.schema";
+import { anTargetsQuerySchema } from "../core/anTargetsQuery.schema";
 
 type Item = Record<string, any>;
 
 const ajv = new Ajv();
-ajv.addSchema(getQuerySchema);
+ajv.addSchema(getAnQuerySchema);
 ajv.addSchema(annotationSchema);
 ajv.addSchema(annotationOptSchema);
-ajv.addSchema(targetsQuerySchema);
+ajv.addSchema(anTargetsQuerySchema);
 
-export function validateGetQuery(query: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("getQuery#/definitions/GetQuery", query);
+export function validateGetAnQuery(anQuery: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("getQuery#/definitions/GetAnQuery", anQuery);
   return ajv.errors;
 }
 
@@ -27,7 +27,7 @@ export function validateAnnotationOpt(annotation: Item): Array<Ajv.ErrorObject> 
   return ajv.errors;
 }
 
-export function validateTargetsQuery(query: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("targetsQuery#/definitions/TargetsQuery", query);
+export function validateAnTargetsQuery(anQuery: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("anTargetsQuery#/definitions/AnTargetsQuery", anQuery);
   return ajv.errors;
 }

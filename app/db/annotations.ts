@@ -5,7 +5,7 @@ import * as dbClient from "./client";
 import type { DBQuery } from "./client";
 import config from "../config";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/queryModel";
+import * as qModel from "../core/anQueryModel";
 import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
@@ -23,7 +23,7 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 // Filters {{{1
 
-function mkTypeFilter(query: qModel.GetQuery): DBQuery {
+function mkTypeFilter(query: qModel.GetAnQuery): DBQuery {
   const semanticFilter = query["type"]?.includes(anModel.AnnotationType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
@@ -41,25 +41,25 @@ function mkTypeFilter(query: qModel.GetQuery): DBQuery {
   return filter;
 }
 
-function mkCreatorFilter(query: qModel.GetQuery): DBQuery {
+function mkCreatorFilter(query: qModel.GetAnQuery): DBQuery {
   return query.creator ? { "creator.id": query.creator } : {};
 }
 
-function mkTargetIdFilter(query: qModel.GetQuery): DBQuery {
+function mkTargetIdFilter(query: qModel.GetAnQuery): DBQuery {
   const ff = query["target-id"];
   return (
     ff ? { "target.id": ff } : { }
   );
 }
 
-function mkTargetSourceFilter(query: qModel.GetQuery): DBQuery {
+function mkTargetSourceFilter(query: qModel.GetAnQuery): DBQuery {
   const ff = query["target-source"];
   return (
     ff ? { "target.source": ff } : { }
   );
 }
 
-function mkValueFilter(query: qModel.GetQuery): DBQuery {
+function mkValueFilter(query: qModel.GetAnQuery): DBQuery {
   return query.value ? { "$or": [
     { "body.value": query.value }, // keyword and comment
     { "body.items": { "$elemMatch": { value: query.value } } } // semantic
@@ -130,7 +130,7 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   );
 }
 
-export function getAnnotations(query: qModel.GetQuery): Promise<Array<anModel.Annotation>> {
+export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
   const filter = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),

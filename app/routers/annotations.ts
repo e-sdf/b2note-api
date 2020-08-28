@@ -5,7 +5,7 @@ import type { UserProfile } from "../core/user";
 import config from "../config";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/queryModel";
+import * as qModel from "../core/anQueryModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
 import * as user from "../core/user";
@@ -14,30 +14,13 @@ import * as responses from "../responses";
 import * as db from "../db/annotations";
 import * as rdf from "../core/export/rdf";
 import * as ttl from "../core/export/turtle";
+import * as formats from "../core/formats";
+import * as utils from "../core/utils";
 import { resolveSourceFilenameFromHandle } from "../utils";
 
 const router = Router();
 
-interface AnResponse {
-  _updated: string;
-  _created: string;
-  _id: string;
-  _links: {
-    self: {
-      title: string;
-      href: string;
-    };
-  };
-  _status: string;
-}
-
 // Utils {{{1
-
-function setDownloadHeader(resp: Response, fname: string, format: anModel.Format): void {
-  const ext = anModel.mkFileExt(format);
-  resp.setHeader("Content-Disposition", "attachment");
-  resp.setHeader("filename", fname + "." + ext);
-}
 
 function urlize(an: anModel.Annotation): anModel.Annotation {
   return {
@@ -59,23 +42,23 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
       ... req.query,
       download: req.query.download ? JSON.parse(req.query.download as string) : false,
     };
-    const errors = validator.validateGetQuery(query2);
+    const errors = validator.validateGetAnQuery(query2);
     if (errors) {
       responses.reqErr(resp, errors);
     } else {
-      const query3 = query2 as qModel.GetQuery;
+      const query3 = query2 as qModel.GetAnQuery;
       db.getAnnotations(query3).then(
         anlRecs => {
           const anl = anlRecs.map(urlize);
-          const format = query3.format || anModel.Format.JSONLD;
+          const format = query3.format || formats.FormatType.JSONLD;
           if (query3.download) {
-            setDownloadHeader(resp, "annotations_" + anModel.mkTimestamp(), format);
+            formats.setDownloadHeader(resp, "annotations_" + utils.mkTimestamp(), format);
           }
-          if (format === anModel.Format.JSONLD) {
+          if (format === formats.FormatType.JSONLD) {
             responses.jsonld(resp, anl);
-          } else if (query3.format === anModel.Format.RDF) {
+          } else if (query3.format === formats.FormatType.RDF) {
             responses.xml(resp, rdf.mkRDF(anl, config.domainUrl));
-          } else if (query3.format === anModel.Format.TTL) {
+          } else if (query3.format === formats.FormatType.TTL) {
             responses.xml(resp, ttl.annotations2ttl(anl, config.domainUrl));
           } else {
             throw new Error("Unknown download format");
@@ -202,11 +185,11 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
 
 // Get targets for a certain tag {{{2
 router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
-  const errors = validator.validateTargetsQuery(req.query);
+  const errors = validator.validateAnTargetsQuery(req.query);
   if (errors) {
     responses.reqErr(resp, errors);
   } else {
-    const query = req.query as unknown as qModel.TargetsQuery;
+    const query = req.query as unknown as qModel.AnTargetsQuery;
     db.getAnnotationsForTag(query.tag).then(
       annotations => responses.ok(resp, annotations.map(a => a.target)),
       error => responses.serverErr(resp, error)
