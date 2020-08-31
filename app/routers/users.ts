@@ -8,6 +8,8 @@ import * as responses from "../responses";
 import * as validator from "../validators/profile";
 import * as dbUsers from "../db/users";
 
+console.log("Initialising users router...");
+
 const router = Router();
 
 // Get profile
@@ -24,7 +26,7 @@ router.get(user.usersUrl, passport.authenticate("bearer", { session: false }),
 
 // Edit profile
 router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
-  const errors = validator.validateUserProfileOpt(req.body);
+  const errors = validator.validateUserProfilePartial(req.body);
   if (errors) {
     responses.reqErr(resp, errors);
   } else {
@@ -39,7 +41,7 @@ router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }),
       const userRecord = req.user as UserProfile;
       dbUsers.updateUserProfile(userRecord.email, changes).then(
         modified => {
-          if (modified > 0) { // operation successful 
+          if (modified > 0) { // operation successful
             dbUsers.getUserProfileByEmail(userRecord.email)
             .then(mbNewProfile => {
               if (mbNewProfile) {
@@ -58,5 +60,7 @@ router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }),
     }
   }
 });
+
+console.log("Users router initialised.");
 
 export default router;

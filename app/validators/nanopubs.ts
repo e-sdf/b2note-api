@@ -1,12 +1,12 @@
 import Ajv from "ajv";
 import { nanopubSchema } from "../core/nanopub.schema";
-import { nanopubOptSchema } from "../core/nanopub.opt.schema";
+import { nanopubPartialSchema } from "../core/nanopub.partial.schema";
 
 type Item = Record<string, any>;
 
 const ajv = new Ajv();
 ajv.addSchema(nanopubSchema);
-ajv.addSchema(nanopubOptSchema);
+ajv.addSchema(nanopubPartialSchema);
 
 export function validateGetNpQuery(npQuery: Item): Array<Ajv.ErrorObject> | null | undefined {
   ajv.validate("getNpQuery#/definitions/GetNpQuery", npQuery);
@@ -18,7 +18,7 @@ export function validateNanopub(nanopub: Item): Array<Ajv.ErrorObject> | null | 
   return ajv.errors;
 }
 
-export function validateNanopubOpt(nanopub: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("nanopubOpt#/definitions/Nanopub", nanopub);
+export function validateNanopubPartial(nanopub: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("nanopubPartial#/definitions/NanopubPartial", nanopub);
   return ajv.errors;
 }

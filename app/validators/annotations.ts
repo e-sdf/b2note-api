@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import { getAnQuerySchema } from "../core/getAnQuery.schema";
 import { annotationSchema } from "../core/annotation.schema";
-import { annotationOptSchema } from "../core/annotation.opt.schema";
+import { annotationPartialSchema } from "../core/annotation.partial.schema";
 import { anTargetsQuerySchema } from "../core/anTargetsQuery.schema";
 
 type Item = Record<string, any>;
@@ -9,11 +9,11 @@ type Item = Record<string, any>;
 const ajv = new Ajv();
 ajv.addSchema(getAnQuerySchema);
 ajv.addSchema(annotationSchema);
-ajv.addSchema(annotationOptSchema);
+ajv.addSchema(annotationPartialSchema);
 ajv.addSchema(anTargetsQuerySchema);
 
 export function validateGetAnQuery(anQuery: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("getQuery#/definitions/GetAnQuery", anQuery);
+  ajv.validate("getAnQuery#/definitions/GetAnQuery", anQuery);
   return ajv.errors;
 }
 
@@ -22,8 +22,8 @@ export function validateAnnotation(annotation: Item): Array<Ajv.ErrorObject> | n
   return ajv.errors;
 }
 
-export function validateAnnotationOpt(annotation: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("annotationOpt#/definitions/Annotation", annotation);
+export function validateAnnotationPartial(annotation: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("annotationPartial#/definitions/AnnotationPartial", annotation);
   return ajv.errors;
 }
 

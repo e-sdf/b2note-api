@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { logError } from "./logging";
+import * as formats from "./core/formats";
 
 export interface RestError {
   error: string;
@@ -116,4 +117,10 @@ export function windowWithMessage(resp: Response, msg: string): void {
       </script>
     </html>
   `);
+}
+
+export function setDownloadHeader(resp: Response, fname: string, format: formats.FormatType): void {
+  const ext = formats.mkFileExt(format);
+  resp.setHeader("Content-Disposition", "attachment");
+  resp.setHeader("filename", fname + "." + ext);
 }

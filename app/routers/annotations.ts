@@ -18,6 +18,8 @@ import * as formats from "../core/formats";
 import * as utils from "../core/utils";
 import { resolveSourceFilenameFromHandle } from "../utils";
 
+console.log("Initialising annotations router...");
+
 const router = Router();
 
 // Utils {{{1
@@ -37,12 +39,16 @@ function urlize(an: anModel.Annotation): anModel.Annotation {
 
 // Get list of annotations {{{2
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
+  let query2 = null;
   try {
-    const query2 = {
+    query2 = {
       ... req.query,
       download: req.query.download ? JSON.parse(req.query.download as string) : false,
     };
+  } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download must be boolean"); }
+  if (query2) {
     const errors = validator.validateGetAnQuery(query2);
+    console.log(errors);
     if (errors) {
       responses.reqErr(resp, errors);
     } else {
@@ -52,7 +58,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
           const anl = anlRecs.map(urlize);
           const format = query3.format || formats.FormatType.JSONLD;
           if (query3.download) {
-            formats.setDownloadHeader(resp, "annotations_" + utils.mkTimestamp(), format);
+            responses.setDownloadHeader(resp, "annotations_" + utils.mkTimestamp(), format);
           }
           if (format === formats.FormatType.JSONLD) {
             responses.jsonld(resp, anl);
@@ -67,7 +73,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
         error => responses.serverErr(resp, error, true)
       );
     }
-  } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download parameter is expected to be boolean"); }
+  }
 });
 
 // Get annotation {{{2
@@ -80,86 +86,83 @@ router.get(anModel.annotationsUrl + "/:id", (req: Request, resp: Response) => {
 });
 
 // Create a new annotation {{{2
-router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: false }),
-  (req: Request, resp: Response) => {
-    const errors = validator.validateAnnotation(req.body);
-    if (errors) {
-      responses.reqErr(resp, errors);
+router.post(anModel.annotationsUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const errors = validator.validateAnnotation(req.body);
+  if (errors) {
+    responses.reqErr(resp, errors);
+  } else {
+    const annotation = req.body as anModel.Annotation;
+    if (annotation.creator.id !== (req.user as UserProfile).id) {
+      responses.forbidden(resp, "Creator id does not match the logged user");
     } else {
-      const annotation = req.body as anModel.Annotation;
-      if (annotation.creator.id !== (req.user as UserProfile).id) {
-        responses.forbidden(resp, "Creator id does not match the logged user");
-      } else {
-        db.addAnnotation(annotation).then(
-          newAn => {
-            if (newAn) { // annotation saved
-              responses.created(resp, newAn.id, newAn);
-            } else { // annotation already exists
-              responses.forbidden(resp, "Annotation already exists");
-            }
+      db.addAnnotation(annotation).then(
+        newAn => {
+          if (newAn) { // annotation saved
+            responses.created(resp, newAn.id, newAn);
+          } else { // annotation already exists
+            responses.forbidden(resp, "Annotation already exists");
           }
-        ).catch(
-          err => responses.serverErr(resp, err)
-        );
-      }
-    }
-  });
-
-// Update an annotation {{{2
-router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
-  (req: Request, resp: Response) => {
-    const anId = req.params.id;
-    const errors = validator.validateAnnotationOpt(req.body);
-    if (errors) {
-      responses.reqErr(resp, errors);
-    } else {
-      const changes = req.body as Partial<anModel.Annotation>;
-      db.getAnnotation(anId).then(
-        anr => {
-          if (anr) {
-            if (anr.creator.id === (req.user as UserProfile).id) {
-              db.updateAnnotation(anId, changes)
-              .then(
-                () => db.getAnnotation(anId).then(
-                  anr2 => {
-                    if (anr2) {
-                      responses.jsonld(resp, urlize(anr2));
-                    } else {
-                      responses.notFound(resp, `Annotation with id=${anId} not found`);
-                    }
-                  },
-                  error => responses.serverErr(resp, error)
-              ),
-              error => responses.forbidden(resp, error)
-              ).catch(err => responses.serverErr(resp, err));
-            } else {
-              responses.forbidden(resp, "Annotation creator does not match");
-            }
-          } else {
-            responses.notFound(resp, `Annotation with id=${anId} not found`);
-          }
-        },
-        error => responses.serverErr(resp, error)
+        }
+      ).catch(
+      err => responses.serverErr(resp, err)
       );
     }
-  });
+  }
+});
 
-// Delete an annotation {{{2
-router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }),
-  (req: Request, resp: Response) => {
-    const anId = req.params.id;
+// Update an annotation {{{2
+router.patch(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const anId = req.params.id;
+  const errors = validator.validateAnnotationPartial(req.body);
+  if (errors) {
+    responses.reqErr(resp, errors);
+  } else {
+    const changes = req.body as Partial<anModel.Annotation>;
     db.getAnnotation(anId).then(
-      anr =>
-        anr ?
-          anr.creator.id === (req.user as UserProfile).id ?
-            db.deleteAnnotation(anId)
-            .then(() => responses.ok(resp))
-            .catch(err => responses.serverErr(resp, err))
-          : responses.forbidden(resp, "Annotation creator does not match")
-        : responses.notFound(resp, `Annotation with id=${anId} not found`),
+      anr => {
+        if (anr) {
+          if (anr.creator.id === (req.user as UserProfile).id) {
+            db.updateAnnotation(anId, changes)
+            .then(
+              () => db.getAnnotation(anId).then(
+                anr2 => {
+                  if (anr2) {
+                    responses.jsonld(resp, urlize(anr2));
+                  } else {
+                    responses.notFound(resp, `Annotation with id=${anId} not found`);
+                  }
+                },
+                error => responses.serverErr(resp, error)
+              ),
+              error => responses.forbidden(resp, error)
+            ).catch(err => responses.serverErr(resp, err));
+          } else {
+            responses.forbidden(resp, "Annotation creator does not match");
+          }
+        } else {
+          responses.notFound(resp, `Annotation with id=${anId} not found`);
+        }
+      },
       error => responses.serverErr(resp, error)
     );
-  });
+  }
+});
+
+// Delete an annotation {{{2
+router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const anId = req.params.id;
+  db.getAnnotation(anId).then(
+    anr =>
+      anr ?
+      anr.creator.id === (req.user as UserProfile).id ?
+      db.deleteAnnotation(anId)
+    .then(() => responses.ok(resp))
+    .catch(err => responses.serverErr(resp, err))
+      : responses.forbidden(resp, "Annotation creator does not match")
+        : responses.notFound(resp, `Annotation with id=${anId} not found`),
+        error => responses.serverErr(resp, error)
+  );
+});
 
 // Search annotations {{{2
 router.get(sModel.searchUrl, (req: Request, resp: Response) => {
@@ -211,5 +214,7 @@ router.get(anModel.resolveSourceUrl, (req: Request, resp: Response) => {
     );
   }
 });
+
+console.log("Annotations router initialised.");
 
 export default router;

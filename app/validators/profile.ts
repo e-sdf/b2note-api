@@ -1,12 +1,12 @@
 import Ajv from "ajv";
-import { userProfileOptSchema } from "../core/userProfileOpt.schema";
+import { userProfilePartialSchema } from "../core/userProfile.partial.schema";
 
 type Item = Record<string, any>;
 
 const ajv = new Ajv();
-ajv.addSchema(userProfileOptSchema);
+ajv.addSchema(userProfilePartialSchema);
 
-export function validateUserProfileOpt(query: Item): Array<Ajv.ErrorObject> | null | undefined {
-  ajv.validate("userProfileOpt#/definitions/UserProfile", query);
+export function validateUserProfilePartial(query: Item): Array<Ajv.ErrorObject> | null | undefined {
+  ajv.validate("userProfilePartial#/definitions/UserProfilePartial", query);
   return ajv.errors;
 }
