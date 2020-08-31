@@ -3,13 +3,17 @@
 D="`pwd`/b2note-core/src/core"
 IF="$D/nanopubModel.ts"
 
-S="nanopubModel.schema.js"
+S="nanopub.schema.js"
 F="$D/$S"
-echo "export const nanopubModelSchema = " > "$F"
+echo "Generating $S"
+echo "export const nanopubSchema = " > "$F"
 npx ts-json-schema-generator --tsconfig "`pwd`/tsconfig.json" -p "$IF" -t "Nanopub" >> "$F"
+sed -i '2 a \ \ "$id": "nanopub",' "$F"
 
 # Schema with optional fields for patch validations
-S="nanopub.opt.schema.js"
+S="nanopub.partial.schema.js"
 F="$D/$S"
-echo "export const nanopubOptSchema = " > "$F"
-npx ts-json-schema-generator --tsconfig "`pwd`/tsconfig.json" --additional-properties true -p "$IF" -t "Nanopub" >> "$F"
+echo "Generating $S"
+echo "export const nanopubPartialSchema = " > "$F"
+npx ts-json-schema-generator --tsconfig "`pwd`/tsconfig.json" -p "$IF" -t "NanopubPartial" >> "$F"
+sed -i '2 a \ \ "$id": "nanopubPartial",' "$F"
