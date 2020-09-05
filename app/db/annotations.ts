@@ -36,7 +36,11 @@ function mkTypeFilter(query: qModel.GetAnQuery): DBQuery {
     motivation: anModel.PurposeType.COMMENTING ,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY
   } : {};
-  const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}].filter(i => { return !_.isEmpty(i); });
+  const tripleFilter = query["type"]?.includes(anModel.AnnotationType.TRIPLE) ? {
+    motivation: anModel.PurposeType.TAGGING,
+    "body.type": anModel.AnBodyItemType.SPECIFIC_RESOURCE
+  } : {};
+  const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}, {...tripleFilter}].filter(i => { return !_.isEmpty(i); });
   const filter = { "$or": typeFilters};
   return filter;
 }

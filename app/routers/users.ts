@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
 import type { UserProfile } from "../core/user";
+import { OntologyFormat } from "../core/ontologyRegister";
 import * as user from "../core/user";
 import { ErrorCodes } from "../responses";
 import * as responses from "../responses";
@@ -60,6 +61,28 @@ router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }),
     }
   }
 });
+
+// Upload ontology into profile
+router.post(user.customOntologyUrl, passport.authenticate("bearer", { session: false }),
+  (req: Request, resp: Response) => {
+    if (!req.user) {
+      responses.serverErr(resp, "No user in request", true);
+    }
+    const userRecord = req.user as UserProfile;
+    const url = req.body.url;
+    const format = req.body.format;
+    if (!url) {
+      responses.reqErr(resp, { errors: "Missing URL parameter in body" } );
+    }
+    if (!format) {
+      responses.reqErr(resp, { errors: "Missing format parameter in body" } );
+    }
+    dbUsers.addOntology(userRecord.id, url, format).then(
+        res => responses.ok(resp, JSON.stringify(res)),
+        formatErr => responses.processingErr(resp, formatErr)
+    );
+  }
+);
 
 console.log("Users router initialised.");
 

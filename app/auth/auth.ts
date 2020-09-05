@@ -21,7 +21,7 @@ export enum OIDCkeysEnum {
   authorization_endpoint = "authorization_endpoint",
   token_endpoint = "token_endpoint",
   userinfo_endpoint = "userinfo_endpoint"
-};
+}
 
 export type OIDCconfig = Record<keyof typeof OIDCkeysEnum, string>;
 

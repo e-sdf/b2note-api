@@ -14,6 +14,7 @@ export enum ErrorCodes {
   NO_USER_IN_REQUEST = "NoUserInRequest",
   REQ_FORMAT_ERR = "RequestFormatError",
   SYNTAX_ERR = "RequestParameterSyntaxError",
+  PROCESSING_ERR = "ProcessingError",
   NOT_FOUND = "NotFound"
 }
 
@@ -31,6 +32,10 @@ export function clientErr(resp: Response, code: ErrorCodes, message: string): vo
 
 export function reqErr(resp: Response, errors: Record<any, any>): void {
   clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, JSON.stringify(errors));
+}
+
+export function processingErr(resp: Response, error: string): void {
+  clientErr(resp, ErrorCodes.PROCESSING_ERR, error);
 }
 
 export function syntaxErr(resp: Response, errors: Record<any, any>): void {

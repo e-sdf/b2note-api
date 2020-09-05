@@ -4,7 +4,10 @@ import * as dbClient from "./client";
 import type { OIDUserinfo } from "../auth/auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
+import { OntologyFormat } from "../core/ontologyRegister";
 import { extractId } from "../core/utils";
+import { exec } from "child_process";
+import * as n3 from "n3";
 
 // DB Access {{{1
 
@@ -70,6 +73,53 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
     usersCol => new Promise((resolve, reject) => {
       usersCol.updateOne({ email }, { "$set": userProfileChanges }).then(
         res => resolve(res.matchedCount),
+        err => reject(err)
+      );
+    })
+  );
+}
+
+function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string> {
+  const cmd = `docker run stain/jena riot --syntax=${format} --output=Turtle ${ontUrl}`;
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        reject(error.message);
+      }
+      if (stderr) {
+        reject(stderr);
+      }
+      resolve(stdout);
+    });
+  });
+}
+
+export async function addOntology(userId: string, ontUrl: string, format: OntologyFormat): Promise<number> {
+  return withCollection(
+    usersCol => new Promise((resolve, reject) => {
+      usersCol.findOne({ id: userId }).then(
+        userRec => {
+          convertToTtlPm(ontUrl, format).then(
+            ttl => {
+              const parser = new n3.Parser();
+              const res = parser.parse(ttl);
+              console.log(res);
+              resolve(5);
+            },
+            err => reject(err)
+          );
+            //ontSource,
+            //(error, quad, prefixes) => {
+              //if (error) {
+                //reject(error);
+              //} else {
+                //if (quad)
+                  //console.log(quad);
+                //else
+                  //console.log("# That's all, folks!", prefixes);
+              //}
+            //});
+        },
         err => reject(err)
       );
     })
