@@ -34,11 +34,11 @@ Promise.all(authConfPms).then(
           } else {
             const email = (decoded as JWT).email;
             if (!email) {
-              throw new Error("email not present in the JWT token"); 
+              throw new Error("email not present in the JWT token");
               return done(null, false);
             } else {
               dbUsers.getUserProfileByEmail(email).then(userProfile => {
-                if (!userProfile) { 
+                if (!userProfile) {
                   logError(`JWT verification failed: User with email ${email} does not exist`);
                   return done(null, false);
                 } else {
@@ -66,6 +66,7 @@ Promise.all(authConfPms).then(
     app.set("port", port);
     server.on("listening", onListening);
     server.listen(port);
+
   },
 
   err => logError("Failed receiving an OIDC Configuration Response: " + err)

@@ -8,7 +8,6 @@ import "source-map-support/register";
 import config from "./config";
 import annotationsRouter from "./routers/annotations";
 import usersRouter from "./routers/users";
-
 console.log("Starting webserver at " + __dirname);
 
 const app = express();

@@ -1,13 +1,12 @@
 import { v5 as uuidv5 } from "uuid";
 import config from "../config";
 import * as dbClient from "./client";
+import * as oDb from "./ontologies";
+import * as oi from "../ontologyImport";
 import type { OIDUserinfo } from "../auth/auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
-import { OntologyFormat } from "../core/ontologyRegister";
 import { extractId } from "../core/utils";
-import { exec } from "child_process";
-import * as n3 from "n3";
 
 // DB Access {{{1
 
@@ -79,31 +78,13 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
   );
 }
 
-function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string> {
-  const cmd = `docker run stain/jena riot --syntax=${format} --output=Turtle ${ontUrl}`;
-  return new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        reject(error.message);
-      }
-      if (stderr) {
-        reject(stderr);
-      }
-      resolve(stdout);
-    });
-  });
-}
-
-export async function addOntology(userId: string, ontUrl: string, format: OntologyFormat): Promise<number> {
+export async function addOntology(userId: string, ontUrl: string, format: oi.OntologyFormat): Promise<number> {
   return withCollection(
     usersCol => new Promise((resolve, reject) => {
       usersCol.findOne({ id: userId }).then(
         userRec => {
-          convertToTtlPm(ontUrl, format).then(
-            ttl => {
-              const parser = new n3.Parser();
-              const res = parser.parse(ttl);
-              console.log(res);
+          oDb.addOntology(ontUrl, format).then(
+            ontology => {
               resolve(5);
             },
             err => reject(err)

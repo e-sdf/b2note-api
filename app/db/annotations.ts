@@ -9,8 +9,8 @@ import * as qModel from "../core/anQueryModel";
 import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
-import type { OntologyDict, OntologyInfo } from "../core/ontologyRegister";
-import { getOntologies } from "../core/ontologyRegister";
+import type { OntologyDict, OntologyTerm } from "../core/ontologyRegister";
+import { getOTerms } from "../core/ontologyRegister";
 import { logError } from "../logging";
 
 // Definitions {{{1
@@ -338,10 +338,10 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologiesDict: OntologyDict = await getOntologies(config.solrUrl, tagExpr.value);
+          const ontologiesDict: OntologyDict = await getOTerms(config.solrUrl, tagExpr.value);
           const ontologies = ontologiesDict[tagExpr.value.toLocaleLowerCase()];
           const synonyms = ontologies.reduce(
-            (acc: Array<string>, o: OntologyInfo) => [ ...acc,  ...o.synonyms  ],
+            (acc: Array<string>, o: OntologyTerm) => [ ...acc,  ...o.synonyms  ],
             []
           );
           return mkMultiAndExpr([ tagExpr.value, ...synonyms ]);

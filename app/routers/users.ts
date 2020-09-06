@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
 import type { UserProfile } from "../core/user";
-import { OntologyFormat } from "../core/ontologyRegister";
 import * as user from "../core/user";
 import { ErrorCodes } from "../responses";
 import * as responses from "../responses";
