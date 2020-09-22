@@ -9,7 +9,7 @@ import * as qModel from "../core/anQueryModel";
 import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
-import type { OntologyDict, OntologyTerm } from "../core/ontologyRegister";
+import type { OTermsDict, OntologyTerm } from "../core/ontologyRegister";
 import { getOTerms } from "../core/ontologyRegister";
 import { logError } from "../logging";
 
@@ -24,19 +24,19 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 // Filters {{{1
 
 function mkTypeFilter(query: qModel.GetAnQuery): DBQuery {
-  const semanticFilter = query["type"]?.includes(anModel.AnnotationType.SEMANTIC) ? {
+  const semanticFilter = query["type"]?.includes(anModel.AnBodyType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.COMPOSITE
   } : {};
-  const keywordFilter = query["type"]?.includes(anModel.AnnotationType.KEYWORD) ? {
+  const keywordFilter = query["type"]?.includes(anModel.AnBodyType.KEYWORD) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY
   } : {};
-  const commentFilter = query["type"]?.includes(anModel.AnnotationType.COMMENT) ? {
+  const commentFilter = query["type"]?.includes(anModel.AnBodyType.COMMENT) ? {
     motivation: anModel.PurposeType.COMMENTING ,
     "body.type": anModel.AnBodyItemType.TEXTUAL_BODY
   } : {};
-  const tripleFilter = query["type"]?.includes(anModel.AnnotationType.TRIPLE) ? {
+  const tripleFilter = query["type"]?.includes(anModel.AnBodyType.TRIPLE) ? {
     motivation: anModel.PurposeType.TAGGING,
     "body.type": anModel.AnBodyItemType.SPECIFIC_RESOURCE
   } : {};
@@ -338,7 +338,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologiesDict: OntologyDict = await getOTerms(config.solrUrl, tagExpr.value);
+          const ontologiesDict: OTermsDict = await getOTerms(config.solrUrl, tagExpr.value);
           const ontologies = ontologiesDict[tagExpr.value.toLocaleLowerCase()];
           const synonyms = ontologies.reduce(
             (acc: Array<string>, o: OntologyTerm) => [ ...acc,  ...o.synonyms  ],
