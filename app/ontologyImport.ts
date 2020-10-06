@@ -1,3 +1,4 @@
+import _ from "lodash";
 import * as n3 from "n3";
 import { Store, NamedNode } from "n3";
 import { exec } from "child_process";
@@ -12,12 +13,10 @@ function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string
   return new Promise((resolve, reject) => {
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
-        reject(error.message);
-      }
-      if (stderr) {
         reject(stderr);
+      } else {
+        resolve(stdout);
       }
-      resolve(stdout);
     });
   });
 }
@@ -52,19 +51,26 @@ function getOTermsFromOntology(store: Store): Array<OntologyTerm> {
   const owlThing = new NamedNode("http://www.w3.org/2002/07/owl#Thing");
   const allOTermNodes = getSubClasses(store, owlThing);
   const oTerms = allOTermNodes.map(n => mkOTerm(store, n)).filter(t => t !== null) as Array<OntologyTerm>;
-  return oTerms;
+  const oTermsUniqueSorted = _.sortBy(_.uniqBy(oTerms, "labels"), ["labels"]);
+  return oTermsUniqueSorted;
 }
 
-export function mkOntologyPm(ontUrl: string, format: OntologyFormat): Promise<Ontology> {
+interface OntologyPartial {
+  creatorId: string;
+  uri: string;
+  terms: Array<OntologyTerm>
+}
+
+export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: string): Promise<OntologyPartial> {
   return new Promise((resolve, reject) => {
     convertToTtlPm(ontUrl, format).then(
       ttl => {
-      const parser = new n3.Parser();
-      const quads = parser.parse(ttl);
-      const store = new Store(quads);
-      const ontUri = getOntologyUri(store);
-      const oTerms = getOTermsFromOntology(store);
-      resolve({ uri: ontUri || "<URI not detected>", terms: oTerms });
+        const parser = new n3.Parser();
+        const quads = parser.parse(ttl);
+        const store = new Store(quads);
+        const ontUri = getOntologyUri(store);
+        const oTerms = getOTermsFromOntology(store);
+        resolve({ creatorId, uri: ontUri || ontUrl, terms: oTerms });
       },
       err => reject(err)
     );

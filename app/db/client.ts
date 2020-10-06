@@ -1,4 +1,5 @@
-import { MongoClient, Collection } from "mongodb";
+import type { Collection } from "mongodb";
+import { MongoClient } from "mongodb";
 import config from "../config";
 
 export type DBQuery = Record<string, any>;

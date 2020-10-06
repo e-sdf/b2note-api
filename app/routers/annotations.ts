@@ -154,13 +154,13 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
   db.getAnnotation(anId).then(
     anr =>
       anr ?
-      anr.creator.id === (req.user as UserProfile).id ?
-      db.deleteAnnotation(anId)
-    .then(() => responses.ok(resp))
-    .catch(err => responses.serverErr(resp, err))
-      : responses.forbidden(resp, "Annotation creator does not match")
-        : responses.notFound(resp, `Annotation with id=${anId} not found`),
-        error => responses.serverErr(resp, error)
+        anr.creator.id === (req.user as UserProfile).id ?
+          db.deleteAnnotation(anId)
+          .then(() => responses.ok(resp))
+          .catch(err => responses.serverErr(resp, err))
+        : responses.forbidden(resp, "Annotation creator does not match")
+      : responses.notFound(resp, `Annotation with id=${anId} not found`),
+    error => responses.serverErr(resp, error)
   );
 });
 

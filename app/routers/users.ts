@@ -13,8 +13,7 @@ console.log("Initialising users router...");
 const router = Router();
 
 // Get profile
-router.get(user.usersUrl, passport.authenticate("bearer", { session: false }),
-  (req: Request, resp: Response) => {
+router.get(user.usersUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
     if (!req.user) {
       responses.serverErr(resp, "No user in request", true);
     } else {
@@ -60,29 +59,55 @@ router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }),
     }
   }
 });
+-
+router.get(user.customOntologyUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  if (!req.user) {
+    responses.serverErr(resp, "No user in request", true);
+  } else {
+    const user = req.user as UserProfile;
+    dbUsers.getOntologiesOfUser(user.id).then(
+      ontologies => responses.ok(resp, ontologies)
+    );
+  }
+});
 
-// Upload ontology into profile
-router.post(user.customOntologyUrl, passport.authenticate("bearer", { session: false }),
-  (req: Request, resp: Response) => {
+// Add ontology for user
+router.post(user.customOntologyUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
     if (!req.user) {
       responses.serverErr(resp, "No user in request", true);
+    } else {
+      const userRecord = req.user as UserProfile;
+      const ontId = req.body.ontologyId;
+      if (!ontId) {
+        responses.reqErr(resp, { errors: "Missing ontologyId in request body" } );
+      } else {
+        dbUsers.addCustomOntology(userRecord.id, ontId).then(
+            () => responses.ok(resp),
+            err => responses.notFound(resp, err)
+        );
+      }
     }
-    const userRecord = req.user as UserProfile;
-    const url = req.body.url;
-    const format = req.body.format;
-    if (!url) {
-      responses.reqErr(resp, { errors: "Missing URL parameter in body" } );
-    }
-    if (!format) {
-      responses.reqErr(resp, { errors: "Missing format parameter in body" } );
-    }
-    dbUsers.addOntology(userRecord.id, url, format).then(
-        res => responses.ok(resp, JSON.stringify(res)),
-        formatErr => responses.processingErr(resp, formatErr)
-    );
   }
 );
 
+// remove ontology of user
+router.delete(user.customOntologyUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+    if (!req.user) {
+      responses.serverErr(resp, "No user in request", true);
+    } else {
+      const userRecord = req.user as UserProfile;
+      const ontId = req.params.id;
+      if (!ontId) {
+        responses.reqErr(resp, { errors: "Missing ontologyId in request URL" } );
+      } else {
+        dbUsers.deleteCustomOntology(userRecord.id, ontId).then(
+            () => responses.ok(resp),
+            err => responses.notFound(resp, err)
+        );
+      }
+    }
+  }
+);
 console.log("Users router initialised.");
 
 export default router;

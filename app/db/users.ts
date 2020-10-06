@@ -1,11 +1,11 @@
 import { v5 as uuidv5 } from "uuid";
 import config from "../config";
 import * as dbClient from "./client";
-import * as oDb from "./ontologies";
-import * as oi from "../ontologyImport";
 import type { OIDUserinfo } from "../auth/auth";
 import type { UserProfile } from "../core/user";
 import { Experience } from "../core/user";
+import type { Ontology } from  "../core/ontologyRegister";
+import * as oDb from "./ontologyRegister";
 import { extractId } from "../core/utils";
 
 // DB Access {{{1
@@ -22,12 +22,17 @@ function mkId(email: string): string {
 
 // User queries {{{1
 
+export function getUserProfileById(id: string): Promise<UserProfile|null> {
+  return withCollection(
+    usersCol => usersCol.findOne({ id })
+  );
+}
+
 export function getUserProfileByEmail(email: string): Promise<UserProfile|null> {
   return withCollection(
     usersCol => usersCol.findOne({ "email": email })
   );
 }
-
 
 export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<UserProfile> {
   return withCollection(
@@ -78,31 +83,35 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
   );
 }
 
-export async function addOntology(userId: string, ontUrl: string, format: oi.OntologyFormat): Promise<number> {
-  return withCollection(
-    usersCol => new Promise((resolve, reject) => {
-      usersCol.findOne({ id: userId }).then(
-        userRec => {
-          oDb.addOntology(ontUrl, format).then(
-            ontology => {
-              resolve(5);
-            },
-            err => reject(err)
-          );
-            //ontSource,
-            //(error, quad, prefixes) => {
-              //if (error) {
-                //reject(error);
-              //} else {
-                //if (quad)
-                  //console.log(quad);
-                //else
-                  //console.log("# That's all, folks!", prefixes);
-              //}
-            //});
-        },
+export function getOntologiesOfUser(userId: string): Promise<Array<Ontology>> {
+  return new Promise((resolve, reject) =>
+    oDb.getOntologiesRecords().then(
+      records => resolve(records.filter(rec => rec.userIds.includes(userId)).map(oDb.record2ontology)),
+      err => reject(err)
+    )
+  );
+}
+
+export function addCustomOntology(userId: string, ontId: string): Promise<void> {
+  return new Promise((resolve, reject) => 
+    getUserProfileById(userId).then(
+      user => oDb.addUserOfOntology(ontId, userId).then(
+        () => resolve(),
         err => reject(err)
-      );
-    })
+      ),
+      err => reject(err)
+    )
+  );
+}
+
+export function deleteCustomOntology(userId: string, ontId: string): Promise<void> {
+  return new Promise((resolve, reject) => 
+    getUserProfileById(userId).then(
+      user => oDb.removeUserOfOntology(ontId, userId).then(
+        () => resolve(),
+        err => reject(err)
+      ),
+      err => reject(err)
+    )
   );
 }

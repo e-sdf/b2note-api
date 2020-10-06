@@ -2,6 +2,8 @@ import { Response } from "express";
 import { logError } from "./logging";
 import * as formats from "./core/formats";
 
+// Errors {{{1
+
 export interface RestError {
   error: string;
   message: string;
@@ -51,7 +53,24 @@ export function serverErr(resp: Response, logMsg: string, fatal = false): void {
   resp.json(mkErr(ErrorCodes.SERVER_ERR, "Internal server error"));
 }
 
-export function ok(resp: Response, result?: object|string): void {
+export function notAuthorized(resp: Response, message: string): void {
+  resp.status(401);
+  resp.json(mkErr(ErrorCodes.NOT_AUTHORIZED, message));
+}
+
+export function forbidden(resp: Response, message: string): void {
+  resp.status(403);
+  resp.json(mkErr(ErrorCodes.FORBIDDEN, message));
+}
+
+export function notFound(resp: Response, message: string): void {
+  resp.status(404);
+  resp.json(mkErr(ErrorCodes.NOT_FOUND, message));
+}
+
+// OK responses {{{1
+
+export function ok(resp: Response, result?: Record<string, any>|string): void {
   resp.status(200);
   if (result) {
     if (typeof result === "string") {
@@ -88,21 +107,6 @@ export function created(resp: Response, location: string, result: object): void 
   resp.setHeader("Location", location);
   resp.setHeader("Access-Control-Expose-Headers", "Location, profile");
   resp.json(result);
-}
-
-export function notAuthorized(resp: Response, message: string): void {
-  resp.status(401);
-  resp.json(mkErr(ErrorCodes.NOT_AUTHORIZED, message));
-}
-
-export function forbidden(resp: Response, message: string): void {
-  resp.status(403);
-  resp.json(mkErr(ErrorCodes.FORBIDDEN, message));
-}
-
-export function notFound(resp: Response, message: string): void {
-  resp.status(404);
-  resp.json(mkErr(ErrorCodes.NOT_FOUND, message));
 }
 
 export function windowWithMessage(resp: Response, msg: string): void {

@@ -6,12 +6,12 @@ import type { DBQuery } from "./client";
 import config from "../config";
 import * as anModel from "../core/annotationsModel";
 import * as qModel from "../core/anQueryModel";
-import { genUuid } from "./uuid";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
 import type { OTermsDict, OntologyTerm } from "../core/ontologyRegister";
 import { getOTerms } from "../core/ontologyRegister";
 import { logError } from "../logging";
+import { addItem, deleteItem } from "./utils";
 
 // Definitions {{{1
 
@@ -179,22 +179,9 @@ export function addAnnotation(annotation: anModel.Annotation): Promise<anModel.A
               ...annotation,
               visibility: annotation.visibility || anModel.VisibilityEnum.PRIVATE
             };
-            anCol.insertOne(anRecord).then(
-              res => {
-                const newId = res.insertedId as string;
-                genUuid().then(
-                  uuid => {
-                    anCol.findOneAndUpdate(
-                      { _id: newId },
-                      { "$set": { id: uuid } },
-                      { returnOriginal: false }
-                    ).then(
-                      newAn => resolve(newAn.value),
-                      err => reject(err)
-                    );
-                  }
-                );
-              }
+            addItem(anCol, anRecord).then(
+              newAn => resolve(newAn),
+              err => reject(err)
             );
           }
         }
@@ -235,12 +222,7 @@ export function updateAnnotation(anId: string, changes: Partial<anModel.Annotati
 
 export function deleteAnnotation(anId: string): Promise<number> {
   return withCollection(
-    anCol => new Promise((resolve) => {
-      anCol.deleteOne({ id: anId }).then(
-        res => resolve(res.result.n || 0),
-        err => resolve(0)
-      );
-    })
+    anCol => deleteItem(anCol, anId)
   );
 }
 

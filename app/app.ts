@@ -7,6 +7,7 @@ import logger from "morgan";
 import "source-map-support/register";
 import config from "./config";
 import annotationsRouter from "./routers/annotations";
+import ontologyRegisterRouter from "./routers/ontologyRegister";
 import usersRouter from "./routers/users";
 console.log("Starting webserver at " + __dirname);
 
@@ -48,6 +49,7 @@ const publicDir = path.join(__dirname, "public/");
 
 app.use(config.serverPath, express.static(publicDir + "openapi3.json"));
 app.use(config.serverPath, annotationsRouter);
+app.use(config.serverPath, ontologyRegisterRouter);
 app.use(config.serverPath, usersRouter);
 
 export default app;

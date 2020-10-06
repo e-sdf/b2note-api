@@ -32,6 +32,7 @@
     "@typescript-eslint/parser": "^4.2.0",
     "api-spec-converter": "^2.11.2",
     "eslint": "^7.9.0",
+    "immutability-helper": "^3.1.1",
     "ts-json-schema-generator": "^0.74.0",
     "ts-node": "^9.0.0",
     "ttypescript": "^1.5.12",
