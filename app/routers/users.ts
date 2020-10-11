@@ -59,7 +59,8 @@ router.patch(user.usersUrl, passport.authenticate("bearer", { session: false }),
     }
   }
 });
--
+
+// Get custom ontologies
 router.get(user.customOntologyUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   if (!req.user) {
     responses.serverErr(resp, "No user in request", true);

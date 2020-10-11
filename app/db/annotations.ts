@@ -3,13 +3,12 @@ import { matchSwitch } from "@babakness/exhaustive-type-checking";
 import type { Collection } from "mongodb";
 import * as dbClient from "./client";
 import type { DBQuery } from "./client";
-import config from "../config";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/anQueryModel";
+import * as qModel from "../core/queryModels/anQueryModel";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
 import type { OTermsDict, OntologyTerm } from "../core/ontologyRegister";
-import { getOTerms } from "../core/ontologyRegister";
+import { getOTerm } from "./ontologyRegister";
 import { logError } from "../logging";
 import { addItem, deleteItem } from "./utils";
 
@@ -320,7 +319,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
     return (
       tagExpr.synonymsFlag ?
         (async () => {
-          const ontologiesDict: OTermsDict = await getOTerms(config.solrUrl, tagExpr.value);
+          const ontologiesDict: OTermsDict = await getOTerm(tagExpr.value);
           const ontologies = ontologiesDict[tagExpr.value.toLocaleLowerCase()];
           const synonyms = ontologies.reduce(
             (acc: Array<string>, o: OntologyTerm) => [ ...acc,  ...o.synonyms  ],

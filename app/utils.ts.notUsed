@@ -3,10 +3,10 @@
 
 import axios from "axios";
 import { axiosErrToMsg } from "./core/utils";
-import type { HandleResp } from "./core/handleModel";
+import type { HandleResp } from "./core/handleModel.ts.notUsed";
 
 import Ajv from "ajv";
-import { handleRespSchema } from "./core/handleModel.schema";
+import { handleRespSchema } from "./core/schemas/handleModel.schema";
 const ajv = new Ajv();
 ajv.addSchema(handleRespSchema);
 

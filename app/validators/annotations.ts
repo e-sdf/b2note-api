@@ -1,8 +1,8 @@
 import Ajv from "ajv";
-import { getAnQuerySchema } from "../core/getAnQuery.schema";
-import { annotationSchema } from "../core/annotation.schema";
-import { annotationPartialSchema } from "../core/annotation.partial.schema";
-import { anTargetsQuerySchema } from "../core/anTargetsQuery.schema";
+import { getAnQuerySchema } from "../core/schemas/getAnQuery.schema";
+import { annotationSchema } from "../core/schemas/annotation.schema";
+import { annotationPartialSchema } from "../core/schemas/annotationPartial.schema";
+import { anTargetsQuerySchema } from "../core/schemas/anTargetsQuery.schema";
 
 type Item = Record<string, any>;
 

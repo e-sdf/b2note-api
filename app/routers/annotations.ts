@@ -5,7 +5,7 @@ import type { UserProfile } from "../core/user";
 import config from "../config";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/anQueryModel";
+import * as qModel from "../core/queryModels/anQueryModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
 import * as user from "../core/user";
@@ -16,7 +16,7 @@ import * as rdf from "../core/export/rdf";
 import * as ttl from "../core/export/turtle";
 import * as formats from "../core/formats";
 import * as utils from "../core/utils";
-import { resolveSourceFilenameFromHandle } from "../utils";
+// import { resolveSourceFilenameFromHandle } from "../utils.ts";
 
 console.log("Initialising annotations router...");
 
@@ -203,17 +203,17 @@ router.get(anModel.targetsUrl, (req: Request, resp: Response) => {
 // Resolve source filename
 // Prepared here for future use once the Target structure is changed to resolvable handles:
 // https://esciencedatalab.atlassian.net/browse/B2NT-137
-router.get(anModel.resolveSourceUrl, (req: Request, resp: Response) => {
-  const handleUrl = req.query.handleUrl as string;
-  if (!handleUrl) {
-    responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Missing handlerUrl parameter");
-  } else {
-    resolveSourceFilenameFromHandle(handleUrl).then(
-      res => responses.ok(resp, res),
-      err => responses.serverErr(resp, "Failed resolving handleUrl: " + err)
-    );
-  }
-});
+// router.get(anModel.resolveSourceUrl, (req: Request, resp: Response) => {
+//   const handleUrl = req.query.handleUrl as string;
+//   if (!handleUrl) {
+//     responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Missing handlerUrl parameter");
+//   } else {
+//     resolveSourceFilenameFromHandle(handleUrl).then(
+//       res => responses.ok(resp, res),
+//       err => responses.serverErr(resp, "Failed resolving handleUrl: " + err)
+//     );
+//   }
+// });
 
 console.log("Annotations router initialised.");
 

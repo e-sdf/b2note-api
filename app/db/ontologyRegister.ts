@@ -1,10 +1,65 @@
 import _ from "lodash";
 import update from "immutability-helper";
+import { get } from "../core/http";
+import config from "../config";
 import * as dbClient from "./client";
 import type { Ontology, OntologyTerm } from "../core/ontologyRegister";
 import * as oi from "../ontologyImport";
 import { addItem, deleteItem } from "./utils";
 import { logError } from "../logging";
+import { OTermsDict } from "../core/ontologyRegister";
+
+// SOLR routines {{{1
+
+// SOLR requires a non-standard encoding where just # and " are encoded
+function encodeSolrQuery(uri: string): string {
+  return uri.replace(/#/g, "%23").replace(/"/g, "%22");
+}
+
+function mkSolrTermQueryUrl(query: string): string {
+  const q =
+    (query.length <= 4 && _.words(query).length <= 1) ? `(labels:/${query}.*/)`
+    : `(labels:"${query}"^100%20OR%20labels:${query}*^20%20OR%20text_auto:/${query}.*/^10%20OR%20labels:*${query}*)`;
+  const notErrors = "%20AND%20NOT%20(labels:/Error[0-9].*/)";
+  const sort = _.words(query).length <= 1 ? "&sort=norm(labels) desc" : "";
+  const flags = "&wt=json&indent=true&rows=1000";
+  const res = config.solrUrl + "?q=(" + q + notErrors + ")" + sort + flags;
+  return res;
+}
+
+function mkSolrExactQueryUrl(tag: string): string {
+  const q = `(labels:/${tag}/)`;
+  const notErrors = "%20AND%20NOT%20(labels:/Error[0-9].*/)";
+  const sort = "&sort=norm(labels) desc";
+  const flags = "&wt=json&indent=true&rows=1000";
+  const res = config.solrUrl + "?q=(" + q + notErrors + ")" + sort + flags;
+  return res;
+}
+
+interface SolrOntology {
+  labels: string;
+  description: string;
+  short_form: string
+  ontology_name: string;
+  ontology_acronym: string;
+  synonyms: Array<string>;
+  uris: string;
+}
+
+function resultToDict(docs: Array<SolrOntology>): OTermsDict {
+  const ontologies: Array<OntologyTerm> = docs.map(o => ({
+    labels: o.labels || "",
+    description: o.description || "",
+    shortForm: o.short_form || "",
+    ontologyName: o.ontology_name || "",
+    ontologyAcronym: o.ontology_acronym || "",
+    synonyms: o.synonyms || [],
+    uris: o.uris || ""
+  }));
+  const ontologiesUniq = _.uniqBy(ontologies, "uris");
+  const groups = _.groupBy(ontologiesUniq, o => o.labels.toLowerCase());
+  return groups;
+}
 
 // DB Access {{{1
 
@@ -27,6 +82,8 @@ function ontology2record(o: Partial<Ontology>): Partial<OntologyRecord> {
 }
 
 // Operations {{{1
+
+// Ontology managmenet {{{2
 
 export function getOntologiesRecords(): Promise<Array<OntologyRecord>> {
   return withCollection(
@@ -88,16 +145,25 @@ export function addOntology(ontUrl: string, format: oi.OntologyFormat, creatorId
   return withCollection(
     ontCol => new Promise((resolve, reject) => 
       oi.mkOntologyPm(ontUrl, format, creatorId).then(
-        ontology => getOntologyByTerms(ontology.terms).then(
-          o => (o ? 
-            reject("Ontology with these terms exists: " + o.uri)
-          : addItem(ontCol, ontology2record(ontology)).then(
+        ontology => {
+          if (checkUnique) {
+            getOntologyByTerms(ontology.terms).then(
+              o => (o ? 
+                reject("Ontology with these terms exists: " + o.uri)
+              : addItem(ontCol, ontology2record(ontology)).then(
+                  newItem => resolve(newItem),
+                  err => reject(err)
+                )
+              ),
+              err => reject(err)
+            );
+          } else {
+            addItem(ontCol, ontology2record(ontology)).then(
               newItem => resolve(newItem),
               err => reject(err)
-            )
-          ),
-          err => reject(err)
-        ),
+            );
+          }
+        },
         err => reject(err)
       )
     )
@@ -139,4 +205,45 @@ export function removeUserOfOntology(ontId: string, userId: string): Promise<voi
       )
     )
   );
+}
+
+// Queries into ontologies {{{2
+
+export function findOTermsStarting(query: string, userId: string): Promise<OTermsDict> {
+  return new Promise((resolve, reject) => {
+    const queryUrl = mkSolrTermQueryUrl(query);
+    get(queryUrl).then(
+      (res: any) => resolve(resultToDict(res.response.docs || [])),
+      err => reject(err)
+    );
+  });
+}
+
+export function getOTerm(term: string): Promise<OTermsDict> {
+  return new Promise((resolve, reject) => {
+    const queryUrl = mkSolrExactQueryUrl(term);
+    get(queryUrl).then(
+      (res: any) => resolve(resultToDict(res.response.docs || [])),
+      err => reject(err)
+    );
+  });
+}
+
+export function getOTermByUri(ontologyUri: string): Promise<OntologyTerm> {
+  return new Promise((resolve, reject) => {
+    const queryUrl = encodeSolrQuery(config.solrUrl + '?q=uris:("' + ontologyUri + '")&rows=100&wt=json');
+    get(queryUrl).then(
+      (res: any) => {
+        const docs = res.response?.docs;
+        if (docs && docs.length > 0) {
+          const info = resultToDict(docs);
+          const key = Object.keys(info)[0];
+          resolve(info[key][0]);
+        } else {
+          reject("SOLR query returned 0 results for " + queryUrl);
+        }
+      },
+      error => reject(error)
+    );
+  });
 }

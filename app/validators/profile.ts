@@ -1,5 +1,5 @@
 import Ajv from "ajv";
-import { userProfilePartialSchema } from "../core/userProfile.partial.schema";
+import { userProfilePartialSchema } from "../core/schemas/userProfilePartial.schema";
 
 type Item = Record<string, any>;
 

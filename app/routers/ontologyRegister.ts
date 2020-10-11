@@ -1,3 +1,4 @@
+import _ from "lodash";
 import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
@@ -10,18 +11,41 @@ console.log("Initialising ontologies router...");
 
 const router = Router();
 
-// Handlers {{{1
+// Terms searching {{{1
 
-// Get list of ontologies {{{2
-router.get(oreg.ontologyRegisterUrl, (req: Request, resp: Response) => {
-  db.getOntologies().then(
-    ontologies => responses.ok(resp, ontologies),
-    error => responses.serverErr(resp, error, true)
-  );
+// Terms search {{{2
+router.get(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const value = req.query.value as string;
+  const uri = req.query.uri as string;
+  const ontologySources = req.query.sources;
+  const userId = (req.user as UserProfile).id;
+  if (value) {
+    if (_.last(value) === "*") {
+      db.findOTermsStarting(value.substring(0, value.length - 1), userId).then(
+        terms => responses.ok(resp, terms),
+        err => responses.serverErr(resp, err)
+      );
+    } else {
+      db.getOTerm(value).then(
+        terms => responses.ok(resp, terms),
+        err => responses.serverErr(resp, err)
+      );
+    }
+  } else if (uri) {
+    db.getOTermByUri(uri).then(
+      term => responses.ok(resp, term),
+      err => responses.serverErr(resp, err)
+    );
+  } else { // get list of ontologies
+    db.getOntologies().then(
+      ontologies => responses.ok(resp, ontologies),
+      err => responses.serverErr(resp, err)
+    );
+  }
 });
 
 // Upload ontology {{{2
-router.post(oreg.ontologyRegisterUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+router.post(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const url = req.body.url;
   const format = req.body.format;
   const creatorId = (req.user as UserProfile).id;
@@ -38,7 +62,7 @@ router.post(oreg.ontologyRegisterUrl, passport.authenticate("bearer", { session:
 });
 
 // Delete ontology {{{2
-router.delete(oreg.ontologyRegisterUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+router.delete(oreg.ontologiesUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const ontId = req.params.id;
   db.getOntology(ontId).then(
     ont =>

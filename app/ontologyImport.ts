@@ -2,7 +2,7 @@ import _ from "lodash";
 import * as n3 from "n3";
 import { Store, NamedNode } from "n3";
 import { exec } from "child_process";
-import type { Ontology, OntologyTerm } from "./core/ontologyRegister";
+import type { OntologyTerm } from "./core/ontologyRegister";
 import { OntologyFormat, mkOntologyTerm } from "./core/ontologyRegister";
 
 export type { Ontology } from "./core/ontologyRegister";
@@ -11,9 +11,13 @@ export { OntologyFormat } from "./core/ontologyRegister";
 function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string> {
   const cmd = `docker run stain/jena riot --syntax=${format} --output=Turtle ${ontUrl}`;
   return new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
+    exec(cmd, {maxBuffer: 50 * 1024 * 1024}, (error, stdout, stderr) => {
       if (error) {
-        reject(stderr);
+        if (error.name === "RangeError") {
+           reject("Ontology too big"); 
+         } else {
+          reject(stderr);
+         }
       } else {
         resolve(stdout);
       }
@@ -49,7 +53,10 @@ function getSubClasses(store: Store, node: NamedNode): Array<NamedNode> {
 
 function getOTermsFromOntology(store: Store): Array<OntologyTerm> {
   const owlThing = new NamedNode("http://www.w3.org/2002/07/owl#Thing");
-  const allOTermNodes = getSubClasses(store, owlThing);
+  const owlIsType = new NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+  const owlClass = new NamedNode("http://www.w3.org/2002/07/owl#Class");
+  // const allOTermNodes = getSubClasses(store, owlThing);
+  const allOTermNodes = store.getSubjects(owlIsType, owlClass, null).filter(n3.Util.isNamedNode) as Array<NamedNode>;
   const oTerms = allOTermNodes.map(n => mkOTerm(store, n)).filter(t => t !== null) as Array<OntologyTerm>;
   const oTermsUniqueSorted = _.sortBy(_.uniqBy(oTerms, "labels"), ["labels"]);
   return oTermsUniqueSorted;
@@ -67,10 +74,13 @@ export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: 
       ttl => {
         const parser = new n3.Parser();
         const quads = parser.parse(ttl);
+        console.log(quads);
         const store = new Store(quads);
         const ontUri = getOntologyUri(store);
         const oTerms = getOTermsFromOntology(store);
-        resolve({ creatorId, uri: ontUri || ontUrl, terms: oTerms });
+        oTerms.length > 0 ?
+          resolve({ creatorId, uri: ontUri || ontUrl, terms: oTerms })
+        : reject("No terms were extracted from the ontology");
       },
       err => reject(err)
     );
