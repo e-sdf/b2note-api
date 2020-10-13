@@ -58,7 +58,7 @@ function getOTermsFromOntology(store: Store): Array<OntologyTerm> {
   // const allOTermNodes = getSubClasses(store, owlThing);
   const allOTermNodes = store.getSubjects(owlIsType, owlClass, null).filter(n3.Util.isNamedNode) as Array<NamedNode>;
   const oTerms = allOTermNodes.map(n => mkOTerm(store, n)).filter(t => t !== null) as Array<OntologyTerm>;
-  const oTermsUniqueSorted = _.sortBy(_.uniqBy(oTerms, "labels"), ["labels"]);
+  const oTermsUniqueSorted = _.sortBy(_.uniqBy(oTerms, "label"), ["label"]);
   return oTermsUniqueSorted;
 }
 
@@ -74,7 +74,6 @@ export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: 
       ttl => {
         const parser = new n3.Parser();
         const quads = parser.parse(ttl);
-        console.log(quads);
         const store = new Store(quads);
         const ontUri = getOntologyUri(store);
         const oTerms = getOTermsFromOntology(store);

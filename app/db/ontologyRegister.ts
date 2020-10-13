@@ -5,6 +5,7 @@ import config from "../config";
 import * as dbClient from "./client";
 import type { Ontology, OntologyTerm } from "../core/ontologyRegister";
 import * as oi from "../ontologyImport";
+import type { OntologySources } from "../core/apiModels/ontologyQueryModel";
 import { addItem, deleteItem } from "./utils";
 import { logError } from "../logging";
 import { OTermsDict } from "../core/ontologyRegister";
@@ -36,7 +37,7 @@ function mkSolrExactQueryUrl(tag: string): string {
   return res;
 }
 
-interface SolrOntology {
+interface SolrTerm {
   labels: string;
   description: string;
   short_form: string
@@ -46,19 +47,27 @@ interface SolrOntology {
   uris: string;
 }
 
-function resultToDict(docs: Array<SolrOntology>): OTermsDict {
-  const ontologies: Array<OntologyTerm> = docs.map(o => ({
-    labels: o.labels || "",
-    description: o.description || "",
-    shortForm: o.short_form || "",
-    ontologyName: o.ontology_name || "",
-    ontologyAcronym: o.ontology_acronym || "",
-    synonyms: o.synonyms || [],
-    uris: o.uris || ""
-  }));
-  const ontologiesUniq = _.uniqBy(ontologies, "uris");
-  const groups = _.groupBy(ontologiesUniq, o => o.labels.toLowerCase());
+function solrTerm2ontologyTerm(solrTerm: SolrTerm): OntologyTerm {
+  return {
+    label: solrTerm.labels || "",
+    description: solrTerm.description || "",
+    shortForm: solrTerm.short_form || "",
+    ontologyName: solrTerm.ontology_name || "",
+    ontologyAcronym: solrTerm.ontology_acronym || "",
+    synonyms: solrTerm.synonyms || [],
+    uris: solrTerm.uris || ""
+  };
+}
+
+function ontologyTerms2dict(oTerms: Array<OntologyTerm>): OTermsDict {
+  const termsUniq = _.uniqBy(oTerms, "uris");
+  const groups = _.groupBy(termsUniq, o => o.label.toLowerCase());
   return groups;
+}
+
+function solrResultToDict(solrTerms: Array<SolrTerm>): OTermsDict {
+  const terms: Array<OntologyTerm> = solrTerms.map(solrTerm2ontologyTerm);
+  return ontologyTerms2dict(terms);
 }
 
 // DB Access {{{1
@@ -209,11 +218,34 @@ export function removeUserOfOntology(ontId: string, userId: string): Promise<voi
 
 // Queries into ontologies {{{2
 
-export function findOTermsStarting(query: string, userId: string): Promise<OTermsDict> {
+function querySolrForTerms(query: string): Promise<Array<OntologyTerm>> {
   return new Promise((resolve, reject) => {
     const queryUrl = mkSolrTermQueryUrl(query);
     get(queryUrl).then(
-      (res: any) => resolve(resultToDict(res.response.docs || [])),
+      (res: any) => resolve(res?.response?.docs.map(solrTerm2ontologyTerm) || []),
+      err => reject(err)
+    );
+  });
+}
+
+function queryCustomOntologyForTerms(query: string, ontologyId: string): Promise<Array<OntologyTerm>> {
+  return new Promise((resolve, reject) => {
+    getOntologyRecord(ontologyId).then(
+      o => o ? 
+        resolve(o.terms.filter(t => t.label.toLocaleLowerCase().includes(query.toLowerCase())))
+        : resolve([]),
+      err => reject(err)
+    );
+  });
+}
+
+export function findOTermsStarting(query: string, sources: OntologySources): Promise<OTermsDict> {
+  return new Promise((resolve, reject) => {
+    Promise.all([
+      sources.solr ? querySolrForTerms(query) : Promise.resolve([]),
+      ...sources.custom.map(o => queryCustomOntologyForTerms(query, o.id))
+    ]).then(
+      termsCols => resolve(ontologyTerms2dict(_.flatten(termsCols))),
       err => reject(err)
     );
   });
@@ -223,7 +255,7 @@ export function getOTerm(term: string): Promise<OTermsDict> {
   return new Promise((resolve, reject) => {
     const queryUrl = mkSolrExactQueryUrl(term);
     get(queryUrl).then(
-      (res: any) => resolve(resultToDict(res.response.docs || [])),
+      (res: any) => resolve(solrResultToDict(res.response.docs || [])),
       err => reject(err)
     );
   });
@@ -236,7 +268,7 @@ export function getOTermByUri(ontologyUri: string): Promise<OntologyTerm> {
       (res: any) => {
         const docs = res.response?.docs;
         if (docs && docs.length > 0) {
-          const info = resultToDict(docs);
+          const info = solrResultToDict(docs);
           const key = Object.keys(info)[0];
           resolve(info[key][0]);
         } else {

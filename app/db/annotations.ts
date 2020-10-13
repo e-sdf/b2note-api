@@ -4,7 +4,7 @@ import type { Collection } from "mongodb";
 import * as dbClient from "./client";
 import type { DBQuery } from "./client";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/queryModels/anQueryModel";
+import * as qModel from "../core/apiModels/anQueryModel";
 import type { TagExpr, Sexpr } from "../core/searchModel";
 import { SearchType, BiOperatorExpr, BiOperatorType, UnOperatorExpr, UnOperatorType, isBinaryExpr, isUnaryExpr, isTagExpr } from "../core/searchModel";
 import type { OTermsDict, OntologyTerm } from "../core/ontologyRegister";

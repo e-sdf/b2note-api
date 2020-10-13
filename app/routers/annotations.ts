@@ -5,7 +5,7 @@ import type { UserProfile } from "../core/user";
 import config from "../config";
 import * as validator from "../validators/annotations";
 import * as anModel from "../core/annotationsModel";
-import * as qModel from "../core/queryModels/anQueryModel";
+import * as qModel from "../core/apiModels/anQueryModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
 import * as user from "../core/user";
@@ -48,7 +48,6 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download must be boolean"); }
   if (query2) {
     const errors = validator.validateGetAnQuery(query2);
-    console.log(errors);
     if (errors) {
       responses.reqErr(resp, errors);
     } else {

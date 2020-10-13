@@ -1,8 +1,8 @@
 #!/bin/bash
 
 source ./scripts/schemas/generateSchema.sh
-IF="`pwd`/b2note-core/src/core/user.ts"
+IF="`pwd`/b2note-core/src/core/apiModels/ontologyQueryModel.ts"
 OD="`pwd`/b2note-core/src/core/schemas/"
 
-T="UserProfilePartial"
+T="OntologyQuery"
 generateSchema
