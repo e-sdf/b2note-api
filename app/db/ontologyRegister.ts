@@ -160,7 +160,10 @@ export function addOntology(ontUrl: string, format: oi.OntologyFormat, creatorId
               o => (o ? 
                 reject("Ontology with these terms exists: " + o.uri)
               : addItem(ontCol, ontology2record(ontology)).then(
-                  newItem => resolve(newItem),
+                  newItem => addUserOfOntology(newItem.id, creatorId).then(
+                    () => resolve(newItem),
+                    err => reject(err)
+                  ),
                   err => reject(err)
                 )
               ),
@@ -168,7 +171,10 @@ export function addOntology(ontUrl: string, format: oi.OntologyFormat, creatorId
             );
           } else {
             addItem(ontCol, ontology2record(ontology)).then(
-              newItem => resolve(newItem),
+              newItem => addUserOfOntology(newItem.id, creatorId).then(
+                () => resolve(newItem),
+                err => reject(err)
+              ),
               err => reject(err)
             );
           }
