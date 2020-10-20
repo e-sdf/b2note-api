@@ -3,6 +3,7 @@ import { logError } from './logging';
 // import prodConfig from "./config.prod";
 
 interface Config {
+  environment: "development"|"production";
   serverPort: string;
   serverPath: string;
   domainUrl: string;
@@ -22,9 +23,10 @@ interface Config {
   gAuthClientId: string;
   gAuthClientSecret: string;
   gAuthRedirectUrl: string;
-};
+}
 
 const globalConfig: Config = {
+  environment: (process.env.NODE_ENV as "development"|"production") || ("development" as const),
   serverPort: process.env.SERVER_PORT || "",
   serverPath: process.env.SERVER_PATH || "",
   domainUrl: process.env.DOMAIN_URL || "",

@@ -1,4 +1,5 @@
 import _ from "lodash";
+import config from "./config";
 import * as n3 from "n3";
 import { Store, NamedNode } from "n3";
 import { exec } from "child_process";
@@ -9,7 +10,9 @@ export type { Ontology } from "./core/ontologyRegister";
 export { OntologyFormat } from "./core/ontologyRegister";
 
 function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string> {
-  const cmd = `docker run stain/jena riot --syntax=${format} --output=Turtle ${ontUrl}`;
+  const cmd = config.environment === "production" ?
+    `/jena/bin/riot --syntax=${format} --output=Turtle ${ontUrl}`
+  : `docker run stain/jena riot --syntax=${format} --output=Turtle ${ontUrl}`;
   return new Promise((resolve, reject) => {
     exec(cmd, {maxBuffer: 50 * 1024 * 1024}, (error, stdout, stderr) => {
       if (error) {
