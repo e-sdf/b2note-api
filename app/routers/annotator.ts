@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import axios from "axios";
-import { processReponse } from "../annotator/content";
+import { processResponse } from "../annotator/content";
 import _ from "lodash";
 import config from "../config";
 
@@ -33,7 +33,7 @@ function proxyRequest(url: string, req: Request, res: Response) {
     })
     .then(response => {
       res.setHeader("content-type", response.headers["content-type"]);
-      res.send(processReponse(proxyUrl, url, response));
+      res.send(processResponse(proxyUrl, url, response));
     })
     .catch(error => {
       console.log(error);
