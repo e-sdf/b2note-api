@@ -7,6 +7,7 @@ const hrefRegex = /href=['"]((?:[^"'\/]*\/)*([^'"]+))['"]/g;
 const srcRegex = /src=['"]((?:[^"'\/]*\/)*([^'"]+))['"]/g;
 const srcsetRegex = /srcset=['"]([^'"]+)['"]/g;
 const urlRegex = /url\(([^)]+)\)/g;
+const targetBlankRegex = /target=['"]_blank['"]/g;
 
 
 export function processResponse<A>(proxyUrl: string, baseUrl: string, response: AxiosResponse<A>): string|A {
@@ -49,6 +50,7 @@ function processHtmlContent(proxyUrl: string, baseUrl: string, content: string):
     .replace(hrefRegex, wrapReplacePram(proxyUrl, baseUrl, "href"))
     .replace(srcRegex, wrapReplacePram(proxyUrl, baseUrl, "src"))
     .replace(srcsetRegex, wrapReplaceSrcset(proxyUrl, baseUrl))
+    .replace(targetBlankRegex, "")
     .replace("</head>", `${baseUrlScript}${overridesScript}${iframeScript}</head>`);
 
 }
