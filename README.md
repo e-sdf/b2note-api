@@ -4,7 +4,4 @@
 
 ---
 
-<div style="display: flex; flex-direction: row; align-items: center">
-  <div>This work is co-funded by the EOSC-hub project (Horizon 2020) under Grant number 777536</div>
-  <img src="https://b2note.bsc.es/img/logo-eosc-hub-eu.png">
-</div>
+This work is co-funded by the EOSC-hub project (Horizon 2020) under Grant number 777536 ![logo](https://b2note.bsc.es/img/logo-eosc-hub-eu.png)
