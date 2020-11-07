@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "description": "B2NOTE is an annotation service.",
+    "description": "B2NOTE is an annotation service based on the [W3C Web Annotation Data Model](https://www.w3.org/TR/annotation-model).\n\nAuthentication is provided either through [B2ACCESS](https://eudat.eu/services/b2access) or [OpenAIRE](https://www.openaire.eu) AAI; \nA new window is opened with login in the respective service. Upon successful login, a user record with user's B2NOTE ID and a Bearer Token is send to the opening window using [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) in the following format:\n```{id: \"e4619431-6087-43bb-a241-1c48674f5156\", accessToken: \"<JWT token>\"}```.",
     "title": "B2NOTE",
     "version": ""
   },
@@ -392,7 +392,30 @@
         "summary": "Update an Annotation"
       }
     },
-    "/login": {
+    "/b2access/login": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "examples": {
+                  "response": {
+                    "value": ""
+                  }
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          }
+        },
+        "tags": [],
+        "description": "",
+        "operationId": "Login",
+        "summary": "Login"
+      }
+    },
+    "/openaire/login": {
       "get": {
         "responses": {
           "200": {
@@ -419,24 +442,6 @@
       "get": {
         "responses": {
           "200": {
-            "content": {
-              "application/json": {
-                "examples": {
-                  "response": {
-                    "value": {
-                      "accessToken": "cnwoYanx0cdFStYSUyasBQtvOBcU3V2CIY7gaNx4aRs",
-                      "country": "Czech Republic",
-                      "email": "perglr@fit.cvut.cz",
-                      "experience": "advanced",
-                      "id": "e4619431-6087-43bb-a241-1c48674f5156",
-                      "jobTitle": "docent",
-                      "name": "Robert Pergl",
-                      "organisation": "CTU"
-                    }
-                  }
-                }
-              }
-            },
             "description": "OK",
             "headers": {}
           }
@@ -524,70 +529,14 @@
         "operationId": "Search Annotations",
         "summary": "Search Annotations"
       }
-    },
-    "/targets/": {
-      "get": {
-        "parameters": [
-          {
-            "description": "tag value",
-            "example": "Axon",
-            "in": "query",
-            "name": "tag",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "examples": {
-                  "response": {
-                    "value": [
-                      {
-                        "id": "http://hdl.handle.net/11304/3720bb44-831c-48f3-9847-6988a41236e1",
-                        "source": "https://b2share.eudat.eu/records/b1092be3cd4844e0bffd7b669521ba3c",
-                        "type": "SpecificResource"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "description": "OK",
-            "headers": {}
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "examples": {
-                  "response": {
-                    "value": {
-                      "error": "reason (string) or object with the expression parse error"
-                    }
-                  }
-                }
-              }
-            },
-            "description": "Bad Request",
-            "headers": {}
-          }
-        },
-        "tags": [],
-        "description": "",
-        "operationId": "Get Targets of a Tag",
-        "summary": "Get Targets of a Tag"
-      }
     }
   },
   "components": {
     "schemas": {
       "Annotation": {},
       "Annotations": {},
-      "Get_Targets": {},
-      "Login": {},
+      "B2ACCESS_Login": {},
+      "OpenAIRE_Login": {},
       "Profile": {},
       "Search": {}
     },

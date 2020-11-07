@@ -40,7 +40,7 @@ function mkTypeFilter(query: qModel.GetAnQuery): DBQuery {
     "body.type": anModel.AnBodyItemType.SPECIFIC_RESOURCE
   } : {};
   const typeFilters = [{...semanticFilter}, {...keywordFilter}, {...commentFilter}, {...tripleFilter}].filter(i => { return !_.isEmpty(i); });
-  const filter = { "$or": typeFilters};
+  const filter = typeFilters.length > 0 ? { "$or": typeFilters} : {};
   return filter;
 }
 
@@ -68,10 +68,6 @@ function mkValueFilter(query: qModel.GetAnQuery): DBQuery {
     { "body.items": { "$elemMatch": { value: query.value } } } // semantic
   ] }
   : {};
-}
-
-function isEmptyFilter(filter: DBQuery): boolean {
-  return filter["$or"]?.length === 0;
 }
 
 // Queries {{{1
@@ -134,14 +130,13 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
 }
 
 export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
-  const filter = {
+  const dbQuery = {
     ...mkTypeFilter(query),
     ...mkCreatorFilter(query),
     ...mkTargetIdFilter(query),
     ...mkTargetSourceFilter(query),
     ...mkValueFilter(query)
   };
-  const dbQuery = isEmptyFilter(filter) ? {} : filter;
   const skipNo = query.skip;
   const limitNo = query.limit;
   return withCollection(
