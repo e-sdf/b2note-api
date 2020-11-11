@@ -3,7 +3,8 @@
     "outDir": "./dist",
     "lib": [
       "es2018",
-      "dom"
+      "dom",
+      "dom.iterable"
     ],
     "module": "commonjs",
     "target": "es2018",

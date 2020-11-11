@@ -1,0 +1,40 @@
+.b2note-annotator-menu {
+  font-family: sans-serif;
+  background: #fafafa;
+  z-index: 100000;
+  position: absolute;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 5px 0;
+  font-size: 14px;
+  transition: opacity 0.25s ease-in-out;
+  opacity: 1;
+}
+
+.b2note-annotator-menu.hidden {
+  opacity: 0;
+}
+
+
+.b2note-annotator-menu:after {
+  content: ' ';
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.b2note-annotator-menu div {
+  cursor: default;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+
+.b2note-annotator-menu div:hover {
+  background: #2381F2;
+  color: #fff;
+}

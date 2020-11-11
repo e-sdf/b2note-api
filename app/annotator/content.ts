@@ -45,13 +45,14 @@ function processHtmlContent(proxyUrl: string, baseUrl: string, content: string):
   const baseUrlScript = `<script>window.baseUrl = '${baseUrl}'; window.proxyUrl = '${proxyUrl}'</script>`;
   const overridesScript = staticScript("annotator-overrides");
   const iframeScript = staticScript("annotator-iframe", true);
+  const style = styleLink("main");
 
   return content
     .replace(hrefRegex, wrapReplacePram(proxyUrl, baseUrl, "href"))
     .replace(srcRegex, wrapReplacePram(proxyUrl, baseUrl, "src"))
     .replace(srcsetRegex, wrapReplaceSrcset(proxyUrl, baseUrl))
     .replace(targetBlankRegex, "")
-    .replace("</head>", `${baseUrlScript}${overridesScript}${iframeScript}</head>`);
+    .replace("</head>", `${baseUrlScript}${overridesScript}${iframeScript}${style}</head>`);
 
 }
 
@@ -61,6 +62,10 @@ function processCssContent(proxyUrl: string, baseUrl: string, content: string): 
 
 function staticScript(script: string, defer = false) {
   return `<script src="${config.serverPath}/static/dist/${script}.js" ${defer ? "defer" : ""}></script>`;
+}
+
+function styleLink(style: string) {
+  return `<link rel="stylesheet" type="text/css" href="${config.serverPath}/static/dist/${style}.css" />`;
 }
 
 
