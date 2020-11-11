@@ -61,6 +61,6 @@ function replaceAmps(url: string): string {
 /**
  * Absolute URL either includes "<protocol>://" or starts with "//".
  */
-function isAbsolute(url: string): boolean {
+export function isAbsolute(url: string): boolean {
   return (url.indexOf("://") > 0 || url.indexOf("//") === 0);
 }
