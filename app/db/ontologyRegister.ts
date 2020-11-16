@@ -1,9 +1,10 @@
 import _ from "lodash";
 import update from "immutability-helper";
+import { keys } from "ts-transformer-keys";
 import { get } from "../core/http";
 import config from "../config";
 import * as dbClient from "./client";
-import type { Ontology, OntologyTerm } from "../core/ontologyRegister";
+import type { Ontology, OntologyMeta, OntologyTerm } from "../core/ontologyRegister";
 import * as oi from "../ontologyImport";
 import type { OntologySources } from "../core/apiModels/ontologyQueryModel";
 import { addItem, deleteItem } from "./utils";
@@ -78,6 +79,10 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 // OntologyRecord {{{1
 
+interface OntologyMetaRecord extends OntologyMeta {
+  userIds: Array<string>;
+}
+
 interface OntologyRecord extends Ontology {
   userIds: Array<string>;
 }
@@ -86,7 +91,7 @@ export function record2ontology(oRecord: OntologyRecord): Ontology {
   return update(oRecord, { $unset: ["userIds"] });
 }
 
-function ontology2record(o: Partial<Ontology>): Partial<OntologyRecord> {
+function ontology2record(o: Ontology): OntologyRecord {
   return { ...o, userIds: [] };
 }
 
@@ -94,17 +99,16 @@ function ontology2record(o: Partial<Ontology>): Partial<OntologyRecord> {
 
 // Ontology managmenet {{{2
 
-export function getOntologiesRecords(): Promise<Array<OntologyRecord>> {
+export function getOntologiesMetaRs(): Promise<Array<OntologyMetaRecord>> {
+  const oiRecKeys = keys<OntologyMetaRecord>();
   return withCollection(
-    anCol => anCol.find({}).toArray()
+    oCol => oCol.find({}, { projection: oiRecKeys }).toArray()
   );
 }
 
-export function getOntologies(): Promise<Array<Ontology>> {
-  return new Promise((resolve) =>
-    getOntologiesRecords().then(
-      records => resolve(records.map(record2ontology))
-    )
+export function getOntologiesRecords(): Promise<Array<OntologyRecord>> {
+  return withCollection(
+    oCol => oCol.find({}).toArray()
   );
 }
 

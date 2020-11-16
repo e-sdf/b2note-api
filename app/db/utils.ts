@@ -18,7 +18,7 @@ function addIdPm<T>(col: Collection, dbId: string): Promise<T> {
   );
 }
 
-export function addItem<T>(col: Collection, item: Partial<T>): Promise<T> {
+export function addItem<T>(col: Collection, item: T): Promise<T> {
   return new Promise((resolve, reject) =>
     col.insertOne(item).then(
       res => {

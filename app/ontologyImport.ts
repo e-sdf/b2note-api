@@ -3,7 +3,7 @@ import config from "./config";
 import * as n3 from "n3";
 import { Store, NamedNode } from "n3";
 import { exec } from "child_process";
-import type { OntologyTerm } from "./core/ontologyRegister";
+import type { Ontology, OntologyTerm } from "./core/ontologyRegister";
 import { OntologyFormat, mkOntologyTerm } from "./core/ontologyRegister";
 
 export type { Ontology } from "./core/ontologyRegister";
@@ -19,7 +19,8 @@ function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string
         if (error.name === "RangeError") {
            reject("Ontology too big"); 
          } else {
-          reject(stderr);
+           console.log(stderr);
+           reject(stderr);
          }
       } else {
         resolve(stdout);
@@ -65,13 +66,7 @@ function getOTermsFromOntology(store: Store): Array<OntologyTerm> {
   return oTermsUniqueSorted;
 }
 
-interface OntologyPartial {
-  creatorId: string;
-  uri: string;
-  terms: Array<OntologyTerm>
-}
-
-export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: string): Promise<OntologyPartial> {
+export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: string): Promise<Ontology> {
   return new Promise((resolve, reject) => {
     convertToTtlPm(ontUrl, format).then(
       ttl => {
@@ -80,8 +75,9 @@ export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: 
         const store = new Store(quads);
         const ontUri = getOntologyUri(store);
         const oTerms = getOTermsFromOntology(store);
+        const noOfTerms = oTerms.length;
         oTerms.length > 0 ?
-          resolve({ creatorId, uri: ontUri || ontUrl, terms: oTerms })
+          resolve({ id: "", creatorId, uri: ontUri || ontUrl, noOfTerms, terms: oTerms })
         : reject("No terms were extracted from the ontology");
       },
       err => reject(err)

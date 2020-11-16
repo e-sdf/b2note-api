@@ -30,7 +30,7 @@ function mkOntologySourcesPm(sourcesIds: Array<string>): Promise<OntologySources
   });
 }
 
-// Terms search {{{2
+//  Getting ontologies {{{2
 router.get(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const userId = (req.user as UserProfile).id;
   const errors = validateGetOntologyQuery(req.query);
@@ -69,11 +69,27 @@ router.get(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false 
         err => responses.serverErr(resp, err)
       );
     } else { // get list of ontologies
-      db.getOntologies().then(
-        ontologies => responses.ok(resp, ontologies),
+      db.getOntologiesMetaRs().then(
+        ois => responses.ok(resp, ois),
         err => responses.serverErr(resp, err)
       );
     }
+  }
+});
+
+// Get ontology {{{2
+
+router.get(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const ontId = req.params.ontId as string;
+  if (!ontId) {
+    responses.reqErr(resp, { error: "missing ontology id"});
+  } else {
+    db.getOntology(ontId).then(
+      o => o ? 
+        responses.ok(resp, o)
+      : responses.notFound(resp, "Ontology with id=" + ontId + "not found"),
+      err => responses.serverErr(resp, err)
+    );
   }
 });
 
@@ -95,8 +111,8 @@ router.post(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false
 });
 
 // Delete ontology {{{2
-router.delete(oreg.ontologiesUrl + "/:id", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
-  const ontId = req.params.id;
+router.delete(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const ontId = req.params.ontId;
   db.getOntology(ontId).then(
     ont =>
       ont ?

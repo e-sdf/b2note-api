@@ -95,7 +95,7 @@ export function getOntologiesOfUser(userId: string): Promise<Array<Ontology>> {
 export function addCustomOntology(userId: string, ontId: string): Promise<void> {
   return new Promise((resolve, reject) => 
     getUserProfileById(userId).then(
-      user => oDb.addUserOfOntology(ontId, userId).then(
+      () => oDb.addUserOfOntology(ontId, userId).then(
         () => resolve(),
         err => reject(err)
       ),
