@@ -33,6 +33,7 @@
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
     "api-spec-converter": "^2.11.2",
+    "copy-webpack-plugin": "^6.2.1",
     "eslint": "^7.13.0",
     "nodemon": "^2.0.6",
     "ts-json-schema-generator": "^0.78.0",

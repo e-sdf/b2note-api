@@ -38,3 +38,13 @@
   background: #2381F2;
   color: #fff;
 }
+
+
+.b2note-annotator-selection {
+  position: absolute;
+  background: rgba(35,129,242, 0.2);
+  border: 2px dashed rgb(35,129,242);
+  transform: translate(-2px, -2px);
+  z-index: 99999;
+}
+
