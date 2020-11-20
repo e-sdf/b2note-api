@@ -11,16 +11,17 @@ const proxyUrl = `${config.serverPath}${annotatorPath}`;
 
 router.get(annotatorPath, (req: Request, res: Response) => {
   const url = req.query.url as string;
+  const root = !_.isEmpty(req.query.root);
 
   if (_.isEmpty(url)) {
     res.status(400).send();
   } else {
-    proxyRequest(url, req, res);
+    proxyRequest(url, root, req, res);
   }
 });
 
 
-function proxyRequest(url: string, req: Request, res: Response) {
+function proxyRequest(url: string, root: boolean, req: Request, res: Response) {
   axios
     .get(url, {
       responseType: "arraybuffer",
@@ -32,8 +33,9 @@ function proxyRequest(url: string, req: Request, res: Response) {
       }
     })
     .then(response => {
-      res.setHeader("content-type", response.headers["content-type"]);
-      res.send(processResponse(proxyUrl, url, response));
+      const {contentType, data} = processResponse(proxyUrl, url, root, response);
+      res.setHeader("content-type", contentType);
+      res.send(data);
     })
     .catch(error => {
       console.log(error.toString());
