@@ -8,7 +8,7 @@
     "generate": "scripts/generateSchemas.sh",
     "watch": "nodemon --watch app --watch public/dist --ext ts,js --exec npm run build \\&\\& npm run start",
     "watch-static": "npx webpack --mode development --watch",
-    "build": "rm -rf dist/*; npx ttsc && npm run copy",
+    "build": "rm -rf dist/*; npm run build-static && npx ttsc && npm run copy",
     "build-static": "rm -rf public/dist/*; npx webpack --mode production",
     "copy": "cp -rv .env public dist/",
     "start": "cd dist; node -r dotenv/config server",
