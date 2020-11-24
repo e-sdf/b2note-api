@@ -42,7 +42,7 @@ The presented example shows a response with these 3 types.
     + creator (string, optional) - include just annotations created by this creator ID. The creator ID is the EUDAT ID that is acquired by the UI from [B2ACCESS](https://eudat.eu/services/b2access) on user signup.
     + target%2Did (string, optional) - get list of annotations of the specified target ID URL
     + target%2Dsource (string, optional) - get list of annotations of the specified target Source URL
-    + value (string, optional) - get annotations with a specific tag value; for more complex queries based on values see "Search"
+    + value (string, optional) - get annotations with a specific tag value. You can either use an exact match or provide `someValue*` form to search for all annotations with tag values starting `someValue`. For more complex search queries see "Search".
     + format (enum[string], optional) - format of the result
         + Members
             + `json-ld`
