@@ -30,6 +30,7 @@ function mkErr(code: ErrorCodes, message: string): RestError {
 export function clientErr(resp: Response, code: ErrorCodes, message: string): void {
   resp.status(400);
   resp.json(mkErr(code, message));
+  console.error(message);
 }
 
 export function reqErr(resp: Response, errors: Record<any, any>): void {
