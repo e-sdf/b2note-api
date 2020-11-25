@@ -130,13 +130,16 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
 }
 
 export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
-  const dbQuery = {
-    ...mkTypeFilter(query),
-    ...mkCreatorFilter(query),
-    ...mkTargetIdFilter(query),
-    ...mkTargetSourceFilter(query),
-    ...mkValueFilter(query)
+  const dbQuery = { 
+    "$and": [
+      mkTypeFilter(query),
+      mkCreatorFilter(query),
+      mkTargetIdFilter(query),
+      mkTargetSourceFilter(query),
+      mkValueFilter(query)
+    ].filter(f => !_.isEmpty(f))
   };
+  console.log(JSON.stringify(dbQuery, null, 2));
   const skipNo = query.skip;
   const limitNo = query.limit;
   return withCollection(
