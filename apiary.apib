@@ -22,7 +22,7 @@ A new window is opened with login in the respective service. Upon successful log
 + Response 200 (text/html)
 
 
-## Annotations [/annotations{?type%5B%5D,creator,target%2Did,target%2Dsource,value,format,skip,limit,download}]
+## Annotations [/annotations{?type%5B%5D,creator,target%2Did%5B%5D,target%2Dsource%5B%5D,value,format,skip,limit,download}]
 
 ### List Annotations [GET]
 
@@ -40,8 +40,8 @@ The presented example shows a response with these 3 types.
             + `keyword`
             + `comment`
     + creator (string, optional) - include just annotations created by this creator ID. The creator ID is the EUDAT ID that is acquired by the UI from [B2ACCESS](https://eudat.eu/services/b2access) on user signup.
-    + target%2Did (string, optional) - get list of annotations of the specified target ID URL
-    + target%2Dsource (string, optional) - get list of annotations of the specified target Source URL
+    + target%2Did%5B%5D (enum[string], optional) - get list of annotations of the specified target ID URLs list
+    + target%2Dsource%5B%5D (enum[string], optional) - get list of annotations of the specified target Source URLs list
     + value (string, optional) - get annotations with a specific tag value. You can either use an exact match or provide `someValue*` form to search for all annotations with tag values starting `someValue`. For more complex search queries see "Search".
     + format (enum[string], optional) - format of the result
         + Members
