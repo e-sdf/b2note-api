@@ -51,14 +51,14 @@ function mkCreatorFilter(query: qModel.GetAnQuery): DBQuery {
 function mkTargetIdFilter(query: qModel.GetAnQuery): DBQuery {
   const ff = query["target-id"];
   return (
-    ff ? { "target.id": ff } : { }
+    ff && ff.length > 0 ? { "target.id": { "$in": ff } } : { }
   );
 }
 
 function mkTargetSourceFilter(query: qModel.GetAnQuery): DBQuery {
   const ff = query["target-source"];
   return (
-    ff ? { "target.source": ff } : { }
+    ff && ff.length > 0 ? { "target.source": { "$in": ff } } : { }
   );
 }
 
@@ -139,7 +139,7 @@ export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.
       mkValueFilter(query)
     ].filter(f => !_.isEmpty(f))
   };
-  console.log(JSON.stringify(dbQuery, null, 2));
+  // console.log(JSON.stringify(dbQuery, null, 2));
   const skipNo = query.skip;
   const limitNo = query.limit;
   return withCollection(
