@@ -41,6 +41,13 @@ export function processResponse<A>(proxyUrl: string, baseUrl: string, root: bool
     };
   }
 
+  if (root && _.includes(contentType, "pdf")) {
+    return {
+      contentType: "text/html",
+      data: processPdfContent(proxyUrl, baseUrl)
+    };
+  }
+
   return {
     contentType,
     data: response.data
@@ -71,7 +78,6 @@ function processHtmlContent(proxyUrl: string, baseUrl: string, content: string):
     .replace(srcsetRegex, wrapReplaceSrcset(proxyUrl, baseUrl))
     .replace(targetBlankRegex, "")
     .replace("</head>", `${headerExtra(proxyUrl, baseUrl)}</head>`);
-
 }
 
 function processCssContent(proxyUrl: string, baseUrl: string, content: string): string {
@@ -85,6 +91,10 @@ function processRootImageContent(proxyUrl: string, baseUrl: string) {
 
 function processTableContent(proxyUrl: string, baseUrl: string) {
   return `<!doctype html><html><head>${headerExtraTable(proxyUrl, baseUrl)}</head><body><div id="table-wrapper" class="table-wrapper"></div><div id="sheetlist" class="sheetlist"></div></body></html>`;
+}
+
+function processPdfContent(proxyUrl: string, baseUrl: string) {
+  return `<!doctype html><html><head>${headerExtraPdf(proxyUrl, baseUrl)}</head><body><div class="toolbar"><button id="prev"><</button><span id="currentPage">1</span>/<span id="pageCount">3</span><button id="next">></button><button id="zoomIn">+</button><button id="zoomOut">-</button></div><canvas id="canvas"></canvas></body></html>`;
 }
 
 function staticScript(script: string, defer = false) {
@@ -148,4 +158,14 @@ function headerExtraTable(proxyUrl: string, baseUrl: string): string {
   const baseStyle = styleLink("annotator-iframe");
   const tableStyle = styleLink("annotator-iframe-table");
   return `${baseUrlScript}${script}${tableStyle}${baseStyle}`;
+}
+
+function headerExtraPdf(proxyUrl: string, baseUrl: string) {
+  const pdfUrl = replaceUrl(proxyUrl, baseUrl, baseUrl);
+  const baseUrlScript = `<script>window.pdfUrl = '${pdfUrl}';</script>`;
+  const pdfjsScript = "<script src=\"//mozilla.github.io/pdf.js/build/pdf.js\"></script>";
+  const script = staticScript("annotator-iframe-pdf");
+  const baseStyle = styleLink("annotator-iframe");
+  const style = styleLink("annotator-iframe-pdf");
+  return `${baseUrlScript}${pdfjsScript}${script}${style}${baseStyle}`;
 }

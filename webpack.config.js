@@ -4,6 +4,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 module.exports = {
     entry: {
         "annotator-iframe.js": "./public/src/annotator-iframe.ts",
+        "annotator-iframe-pdf.js": "./public/src/annotator-iframe-pdf.ts",
         "annotator-iframe-table.js": "./public/src/annotator-iframe-table.ts",
         "annotator-overrides.js": "./public/src/annotator-overrides.ts",
     },
@@ -23,7 +24,8 @@ module.exports = {
         new CopyPlugin({
             patterns: [
                 { from: "./public/src/css/annotator-iframe.css", to: "css"},
-                { from: "./public/src/css/annotator-iframe-table.css", to: "css"}
+                { from: "./public/src/css/annotator-iframe-table.css", to: "css"},
+                { from: "./public/src/css/annotator-iframe-pdf.css", to: "css"}
             ]
         })
     ]

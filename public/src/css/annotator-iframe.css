@@ -15,7 +15,6 @@
   opacity: 0;
 }
 
-
 .b2note-annotator-menu:after {
   content: ' ';
   border-radius: 5px;
@@ -32,6 +31,7 @@
   cursor: default;
   padding: 0 22px;
   white-space: nowrap;
+  text-align: left;
 }
 
 .b2note-annotator-menu div:hover {

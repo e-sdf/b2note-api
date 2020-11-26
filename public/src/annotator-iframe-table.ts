@@ -1,9 +1,9 @@
 import _ from "lodash";
 import * as XLSX from "xlsx";
-import { Utils } from "./iframe/utils";
-import { TableHandler } from "./iframe/table-handler";
-import { TableMenuHandler } from "./iframe/table-menu-handler";
-import { TableAnnotationDataFactory } from "./iframe/table-annotation-data-factory";
+import { Utils } from "./annotator/common/utils";
+import { TableController } from "./annotator/table/table-controller";
+import { TableMenuHandler } from "./annotator/table/table-menu-handler";
+import { TableAnnotationDataFactory } from "./annotator/table/table-annotation-data-factory";
 
 
 window.onload = function () {
@@ -11,8 +11,8 @@ window.onload = function () {
   loadTable(url, (sheets: Record<string, any[][]>) => {
     Utils.postMessage("iframe.loaded");
 
-    const annotationFactory = new TableAnnotationDataFactory(url);
-    const tableHandler = new TableHandler();
+    const annotationFactory = new TableAnnotationDataFactory(Utils.fromProxyURL(url));
+    const tableHandler = new TableController();
     const menuHandler = new TableMenuHandler(tableHandler, annotationFactory);
 
     tableHandler.init(sheets);

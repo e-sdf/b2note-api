@@ -1,15 +1,15 @@
-import _ = require("lodash");
+import _ from "lodash";
 
 const charCodeOfA = "A".charCodeAt(0);
 const alphabetLength = "Z".charCodeAt(0) - charCodeOfA + 1;
 
 
-export class TableHandler {
+export class TableController {
   tableWrapper: HTMLElement | null = null;
   sheetlist: HTMLElement | null = null;
   sheets: Record<string, any[][]> | null = null;
-  sheetLinks : Record<string, HTMLElement> = {};
-  currentSheet  = "";
+  sheetLinks: Record<string, HTMLElement> = {};
+  currentSheet = "";
 
   public init(sheets: Record<string, any[][]>): void {
     this.tableWrapper = document.getElementById("table-wrapper");
@@ -108,7 +108,7 @@ export class TableHandler {
     return tr;
   }
 
-  private createRow(index: number, size:number, data: any[]): HTMLElement {
+  private createRow(index: number, size: number, data: any[]): HTMLElement {
     const tr = document.createElement("tr");
 
     const th = document.createElement("th");

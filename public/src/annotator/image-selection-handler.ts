@@ -1,4 +1,4 @@
-import { Utils } from "./utils";
+import { Utils } from "./common/utils";
 
 export class ImageSelectionHandler {
   imageSelection: HTMLElement | null = null;
@@ -19,21 +19,29 @@ export class ImageSelectionHandler {
     return this.imageSelection != null;
   }
 
+  private get imageWidth(): number {
+    return this.maxX - this.minX;
+  }
+
+  private get imageHeight(): number {
+    return this.maxY - this.minY;
+  }
+
   public init(): void {
     document.addEventListener("mousedown", this.handleMouseDown.bind(this));
   }
 
   public toSvg(): string {
-    const x = Math.min(this.startX, this.currentX) - this.minX;
-    const y = Math.min(this.startY, this.currentY) - this.minY;
-    const width = Math.abs(this.currentX - this.startX);
-    const height = Math.abs(this.currentY - this.startY);
-    return `<svg><rect x="${x}" y="${y}" width="${width}" height="${height}" /></svg>`;
+    const x = this.toPctg(Math.min(this.startX, this.currentX) - this.minX, this.imageWidth);
+    const y = this.toPctg(Math.min(this.startY, this.currentY) - this.minY, this.imageHeight);
+    const width = this.toPctg(Math.abs(this.currentX - this.startX), this.imageWidth);
+    const height = this.toPctg(Math.abs(this.currentY - this.startY), this.imageHeight);
+    return `<svg><rect x="${x}%" y="${y}%" width="${width}%" height="${height}%" /></svg>`;
   }
 
   private handleMouseDown(e: MouseEvent) {
     const target = e.target as HTMLElement;
-    if (target.tagName != "IMG" || e.buttons != 1) return;
+    if ((target.tagName != "IMG" && target.tagName != "CANVAS") || e.buttons != 1) return;
     e.preventDefault();
 
     this.clearSelection();
@@ -70,7 +78,7 @@ export class ImageSelectionHandler {
     }
   }
 
-  private setPosition(currentX: number, currentY: number) {
+  private setPosition(currentX: number, currentY: number): void {
     this.currentX = Math.min(this.maxX, Math.max(this.minX, currentX));
     this.currentY = Math.min(this.maxY, Math.max(this.minY, currentY));
     const left = Math.min(this.startX, this.currentX);
@@ -81,7 +89,7 @@ export class ImageSelectionHandler {
     this.imageSelection?.setAttribute("style", `top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px`);
   }
 
-  private clearSelection() {
+  public clearSelection(): void {
     if (this.imageSelection) {
       this.imageSelection.outerHTML = "";
       this.imageSelection = null;
@@ -90,5 +98,9 @@ export class ImageSelectionHandler {
     if (this.targetImage) {
       this.targetImage = null;
     }
+  }
+
+  private toPctg(num: number, base: number): number {
+    return Math.round(10000 * num / base + Number.EPSILON) / 100;
   }
 }

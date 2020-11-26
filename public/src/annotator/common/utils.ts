@@ -1,4 +1,4 @@
-import { isAbsolute } from "../../../app/annotator/url";
+import { isAbsolute } from "../../../../app/annotator/url";
 
 export class Utils {
   public static postMessage(type: string, payload: Record<string, unknown> = {}): void {
@@ -22,13 +22,13 @@ export class Utils {
     return null;
   }
 
-  static fromProxyURL(urlString: string | null): string | null {
+  static fromProxyURL(urlString: string | null): string {
     if (urlString && !isAbsolute(urlString)) {
       const url = urlString.match(/url=([^&]*)/);
       if (url && url.length > 0) {
         return decodeURIComponent(url[1]);
       }
     }
-    return urlString;
+    return urlString || "";
   }
 }
