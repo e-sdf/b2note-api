@@ -11,7 +11,6 @@ export class AnnotationDataFactory {
   getPageData(): Record<string, unknown> {
     return {
       pid_tofeed: this.baseUrl,
-      subject_tofeed: this.baseUrl
     };
   }
 
@@ -26,9 +25,8 @@ export class AnnotationDataFactory {
           if (textContent) {
             return {
               pid_tofeed: this.baseUrl,
-              subject_tofeed: this.baseUrl,
               xPath_tofeed: getXPathForElement(node),
-              textContent_tofeed: textContent,
+              textContent_tofeed: textContent.substring(range.startOffset, range.endOffset),
               startOffset_tofeed: range.startOffset,
               endOffset_tofeed: range.endOffset
             };
@@ -57,7 +55,7 @@ export class AnnotationDataFactory {
     return {
       pid_tofeed: this.baseUrl,
       subject_tofeed: Utils.fromProxyURL(image.getAttribute("src")),
-      SVG_Selector_tofeed: svg
+      svgSelector_tofeed: svg
     };
   }
 }
