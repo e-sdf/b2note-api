@@ -1,9 +1,10 @@
 import _ from "lodash";
-import { Utils } from "./iframe/utils";
-import { AnnotationDataFactory } from "./iframe/annotation-data-factory";
-import { ImageSelectionHandler } from "./iframe/image-selection-handler";
-import { MenuHandler } from "./iframe/menu-handler";
-import { ImageAnnotationDataFactory } from "./iframe/image-annotation-data-factory";
+import { Utils } from "./annotator/common/utils";
+import { HtmlAnnotationDataFactory } from "./annotator/html/html-annotation-data-factory";
+import { ImageSelectionHandler } from "./annotator/image-selection-handler";
+import { HtmlMenuHandler } from "./annotator/html/html-menu-handler";
+import { ImageAnnotationDataFactory } from "./annotator/image/image-annotation-data-factory";
+import { ImageMenuHandler } from "./annotator/image/image-menu-handler";
 
 window.onload = function () {
   Utils.postMessage("iframe.loaded");
@@ -11,11 +12,16 @@ window.onload = function () {
   const annotatePage = _.get(window, "annotatePage");
   const baseUrl = _.get(window, "baseUrl");
 
-  const annotationFactory = annotatePage ? AnnotationDataFactory : ImageAnnotationDataFactory;
-  const annotationDataFactory = new annotationFactory(baseUrl);
   const imageSelectionHandler = new ImageSelectionHandler();
-  const menuHandler = new MenuHandler(imageSelectionHandler, annotationDataFactory, annotatePage);
-
   imageSelectionHandler.init();
-  menuHandler.init();
+
+  if (annotatePage) {
+    const annotationFactory = new HtmlAnnotationDataFactory(baseUrl);
+    const menuHandler = new HtmlMenuHandler(imageSelectionHandler, annotationFactory);
+    menuHandler.init();
+  } else {
+    const annotationFactory = new ImageAnnotationDataFactory(baseUrl);
+    const menuHandler = new ImageMenuHandler(imageSelectionHandler, annotationFactory);
+    menuHandler.init();
+  }
 };

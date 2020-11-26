@@ -1,0 +1,54 @@
+body {
+    background: #777;
+    text-align: center;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+.toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 100000;
+}
+
+.toolbar button {
+    border: 1px solid #eee;
+    color: #eee;
+    background: #333;
+    border-radius: 100%;
+    padding: 5px;
+    outline: none;
+    cursor: pointer;
+    width: 25px;
+    height: 25px;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+}
+
+.toolbar button:hover {
+    background: #444;
+}
+
+.toolbar span {
+    margin: 0 5px;
+}
+
+#zoomIn {
+    margin-left: 60px;
+}
+
+canvas {
+    margin: 60px auto;
+    box-shadow: 0 5px 10px #444;
+}

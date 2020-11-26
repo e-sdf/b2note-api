@@ -63,6 +63,7 @@
     "n3": "^1.6.4",
     "passport": "^0.4.1",
     "passport-http-bearer": "^1.0.1",
+    "pdfjs-dist": "^2.5.207",
     "pegjs": "^0.10.0",
     "qs": "^6.9.4",
     "source-map-support": "^0.5.19",
