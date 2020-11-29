@@ -20,11 +20,19 @@ const authConfPms = [
   openaire.retrieveConfigurationPm()
 ];
 
-Promise.all(authConfPms).then(
-  ([b2accessOIDConfig, openaireOIDConfig]) => {
+Promise.allSettled(authConfPms).then(
+  ([b2accessOIDConfigRes, openaireOIDConfigRes]) => {
 
-    app.use(config.serverPath, b2access.router(b2accessOIDConfig));
-    app.use(config.serverPath, openaire.router(openaireOIDConfig));
+    if (b2accessOIDConfigRes.status === "fulfilled") {
+      app.use(config.serverPath, b2access.router(b2accessOIDConfigRes.value));
+    } else {
+      console.error("B2ACCESS OIDC configuration request failed");
+    }
+    if (openaireOIDConfigRes.status === "fulfilled") {
+      app.use(config.serverPath, openaire.router(openaireOIDConfigRes.value));
+    } else {
+      console.error("OpenAIRE OIDC configuration request failed");
+    }
 
     passport.use(new BearerStrategy(
       (token: string, done: (x: any, y: boolean|UserProfile) => void) => {
@@ -67,7 +75,5 @@ Promise.all(authConfPms).then(
     server.on("listening", onListening);
     server.listen(port);
 
-  },
-
-  err => logError("Failed receiving an OIDC Configuration Response: " + err)
+  }
 );
