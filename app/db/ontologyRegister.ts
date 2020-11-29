@@ -5,7 +5,7 @@ import { get } from "../core/http";
 import config from "../config";
 import * as dbClient from "./client";
 import type { Ontology, OntologyMeta, OntologyTerm } from "../core/ontologyRegister";
-import * as oi from "../ontologyImport";
+import * as oi from "../ontologyImporter";
 import type { OntologySources } from "../core/apiModels/ontologyQueryModel";
 import { addItem, deleteItem } from "./utils";
 import { logError } from "../logging";
