@@ -132,7 +132,7 @@ export function getOntologyRecord(ontId: string): Promise<OntologyRecord|null> {
   );
 }
 
-export function getOntology(ontId: string): Promise<Ontology|null> {
+export function getOntologyById(ontId: string): Promise<Ontology|null> {
   return new Promise((resolve, reject) => 
     getOntologyRecord(ontId).then(
       record => record ? resolve(record2ontology(record)) : null,
@@ -186,6 +186,26 @@ export function addOntology(ontUrl: string, format: oi.OntologyFormat, creatorId
         err => reject(err)
       )
     )
+  );
+}
+
+export function updateOntology(ontId: string, changes: Partial<OntologyMeta>): Promise<number> {
+  return withCollection(
+    ontCol => new Promise((resolve, reject) =>
+       getOntologyById(ontId).then(
+         ontology => {
+           if (ontology) {
+             ontCol.updateOne({ id: ontId }, { "$set": changes }).then(
+               res => resolve(res.matchedCount),
+               err => reject(err)
+             );
+           } else {
+             reject(`Ontology id=${ontId} does not exist`);
+           }
+         },
+         err => reject(err)
+       )
+     )
   );
 }
 

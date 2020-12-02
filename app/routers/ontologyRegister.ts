@@ -2,10 +2,14 @@ import _ from "lodash";
 import type { Request, Response } from "express";
 import { Router } from "express";
 import passport from "passport";
+import config from "../config";
 import type { UserProfile } from "../core/user";
-import type { OntologyQuery } from "../core/apiModels/ontologyQueryModel";
+import type { Ontology, OntologyMeta} from "../core/ontologyRegister";
+import * as ontModel from "../core/ontologyRegister";
+import * as user from "../core/user";
+import type { OntologyGetQuery, OntologyPatchQuery } from "../core/apiModels/ontologyQueryModel";
 import { defaultOntologySources, OntologySources } from "../core/apiModels/ontologyQueryModel";
-import { validateGetOntologyQuery } from "../validators/ontology";
+import { validateGetOntologyQuery, validatePatchOntologyQuery } from "../validators/ontology";
 import * as oreg from "../core/ontologyRegister";
 import * as db from "../db/ontologyRegister";
 import * as responses from "../responses";
@@ -14,13 +18,23 @@ console.log("Initialising ontologies router...");
 
 const router = Router();
 
+// Utils {{{1
+
+function urlize(ont: Ontology|OntologyMeta): Ontology|OntologyMeta {
+  return {
+    ...ont,
+    id: config.domainUrl + ontModel.ontologiesUrl + "/" + ont.id,
+    creatorId: config.domainUrl + user.usersUrl + "/" + ont.creatorId
+  };
+}
+
 // Terms searching {{{1
 
 function mkOntologySourcesPm(sourcesIds: Array<string>): Promise<OntologySources> {
   return new Promise((resolve,reject) => {
     const includesSolr = sourcesIds.includes("solr");
     const customSourcesIds = sourcesIds.filter(s => s !== "solr");
-    Promise.all(customSourcesIds.map(db.getOntology)).then(
+    Promise.all(customSourcesIds.map(db.getOntologyById)).then(
       ontologies => resolve({
         solr: includesSolr,
         custom: ontologies.filter(o => o !== null) as Array<oreg.Ontology>
@@ -37,7 +51,7 @@ router.get(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false 
   if (errors) {
     responses.reqErr(resp, errors);
   } else {
-    const query = req.query as OntologyQuery;
+    const query = req.query as OntologyGetQuery;
     if (query.value) {
       const value = query.value;
       if (_.last(value) === "*") {
@@ -84,7 +98,7 @@ router.get(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { ses
   if (!ontId) {
     responses.reqErr(resp, { error: "missing ontology id"});
   } else {
-    db.getOntology(ontId).then(
+    db.getOntologyById(ontId).then(
       o => o ? 
         responses.ok(resp, o)
       : responses.notFound(resp, "Ontology with id=" + ontId + "not found"),
@@ -110,10 +124,48 @@ router.post(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false
   );
 });
 
+// Edit ontology
+router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const errors = validatePatchOntologyQuery(req.body);
+  if (errors) {
+    responses.reqErr(resp, errors);
+  } else {
+    const changes = req.body as OntologyPatchQuery;
+    const ontId = changes.id;
+    db.getOntologyRecord(ontId).then(
+      ontRec => {
+        if (ontRec) {
+          if (ontRec.creatorId === (req.user as UserProfile).id) {
+            db.updateOntology(ontId, changes)
+            .then(
+              () => db.getOntologyById(ontId).then(
+                ontRec2 => {
+                  if (ontRec2) {
+                    responses.jsonld(resp, ontRec2);
+                  } else {
+                    responses.notFound(resp, `Ontology with id=${ontId} not found`);
+                  }
+                },
+                error => responses.serverErr(resp, error)
+              ),
+              error => responses.forbidden(resp, error)
+            ).catch(err => responses.serverErr(resp, err));
+          } else {
+            responses.forbidden(resp, "Ontology creator does not match");
+          }
+        } else {
+          responses.notFound(resp, `Ontology with id=${ontId} not found`);
+        }
+      },
+      error => responses.serverErr(resp, error)
+    );
+  }
+});
+
 // Delete ontology {{{2
 router.delete(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const ontId = req.params.ontId;
-  db.getOntology(ontId).then(
+  db.getOntologyById(ontId).then(
     ont =>
       ont ?
         ont.creatorId === (req.user as UserProfile).id ?
