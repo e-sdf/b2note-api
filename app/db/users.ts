@@ -35,41 +35,48 @@ export function getUserProfileByEmail(email: string): Promise<UserProfile|null> 
 }
 
 export function upsertUserProfileFromUserinfo(userInfo: OIDUserinfo): Promise<UserProfile> {
-  return withCollection(
-    usersCol => new Promise((resolve, reject) => {
-      getUserProfileByEmail(userInfo.email).then(
-        userProfile => {
-          if (!userProfile) {
-            const newProfile: UserProfile = {
-              id: mkId(userInfo.email),
-              email: userInfo.email,
-              personName: userInfo.name || ((userInfo.given_name || "") + " " + (userInfo.family_name || "")),
-              givenName: userInfo.given_name || "",
-              familyName: userInfo.family_name || "",
-              orcid: userInfo.orcid ? extractId(userInfo.orcid) : "",
-              organisation: "",
-              jobTitle: "",
-              country: "",
-              experience: Experience.NULL
-            };
-            usersCol.insertOne(newProfile).then(
-              () => resolve(newProfile),
-              err => reject(err)
-            );
-          } else {
-            const updatedProfile: UserProfile = {
-              ...userProfile,
-              personName: userProfile.personName === "" ? userInfo.name : userProfile.personName
-            };
-            usersCol.replaceOne({ email: userProfile.email }, updatedProfile).then(
-              () => resolve(updatedProfile),
-              err => reject(err)
-            );
+  console.log("Got user info from OID:");
+  console.log(userInfo);
+  const email = userInfo.email;
+  if (email) {
+    return withCollection(
+      usersCol => new Promise((resolve, reject) => {
+        getUserProfileByEmail(email).then(
+          userProfile => {
+            if (!userProfile) {
+              const newProfile: UserProfile = {
+                id: mkId(email),
+                email,
+                personName: userInfo.name || ((userInfo.given_name || "") + " " + (userInfo.family_name || "")),
+                givenName: userInfo.given_name || "",
+                familyName: userInfo.family_name || "",
+                orcid: userInfo.orcid ? extractId(userInfo.orcid) : "",
+                organisation: "",
+                jobTitle: "",
+                country: "",
+                experience: Experience.NULL
+              };
+              usersCol.insertOne(newProfile).then(
+                () => resolve(newProfile),
+                err => reject(err)
+              );
+            } else {
+              const updatedProfile: UserProfile = {
+                ...userProfile,
+                personName: userProfile.personName === "" ? userInfo.name || "" : userProfile.personName || ""
+              };
+              usersCol.replaceOne({ email: userProfile.email }, updatedProfile).then(
+                () => resolve(updatedProfile),
+                err => reject(err)
+              );
+            }
           }
-        }
-      );
-    })
-  );
+        );
+      })
+    );
+  } else {
+    return Promise.reject("email not present in OID response");
+  }
 }
 
 export async function updateUserProfile(email: string, userProfileChanges: Partial<UserProfile>): Promise<number> {
