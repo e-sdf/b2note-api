@@ -156,7 +156,7 @@ export function getAnnotations(mbUserId: string|null, query: qModel.GetAnQuery):
       "$and": filters
     }
   : {};
-  console.log(JSON.stringify(dbQuery, null, 2));
+  // console.log(JSON.stringify(dbQuery, null, 2));
   const skipNo = query.skip;
   const limitNo = query.limit;
   return withCollection(
