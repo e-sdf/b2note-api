@@ -1,6 +1,6 @@
 {
   "name": "b2note-api",
-  "version": "4.2.2",
+  "version": "4.2.3",
   "build": "1",
   "description": "B2NOTE server",
   "private": true,
