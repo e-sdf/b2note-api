@@ -22,6 +22,19 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 // Filters {{{1
 
+function mkPrivateFilter(mbUserId: string|null): DBQuery {
+  return (
+    mbUserId ?
+      { 
+        "$or": [
+          { visibility: "public" },
+          { "$and": [ { visibility: "private" }, { "creator.id": mbUserId }]}
+        ]
+      }
+    : { visibility: "public" }
+  );
+}
+
 function mkTypeFilter(query: qModel.GetAnQuery): DBQuery {
   const semanticFilter = query["type"]?.includes(anModel.AnBodyType.SEMANTIC) ? {
     motivation: anModel.PurposeType.TAGGING,
@@ -129,8 +142,9 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   );
 }
 
-export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
+export function getAnnotations(mbUserId: string|null, query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
   const filters = [
+      mkPrivateFilter(mbUserId),
       mkTypeFilter(query),
       mkCreatorFilter(query),
       mkTargetIdFilter(query),
@@ -142,7 +156,7 @@ export function getAnnotations(query: qModel.GetAnQuery): Promise<Array<anModel.
       "$and": filters
     }
   : {};
-  // console.log(JSON.stringify(dbQuery, null, 2));
+  console.log(JSON.stringify(dbQuery, null, 2));
   const skipNo = query.skip;
   const limitNo = query.limit;
   return withCollection(

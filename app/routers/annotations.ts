@@ -39,40 +39,43 @@ function urlize(an: anModel.Annotation): anModel.Annotation {
 
 // Get list of annotations {{{2
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
-  let query2 = null;
-  try {
-    query2 = {
-      ... req.query,
-      download: req.query.download ? JSON.parse(req.query.download as string) : false,
-    };
-  } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download must be boolean"); }
-  if (query2) {
-    const errors = validator.validateGetAnQuery(query2);
-    if (errors) {
-      responses.reqErr(resp, errors);
-    } else {
-      const query3 = query2 as qModel.GetAnQuery;
-      db.getAnnotations(query3).then(
-        anlRecs => {
-          const anl = anlRecs.map(urlize);
-          const format = query3.format || formats.FormatType.JSONLD;
-          if (query3.download) {
-            responses.setDownloadHeader(resp, "annotations_" + utils.mkTimestamp(), format);
-          }
-          if (format === formats.FormatType.JSONLD) {
-            responses.jsonld(resp, anl);
-          } else if (query3.format === formats.FormatType.RDF) {
-            responses.xml(resp, rdf.mkRDF(anl, config.domainUrl));
-          } else if (query3.format === formats.FormatType.TTL) {
-            responses.xml(resp, ttl.annotations2ttl(anl, config.domainUrl));
-          } else {
-            throw new Error("Unknown download format");
-          }
-        },
-        error => responses.serverErr(resp, error, true)
-      );
+  passport.authenticate("bearer", (err, user, info) => {
+    const mbUserId = user ? (user as UserProfile).id : null;
+    let query2 = null;
+    try {
+      query2 = {
+        ... req.query,
+        download: req.query.download ? JSON.parse(req.query.download as string) : false,
+      };
+    } catch (error) { responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "Download must be boolean"); }
+    if (query2) {
+      const errors = validator.validateGetAnQuery(query2);
+      if (errors) {
+        responses.reqErr(resp, errors);
+      } else {
+        const query3 = query2 as qModel.GetAnQuery;
+        db.getAnnotations(mbUserId, query3).then(
+          anlRecs => {
+            const anl = anlRecs.map(urlize);
+            const format = query3.format || formats.FormatType.JSONLD;
+            if (query3.download) {
+              responses.setDownloadHeader(resp, "annotations_" + utils.mkTimestamp(), format);
+            }
+            if (format === formats.FormatType.JSONLD) {
+              responses.jsonld(resp, anl);
+            } else if (query3.format === formats.FormatType.RDF) {
+              responses.xml(resp, rdf.mkRDF(anl, config.domainUrl));
+            } else if (query3.format === formats.FormatType.TTL) {
+              responses.xml(resp, ttl.annotations2ttl(anl, config.domainUrl));
+            } else {
+              throw new Error("Unknown download format");
+            }
+          },
+          error => responses.serverErr(resp, error, true)
+        );
+      }
     }
-  }
+  })(req);
 });
 
 // Get annotation {{{2
