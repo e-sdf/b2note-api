@@ -1,5 +1,5 @@
 import express from "express";
-import type { Request, Response, NextFunction } from "express";
+// import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import path from "path";
 import bodyParser from "body-parser";
@@ -14,6 +14,8 @@ console.log("Starting webserver at " + __dirname);
 
 const app = express();
 
+app.use(cors());
+
 app.use(bodyParser.json());
 app.use(bodyParser.text());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -27,8 +29,6 @@ if (process.env.NODE_ENV == "production") {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use(cors());
-app.options("*", cors());
 
 // Add Allow header middleware
 // app.use((req: Request, resp: Response, next: NextFunction) => {
