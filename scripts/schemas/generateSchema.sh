@@ -1,6 +1,6 @@
 function generateSchema() {
   local T_SM="$(tr '[:upper:]' '[:lower:]' <<< ${T:0:1})${T:1}"
-  local S="${T_SM}.schema.js"
+  local S="${T_SM}.schema.ts"
   local OF="$OD$S"
   if [ -f "$OF" ]; then # dummy/previous file exists
     echo "Generating $S"
