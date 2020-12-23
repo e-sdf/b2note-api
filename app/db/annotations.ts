@@ -364,14 +364,22 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export function searchAnnotations(sExpr: Sexpr): Promise<Array<anModel.Annotation>> {
+export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr): Promise<Array<anModel.Annotation>> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       // console.log(JSON.stringify(sExpr, null, 2));
       enrichExprWithSynonyms(sExpr).then(
         withSynonymExprs => {
           // console.log(JSON.stringify(withSynonymExprs, null, 2));
-          const dbQuery = mkExprDBQuery(withSynonymExprs);
+          const filters = [
+            mkExprDBQuery(withSynonymExprs),
+            mkPrivateFilter(mbUserId)
+          ].filter(f => !_.isEmpty(f));
+          const dbQuery = filters.length > 0 ?
+            {
+              "$and": filters
+            }
+          : {};
           // console.log(JSON.stringify(dbQuery, null, 2));
           resolve(anCol.find(dbQuery).collation({ locale: "en", strength: 2 }).toArray());
         },

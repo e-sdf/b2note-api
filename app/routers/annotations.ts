@@ -168,24 +168,27 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
 
 // Search annotations {{{2
 router.get(sModel.searchUrl, (req: Request, resp: Response) => {
-  const expr = req.query.expression;
-  if (!expr) {
-    responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "parameter missing: expression");
-  } else {
-    const parseResult = searchQueryParser.parse(expr as string);
-    if (parseResult.error) {
-      responses.syntaxErr(resp, parseResult.error);
+  passport.authenticate("bearer", (err, user, info) => {
+    const mbUserId = user ? (user as UserProfile).id : null;
+    const expr = req.query.expression;
+    if (!expr) {
+      responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "parameter missing: expression");
     } else {
-      if (!parseResult.result) {
-        throw new Error("result field expected but missing");
+      const parseResult = searchQueryParser.parse(expr as string);
+      if (parseResult.error) {
+        responses.syntaxErr(resp, parseResult.error);
       } else {
-        db.searchAnnotations(parseResult.result as sModel.Sexpr).then(
-          anl => responses.ok(resp, anl.map(urlize)),
-          error => responses.serverErr(resp, error)
-        );
+        if (!parseResult.result) {
+          throw new Error("result field expected but missing");
+        } else {
+          db.searchAnnotations(mbUserId, parseResult.result as sModel.Sexpr).then(
+            anl => responses.ok(resp, anl.map(urlize)),
+            error => responses.serverErr(resp, error)
+          );
+        }
       }
     }
-  }
+  })(req);
 });
 
 // Get targets for a certain tag {{{2
