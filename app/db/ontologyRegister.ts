@@ -102,7 +102,7 @@ function ontology2record(o: Ontology): OntologyRecord {
 export function getOntologiesMetaRs(): Promise<Array<OntologyMetaRecord>> {
   const oiRecKeys = keys<OntologyMetaRecord>();
   return withCollection(
-    oCol => oCol.find({}, { projection: oiRecKeys }).toArray()
+    oCol => oCol.find({}, { projection: oiRecKeys }).sort({ name: 1, uri: 1}).toArray()
   );
 }
 

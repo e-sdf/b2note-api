@@ -2,7 +2,7 @@
 
 source ./scripts/schemas/generateSchema.sh
 IF="`pwd`/b2note-core/src/core/apiModels/anQueryModel.ts"
-OD="`pwd`/b2note-core/src/core/schemas/"
+OD="`pwd`/app/schemas/"
 
 T="GetAnQuery"
 generateSchema

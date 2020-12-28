@@ -1,6 +1,6 @@
 import type { ErrorObject } from "ajv";
 import Ajv from "ajv";
-import { userProfilePartialSchema } from "../core/schemas/userProfilePartial.schema";
+import { userProfilePartialSchema } from "../schemas/userProfilePartial.schema";
 
 type Item = Record<string, any>;
 

@@ -63,3 +63,4 @@ typings/
 .vscode
 dist/
 b2note-core/
+app/schemas/
