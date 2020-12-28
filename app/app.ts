@@ -10,6 +10,7 @@ import annotationsRouter from "./routers/annotations";
 import annotatorRouter from "./routers/annotator";
 import ontologyRegisterRouter from "./routers/ontologyRegister";
 import usersRouter from "./routers/users";
+import domainsRouter from "./routers/domains";
 console.log("Starting webserver at " + __dirname);
 
 const app = express();
@@ -54,5 +55,6 @@ app.use(config.serverPath, annotationsRouter);
 app.use(config.serverPath, annotatorRouter);
 app.use(config.serverPath, ontologyRegisterRouter);
 app.use(config.serverPath, usersRouter);
+app.use(config.serverPath, domainsRouter);
 
 export default app;
