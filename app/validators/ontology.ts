@@ -1,7 +1,7 @@
 import type { ErrorObject } from "ajv";
 import Ajv from "ajv";
-import { ontologyGetQuerySchema } from "../core/schemas/ontologyGetQuery.schema";
-import { ontologyPatchQuerySchema } from "../core/schemas/ontologyPatchQuery.schema";
+import { ontologyGetQuerySchema } from "../schemas/ontologyGetQuery.schema";
+import { ontologyPatchQuerySchema } from "../schemas/ontologyPatchQuery.schema";
 
 type Item = Record<string, any>;
 

@@ -2,7 +2,7 @@
 
 source ./scripts/schemas/generateSchema.sh
 IF="`pwd`/b2note-core/src/core/annotationsModel.ts"
-OD="`pwd`/b2note-core/src/core/schemas/"
+OD="`pwd`/app/schemas/"
 
 T="Annotation"
 generateSchema

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 source ./scripts/schemas/generateSchema.sh
-IF="`pwd`/b2note-core/src/core/apiModels/ontologyQueryModel.ts"
+IF="`pwd`/b2note-core/src/core/apiModels/domainQueryModel.ts"
 OD="`pwd`/app/schemas/"
 
-T="OntologyGetQuery"
+T="DomainPostQuery"
 generateSchema
 
-T="OntologyPatchQuery"
+T="DomainPatchQuery"
 generateSchema
