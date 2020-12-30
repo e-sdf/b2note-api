@@ -366,3 +366,9 @@ export function getOTermByUri(ontologyUri: string): Promise<OntologyTerm> {
     );
   });
 }
+
+export function getOntologiesForDomain(domainId: string): Promise<Array<string>> {
+  return withCollection(
+    ontCol => ontCol.find({ domainsIds: domainId }, { projection: { id: 1 } }).toArray()
+  );
+}

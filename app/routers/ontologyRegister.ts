@@ -101,7 +101,7 @@ router.get(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { ses
     db.getOntologyById(ontId).then(
       o => o ? 
         responses.ok(resp, o)
-      : responses.notFound(resp, "Ontology with id=" + ontId + "not found"),
+      : responses.notFound(resp, "Ontology [" + ontId + "] not found"),
       err => responses.serverErr(resp, err)
     );
   }
@@ -143,7 +143,7 @@ router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: fals
                   if (ontRec2) {
                     responses.jsonld(resp, ontRec2);
                   } else {
-                    responses.notFound(resp, `Ontology with id=${ontId} not found`);
+                    responses.notFound(resp, `Ontology [${ontId}] not found`);
                   }
                 },
                 error => responses.serverErr(resp, error)
@@ -154,7 +154,7 @@ router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: fals
             responses.forbidden(resp, "Ontology creator does not match");
           }
         } else {
-          responses.notFound(resp, `Ontology with id=${ontId} not found`);
+          responses.notFound(resp, `Ontology [${ontId}] not found`);
         }
       },
       error => responses.serverErr(resp, error)

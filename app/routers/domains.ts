@@ -6,6 +6,7 @@ import type { UserProfile } from "../core/user";
 import type { DomainPostQuery, DomainPatchQuery } from "../core/apiModels/domainQueryModel";
 import { validatePostDomainQuery, validatePatchDomainQuery } from "../validators/domain";
 import * as db from "../db/domains";
+import * as ontDb from "../db/ontologyRegister";
 import * as responses from "../responses";
 
 console.log("Initialising domains router...");
@@ -22,7 +23,7 @@ router.get(model.domainsUrl + "/:domainId", (req: Request, resp: Response) => {
     db.getDomainById(domainId).then(
       d => d ? 
         responses.ok(resp, d)
-      : responses.notFound(resp, "Domain with id=" + domainId + "not found"),
+      : responses.notFound(resp, "Domain [" + domainId + "] not found"),
       err => responses.serverErr(resp, err)
     );
   }
@@ -74,7 +75,7 @@ router.patch(model.domainsUrl, passport.authenticate("bearer", { session: false 
                   if (domain2) {
                     responses.jsonld(resp, domain2);
                   } else {
-                    responses.notFound(resp, `Domain with id=${domainId} not found`);
+                    responses.notFound(resp, `Domain [${domainId}] not found`);
                   }
                 },
                 error => responses.serverErr(resp, error)
@@ -85,7 +86,7 @@ router.patch(model.domainsUrl, passport.authenticate("bearer", { session: false 
             responses.forbidden(resp, "Domain creator does not match");
           }
         } else {
-          responses.notFound(resp, `Domain with id=${domainId} not found`);
+          responses.notFound(resp, `Domain [${domainId}] not found`);
         }
       },
       error => responses.serverErr(resp, error)
@@ -104,7 +105,22 @@ router.delete(model.domainsUrl + "/:domainId", passport.authenticate("bearer", {
           .then(() => responses.ok(resp))
           .catch(err => responses.serverErr(resp, err))
         : responses.forbidden(resp, "Domain creator does not match")
-      : responses.notFound(resp, `Domain with id=${domainId} not found`),
+      : responses.notFound(resp, `Domain [${domainId}] not found`),
+    error => responses.serverErr(resp, error)
+  );
+});
+
+// Query domain for ontologies
+router.get(model.domainsUrl + "/:domainId" + "/ontologies", (req: Request, resp: Response) => {
+  const domainId = req.params.domainId;
+  db.getDomainById(domainId).then(
+    domain =>
+      domain ?
+        ontDb.getOntologiesForDomain(domainId).then(
+          ontologiesIds => responses.ok(resp, ontologiesIds),
+          err => responses.serverErr(resp, err)
+        )
+      : responses.notFound(resp, `Domain [${domainId}] not found`),
     error => responses.serverErr(resp, error)
   );
 });
