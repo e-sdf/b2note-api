@@ -246,6 +246,63 @@ export function removeUserOfOntology(ontId: string, userId: string): Promise<voi
   );
 }
 
+// Domains management {{{2
+
+export function addDomain(ontId: string, dId: string): Promise<void> {
+  return new Promise((resolve, reject) =>
+    getOntologyById(ontId).then(
+      ontology => {
+        if (!ontology) {
+          reject("Ontology [" + ontId + "] does not exist");
+        } else {
+          if (ontology.domainsIds) {
+            if (ontology.domainsIds.includes(dId)) {
+              reject("Ontology [" + ontId + "] already includes domain [" + dId + "]");
+            } else { // add dId to existing list
+              updateOntology(ontId, { domainsIds: [...ontology.domainsIds, dId] }).then(
+                () => resolve(),
+                err => reject(err)
+              );  
+            }
+          } else { // create new domains list with dId
+            updateOntology(ontId, { domainsIds: [dId] }).then(
+              () => resolve(),
+              err => reject(err)
+            );  
+          }
+        }
+      },
+      err => reject(err)
+    )
+  );
+}
+
+export function removeDomain(ontId: string, dId: string): Promise<void> {
+  return new Promise((resolve, reject) =>
+    getOntologyById(ontId).then(
+      ontology => {
+        if (!ontology) {
+          reject("Ontology [" + ontId + "] does not exist");
+        } else {
+          if (ontology.domainsIds) {
+            if (ontology.domainsIds.includes(dId)) {
+              updateOntology(ontId, { domainsIds: ontology.domainsIds.filter(dId1 => dId1 !== dId) }).then(
+                res => resolve(),
+                err => reject(err)
+              );  
+            } else { 
+              reject("Ontology [" + ontId + "] does not include domain [" + dId + "]");
+            }
+          } else { // create new domains list with dId
+            reject("Ontology [" + ontId + "] does not include domain [" + dId + "]");
+          }
+        }
+      },
+      err => reject(err)
+    )
+  );
+}
+
 // Queries into ontologies {{{2
 
 function querySolrForTerms(query: string): Promise<Array<OntologyTerm>> {
