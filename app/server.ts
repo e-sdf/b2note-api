@@ -43,7 +43,6 @@ Promise.allSettled(authConfPms).then(
             const email = (decoded as JWT).email;
             if (!email) {
               throw new Error("email not present in the JWT token");
-              return done(null, false);
             } else {
               dbUsers.getUserProfileByEmail(email).then(userProfile => {
                 if (!userProfile) {
