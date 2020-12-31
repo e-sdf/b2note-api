@@ -7,6 +7,7 @@ import type { DomainPostQuery, DomainPatchQuery } from "../core/apiModels/domain
 import { validatePostDomainQuery, validatePatchDomainQuery } from "../validators/domain";
 import * as db from "../db/domains";
 import * as ontDb from "../db/ontologyRegister";
+import * as usersDb from "../db/users";
 import * as responses from "../responses";
 
 console.log("Initialising domains router...");
@@ -110,7 +111,9 @@ router.delete(model.domainsUrl + "/:domainId", passport.authenticate("bearer", {
   );
 });
 
-// Query domain for ontologies
+// Query domains {{{1
+
+// Query domain for ontologies {{{2
 router.get(model.domainsUrl + "/:domainId" + "/ontologies", (req: Request, resp: Response) => {
   const domainId = req.params.domainId;
   db.getDomainById(domainId).then(
@@ -118,6 +121,21 @@ router.get(model.domainsUrl + "/:domainId" + "/ontologies", (req: Request, resp:
       domain ?
         ontDb.getOntologiesForDomain(domainId).then(
           ontologiesIds => responses.ok(resp, ontologiesIds),
+          err => responses.serverErr(resp, err)
+        )
+      : responses.notFound(resp, `Domain [${domainId}] not found`),
+    error => responses.serverErr(resp, error)
+  );
+});
+
+// Query domain for users {{{2
+router.get(model.domainsUrl + "/:domainId" + "/users", (req: Request, resp: Response) => {
+  const domainId = req.params.domainId;
+  db.getDomainById(domainId).then(
+    domain =>
+      domain ?
+        usersDb.getUsersOfDomain(domainId).then(
+          usersIds => responses.ok(resp, usersIds),
           err => responses.serverErr(resp, err)
         )
       : responses.notFound(resp, `Domain [${domainId}] not found`),
