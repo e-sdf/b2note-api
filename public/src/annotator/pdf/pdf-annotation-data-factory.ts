@@ -1,17 +1,17 @@
 import { AnnotationDataFactory } from "../common/annotation-data-factory";
-import { TargetInput, TargetType } from "../../../../app/core/targetInput";
+import { TargetInput, TargetInputType } from "../../../../app/core/targetInput";
 
 export class PdfAnnotationDataFactory extends AnnotationDataFactory {
   getDocumentData(): TargetInput {
     return {
-      type: TargetType.PAGE,
+      type: TargetInputType.PAGE,
       pid: this.baseUrl
     };
   }
 
   getPageData(pageNumber: number): TargetInput {
     return {
-      type: TargetType.PDF,
+      type: TargetInputType.PDF,
       pid: this.baseUrl,
       pageNumber
     };
@@ -19,7 +19,7 @@ export class PdfAnnotationDataFactory extends AnnotationDataFactory {
 
   getPageSelectionData(pageNumber: number, svgSelector: string): TargetInput {
     return {
-      type: TargetType.PDF,
+      type: TargetInputType.PDF,
       pid: this.baseUrl,
       pageNumber,
       svgSelector
