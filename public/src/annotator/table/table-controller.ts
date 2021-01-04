@@ -102,6 +102,7 @@ export class TableController {
     for (let i = 1; i <= size; i++) {
       const th = document.createElement("th");
       th.innerText = this.numberToLetters(i);
+      th.dataset.colHeader = `${i}`;
       tr.appendChild(th);
     }
 
@@ -113,6 +114,7 @@ export class TableController {
 
     const th = document.createElement("th");
     th.innerText = `${index + 1}`;
+    th.dataset.rowHeader = `${index + 1}`;
     tr.appendChild(th);
 
     for (let i = 0; i < size; i++) {

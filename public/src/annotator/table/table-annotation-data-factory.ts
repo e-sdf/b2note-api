@@ -31,4 +31,30 @@ export class TableAnnotationDataFactory extends AnnotationDataFactory {
       }
     };
   }
+
+  getRowData(sheet: string, row: number): TargetInput {
+    return {
+      type: TargetType.TABLE,
+      pid: this.baseUrl,
+      sheet,
+      range: {
+        type: "RowRange",
+        startRow: row,
+        endRow: row
+      }
+    };
+  }
+
+  getColData(sheet: string, col: number): TargetInput {
+    return {
+      type: TargetType.TABLE,
+      pid: this.baseUrl,
+      sheet,
+      range: {
+        type: "ColumnRange",
+        startColumn: col,
+        endColumn: col
+      }
+    };
+  }
 }
