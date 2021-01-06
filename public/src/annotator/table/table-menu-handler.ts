@@ -17,6 +17,8 @@ export class TableMenuHandler extends MenuHandler {
     this.addAnnotateDocumentMenuItem();
     this.addAnnotateSheetMenuItem();
     this.addAnnotateCellMenuItem(target);
+    this.addAnnotateColMenuItem(target);
+    this.addAnnotateRowMenuItem(target);
   }
 
   private addAnnotateDocumentMenuItem(): void {
@@ -35,6 +37,22 @@ export class TableMenuHandler extends MenuHandler {
       const row = parseInt(target.dataset.row);
       const data = this.annotationDataFactory.getCellData(this.tableHandler.selectedSheet, col, row);
       this.addMenuItem("Annotate cell", data);
+    }
+  }
+
+  private addAnnotateColMenuItem(target: HTMLElement): void {
+    if (target.dataset.colHeader) {
+      const col = parseInt(target.dataset.colHeader);
+      const data = this.annotationDataFactory.getColData(this.tableHandler.selectedSheet, col);
+      this.addMenuItem("Annotate column", data);
+    }
+  }
+
+  private addAnnotateRowMenuItem(target: HTMLElement): void {
+    if (target.dataset.rowHeader) {
+      const row = parseInt(target.dataset.rowHeader);
+      const data = this.annotationDataFactory.getRowData(this.tableHandler.selectedSheet, row);
+      this.addMenuItem("Annotate row", data);
     }
   }
 }

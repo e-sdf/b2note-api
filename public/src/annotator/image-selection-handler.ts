@@ -3,14 +3,16 @@ import { Utils } from "./common/utils";
 export class ImageSelectionHandler {
   imageSelection: HTMLElement | null = null;
   targetImage: HTMLElement | null = null;
-  minX = 0;
-  minY = 0;
-  maxX = 0;
-  maxY = 0;
+
   startX = 0;
   startY = 0;
   currentX = 0;
   currentY = 0;
+
+  topPctg = 0;
+  leftPctg = 0;
+  widthPctg = 0;
+  heightPctg = 0;
 
   mouseMoveListener: any;
   mouseUpListener: any;
@@ -27,16 +29,31 @@ export class ImageSelectionHandler {
     return this.maxY - this.minY;
   }
 
+  private get minX(): number {
+    return this.targetImage?.offsetLeft || 0;
+  }
+
+  private get minY(): number {
+    return this.targetImage?.offsetTop || 0;
+  }
+
+  private get maxX(): number {
+    if (!this.targetImage) return 0;
+    return this.targetImage.offsetLeft + this.targetImage.offsetWidth;
+  }
+
+  private get maxY(): number {
+    if (!this.targetImage) return 0;
+    return this.targetImage.offsetTop + this.targetImage.offsetHeight;
+  }
+
   public init(): void {
     document.addEventListener("mousedown", this.handleMouseDown.bind(this));
+    window.addEventListener("resize", this.handleResize.bind(this));
   }
 
   public toSvg(): string {
-    const x = this.toPctg(Math.min(this.startX, this.currentX) - this.minX, this.imageWidth);
-    const y = this.toPctg(Math.min(this.startY, this.currentY) - this.minY, this.imageHeight);
-    const width = this.toPctg(Math.abs(this.currentX - this.startX), this.imageWidth);
-    const height = this.toPctg(Math.abs(this.currentY - this.startY), this.imageHeight);
-    return `<svg><rect x="${x}%" y="${y}%" width="${width}%" height="${height}%" /></svg>`;
+    return `<svg><rect x="${this.leftPctg}%" y="${this.topPctg}%" width="${this.widthPctg}%" height="${this.heightPctg}%" /></svg>`;
   }
 
   private handleMouseDown(e: MouseEvent) {
@@ -49,10 +66,6 @@ export class ImageSelectionHandler {
 
     this.startX = e.pageX;
     this.startY = e.pageY;
-    this.minX = target.offsetLeft;
-    this.minY = target.offsetTop;
-    this.maxX = target.offsetLeft + target.offsetWidth;
-    this.maxY = target.offsetTop + target.offsetHeight;
 
     this.imageSelection = Utils.addElement("b2note-annotator-selection");
     this.setPosition(this.startX, this.startY);
@@ -78,14 +91,32 @@ export class ImageSelectionHandler {
     }
   }
 
+  private handleResize() {
+    if (!this.active || !this.targetImage) return;
+
+    this.resizeSelection();
+  }
+
   private setPosition(currentX: number, currentY: number): void {
     this.currentX = Math.min(this.maxX, Math.max(this.minX, currentX));
     this.currentY = Math.min(this.maxY, Math.max(this.minY, currentY));
-    const left = Math.min(this.startX, this.currentX);
-    const top = Math.min(this.startY, this.currentY);
-    const width = Math.abs(this.startX - this.currentX);
-    const height = Math.abs(this.startY - this.currentY);
 
+    this.updatePctgs();
+    this.resizeSelection();
+  }
+
+  private updatePctgs() {
+    this.leftPctg = this.toPctg(Math.min(this.startX, this.currentX) - this.minX, this.imageWidth);
+    this.topPctg = this.toPctg(Math.min(this.startY, this.currentY) - this.minY, this.imageHeight);
+    this.widthPctg = this.toPctg(Math.abs(this.currentX - this.startX), this.imageWidth);
+    this.heightPctg = this.toPctg(Math.abs(this.currentY - this.startY), this.imageHeight);
+  }
+
+  private resizeSelection(): void {
+    const left = this.minX + this.imageWidth * this.leftPctg * 0.01;
+    const top = this.minY + this.imageHeight * this.topPctg * 0.01;
+    const width = this.imageWidth * this.widthPctg * 0.01;
+    const height = this.imageHeight * this.heightPctg * 0.01;
     this.imageSelection?.setAttribute("style", `top: ${top}px; left: ${left}px; height: ${height}px; width: ${width}px`);
   }
 
