@@ -1,4 +1,4 @@
-import { logError } from './logging';
+import { logError } from "./logging";
 // import devConfig from "./config.dev";
 // import prodConfig from "./config.prod";
 
