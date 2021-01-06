@@ -35,11 +35,11 @@ export class TableAnnotationDataFactory extends AnnotationDataFactory {
 
   getRowData(sheet: string, row: number): TargetInput {
     return {
-      type: TargetType.TABLE,
+      type: TargetInputType.TABLE,
       pid: this.baseUrl,
       sheet,
       range: {
-        type: "RowRange",
+        type: TableRangeType.ROWS,
         startRow: row,
         endRow: row
       }
@@ -48,11 +48,11 @@ export class TableAnnotationDataFactory extends AnnotationDataFactory {
 
   getColData(sheet: string, col: number): TargetInput {
     return {
-      type: TargetType.TABLE,
+      type: TargetInputType.TABLE,
       pid: this.baseUrl,
       sheet,
       range: {
-        type: "ColumnRange",
+        type: TableRangeType.COLUMNS,
         startColumn: col,
         endColumn: col
       }
