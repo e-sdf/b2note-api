@@ -101,7 +101,7 @@ router.get(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { ses
     db.getOntologyById(ontId).then(
       o => o ? 
         responses.ok(resp, o)
-      : responses.notFound(resp, "Ontology with id=" + ontId + "not found"),
+      : responses.notFound(resp, "Ontology [" + ontId + "] not found"),
       err => responses.serverErr(resp, err)
     );
   }
@@ -124,7 +124,7 @@ router.post(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false
   );
 });
 
-// Edit ontology
+// Patch ontology
 router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
   const errors = validatePatchOntologyQuery(req.body);
   if (errors) {
@@ -143,7 +143,7 @@ router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: fals
                   if (ontRec2) {
                     responses.jsonld(resp, ontRec2);
                   } else {
-                    responses.notFound(resp, `Ontology with id=${ontId} not found`);
+                    responses.notFound(resp, `Ontology [${ontId}] not found`);
                   }
                 },
                 error => responses.serverErr(resp, error)
@@ -154,7 +154,7 @@ router.patch(oreg.ontologiesUrl, passport.authenticate("bearer", { session: fals
             responses.forbidden(resp, "Ontology creator does not match");
           }
         } else {
-          responses.notFound(resp, `Ontology with id=${ontId} not found`);
+          responses.notFound(resp, `Ontology [${ontId}] not found`);
         }
       },
       error => responses.serverErr(resp, error)
@@ -173,7 +173,45 @@ router.delete(oreg.ontologiesUrl + "/:ontId", passport.authenticate("bearer", { 
           .then(() => responses.ok(resp))
           .catch(err => responses.serverErr(resp, err))
         : responses.forbidden(resp, "Ontology creator does not match")
-      : responses.notFound(resp, `Ontology with id=${ontId} not found`),
+      : responses.notFound(resp, `Ontology [${ontId}] not found`),
+    error => responses.serverErr(resp, error)
+  );
+});
+
+// Manage domains {{{2
+
+// Add domain {{{3
+router.post(oreg.ontologiesUrl + "/:ontId" + "/domains/:dId", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const ontId = req.params.ontId;
+  const dId = req.params.dId;
+  db.getOntologyById(ontId).then(
+    ont =>
+      ont ?
+        ont.creatorId === (req.user as UserProfile).id ?
+          db.addDomain(ontId, dId).then(
+            () => responses.ok(resp),
+            error => responses.reqErr(resp, { error })
+          )
+        : responses.forbidden(resp, "Ontology creator does not match")
+      : responses.notFound(resp, `Ontology [${ontId}] not found`),
+    error => responses.serverErr(resp, error)
+  );
+});
+
+// Remove domain {{{3
+router.delete(oreg.ontologiesUrl + "/:ontId" + "/domains/:dId", passport.authenticate("bearer", { session: false }), (req: Request, resp: Response) => {
+  const ontId = req.params.ontId;
+  const dId = req.params.dId;
+  db.getOntologyById(ontId).then(
+    ont =>
+      ont ?
+        ont.creatorId === (req.user as UserProfile).id ?
+          db.removeDomain(ontId, dId).then(
+            () => responses.ok(resp),
+            error => responses.reqErr(resp, { error })
+          )
+        : responses.forbidden(resp, "Ontology creator does not match")
+      : responses.notFound(resp, `Ontology [${ontId}] not found`),
     error => responses.serverErr(resp, error)
   );
 });

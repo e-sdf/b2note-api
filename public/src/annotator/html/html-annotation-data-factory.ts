@@ -1,12 +1,12 @@
 import { getXPathForElement } from "../common/xpath";
 import { Utils } from "../common/utils";
 import { AnnotationDataFactory } from "../common/annotation-data-factory";
-import { TargetInput, TargetType } from "../../../../app/core/targetInput";
+import { TargetInput, TargetInputType } from "../../../../app/core/targetInput";
 
 export class HtmlAnnotationDataFactory extends AnnotationDataFactory {
   getPageData(): TargetInput {
     return {
-      type: TargetType.PAGE,
+      type: TargetInputType.PAGE,
       pid: this.baseUrl
     };
   }
@@ -21,7 +21,7 @@ export class HtmlAnnotationDataFactory extends AnnotationDataFactory {
           const textContent = node.textContent;
           if (textContent) {
             return {
-              type: TargetType.TEXT_SELECTION,
+              type: TargetInputType.TEXT_SELECTION,
               pid: this.baseUrl,
               xPath: getXPathForElement(node),
               startOffset: range.startOffset,
@@ -37,7 +37,7 @@ export class HtmlAnnotationDataFactory extends AnnotationDataFactory {
 
   getLinkData(link: HTMLElement): TargetInput {
     return {
-      type: TargetType.LINK,
+      type: TargetInputType.LINK,
       pid: this.baseUrl,
       source: Utils.fromProxyURL(link.getAttribute("href"))
     };
@@ -45,7 +45,7 @@ export class HtmlAnnotationDataFactory extends AnnotationDataFactory {
 
   getImageData(image: HTMLElement): TargetInput {
     return {
-      type: TargetType.LINK,
+      type: TargetInputType.LINK,
       pid: this.baseUrl,
       source: Utils.fromProxyURL(image.getAttribute("src"))
     };
@@ -53,7 +53,7 @@ export class HtmlAnnotationDataFactory extends AnnotationDataFactory {
 
   getImageSelectionData(image: HTMLElement, svgSelector: string): TargetInput {
     return {
-      type: TargetType.IMAGE_REGION_ON_PAGE,
+      type: TargetInputType.IMAGE_REGION_ON_PAGE,
       pid: this.baseUrl,
       source: Utils.fromProxyURL(image.getAttribute("src")),
       svgSelector

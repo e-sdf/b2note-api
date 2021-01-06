@@ -90,6 +90,8 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
   );
 }
 
+// Custom ontologies management {{{1
+
 export function getOntologiesOfUser(userId: string): Promise<Array<Ontology>> {
   return new Promise((resolve, reject) =>
     oDb.getOntologiesRecords().then(
@@ -114,11 +116,19 @@ export function addCustomOntology(userId: string, ontId: string): Promise<void> 
 export function deleteCustomOntology(userId: string, ontId: string): Promise<void> {
   return new Promise((resolve, reject) => 
     getUserProfileById(userId).then(
-      user => oDb.removeUserOfOntology(ontId, userId).then(
+      () => oDb.removeUserOfOntology(ontId, userId).then(
         () => resolve(),
         err => reject(err)
       ),
       err => reject(err)
     )
+  );
+}
+
+// Domains {{{1
+
+export function getUsersOfDomain(domainId: string): Promise<Array<string>> {
+  return withCollection(
+    usersCol => usersCol.find({ domainsIds: domainId }, { projection: { id: 1 } }).toArray()
   );
 }

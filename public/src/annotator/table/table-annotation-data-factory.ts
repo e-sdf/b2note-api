@@ -1,17 +1,18 @@
 import { AnnotationDataFactory } from "../common/annotation-data-factory";
-import { TargetInput, TargetType } from "../../../../app/core/targetInput";
+import { TableRangeType } from "../../../../app/core/annotationsModel";
+import { TargetInput, TargetInputType } from "../../../../app/core/targetInput";
 
 export class TableAnnotationDataFactory extends AnnotationDataFactory {
   getPageData(): TargetInput {
     return {
-      type: TargetType.PAGE,
+      type: TargetInputType.PAGE,
       pid: this.baseUrl,
     };
   }
 
   getSheetData(sheet: string): TargetInput {
     return {
-      type: TargetType.TABLE,
+      type: TargetInputType.TABLE,
       pid: this.baseUrl,
       sheet
     };
@@ -19,11 +20,11 @@ export class TableAnnotationDataFactory extends AnnotationDataFactory {
 
   getCellData(sheet: string, col: number, row: number): TargetInput {
     return {
-      type: TargetType.TABLE,
+      type: TargetInputType.TABLE,
       pid: this.baseUrl,
       sheet,
       range: {
-        type: "CellRange",
+        type: TableRangeType.CELLS,
         startColumn: col,
         endColumn: col,
         startRow: row,
