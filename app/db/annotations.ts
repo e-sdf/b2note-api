@@ -25,7 +25,7 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 function mkPrivateFilter(mbUserId: string|null): DBQuery {
   return (
     mbUserId ?
-      { 
+      {
         "$or": [
           { visibility: "public" },
           { "$and": [ { visibility: "private" }, { "creator.id": mbUserId }]}
@@ -81,6 +81,13 @@ function mkValueFilter(query: qModel.GetAnQuery): DBQuery {
     { "body.items": { "$elemMatch": { value: query.value } } } // semantic
   ] }
   : {};
+}
+
+function mkCatalogFilter(query: qModel.GetAnQuery): DBQuery {
+  const c = query.catalog;
+  return (
+    c ? { "catalog": c } : { }
+  );
 }
 
 // Queries {{{1
@@ -149,10 +156,11 @@ export function getAnnotations(mbUserId: string|null, query: qModel.GetAnQuery):
       mkCreatorFilter(query),
       mkTargetIdFilter(query),
       mkTargetSourceFilter(query),
-      mkValueFilter(query)
+      mkValueFilter(query),
+      mkCatalogFilter(query)
     ].filter(f => !_.isEmpty(f));
   const dbQuery = filters.length > 0 ?
-    { 
+    {
       "$and": filters
     }
   : {};
@@ -364,7 +372,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr): Promise<Array<anModel.Annotation>> {
+export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr, catalog?: string): Promise<Array<anModel.Annotation>> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       // console.log(JSON.stringify(sExpr, null, 2));
@@ -373,7 +381,8 @@ export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr): Promise<
           // console.log(JSON.stringify(withSynonymExprs, null, 2));
           const filters = [
             mkExprDBQuery(withSynonymExprs),
-            mkPrivateFilter(mbUserId)
+            mkPrivateFilter(mbUserId),
+            mkCatalogFilter({ catalog })
           ].filter(f => !_.isEmpty(f));
           const dbQuery = filters.length > 0 ?
             {
