@@ -86,7 +86,7 @@ function mkValueFilter(query: qModel.GetAnQuery): DBQuery {
 function mkCatalogFilter(query: qModel.GetAnQuery): DBQuery {
   const c = query.catalog;
   return (
-    c ? { "catalog": c } : { }
+    c ? { "catalogs": c } : { }
   );
 }
 
