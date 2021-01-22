@@ -15,7 +15,8 @@
     "no-explicit-any": "off",
     "no-use-before-define": 0,
     "camelcase": "off",
-    "quotes": ["error", "double"]
+    "quotes": ["error", "double"],
+    "no-shadow": "error"
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
