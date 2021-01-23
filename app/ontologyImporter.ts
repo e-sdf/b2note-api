@@ -17,7 +17,7 @@ function convertToTtlPm(ontUrl:  string, format: OntologyFormat): Promise<string
     exec(cmd, {maxBuffer: 50 * 1024 * 1024}, (error, stdout, stderr) => {
       if (error) {
         if (error.name === "RangeError") {
-           reject("Ontology too big"); 
+           reject("Ontology too big");
          } else {
            console.log(stderr);
            reject(stderr);
@@ -106,6 +106,16 @@ function getSkosOTermsFromOntology(store: Store): Array<OntologyTerm> {
   return oTermsUniqueSorted;
 }
 
+function getPropertiesFromOntology(store: Store): Array<OntologyTerm> {
+  const owlObjectProperty = new NamedNode("http://www.w3.org/2002/07/owl#ObjectProperty");
+  const owlIsType = new NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+  const objectPropertyNodes = store.getSubjects(owlIsType, owlObjectProperty, null).filter(n3.Util.isNamedNode) as Array<NamedNode>;
+  const oTerms = objectPropertyNodes.map(n => mkRdfsOTerm(store, n)).filter(t => t !== null) as Array<OntologyTerm>;
+  const oTermsUniqueSorted = _.sortBy(_.uniqBy(oTerms, "label"), ["label"]);
+  return oTermsUniqueSorted;
+}
+
+
 export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: string): Promise<Ontology> {
   return new Promise((resolve, reject) => {
     convertToTtlPm(ontUrl, format).then(
@@ -116,7 +126,8 @@ export function mkOntologyPm(ontUrl: string, format: OntologyFormat, creatorId: 
         const ontUri = getOntologyUri(store);
         const owlOTerms = getOwlOTermsFromOntology(store);
         const skosOTerms = getSkosOTermsFromOntology(store);
-        const oTerms = [...owlOTerms, ...skosOTerms];
+        const propertyTerms = getPropertiesFromOntology(store);
+        const oTerms = [...owlOTerms, ...skosOTerms, ...propertyTerms];
         const noOfTerms = oTerms.length;
         oTerms.length > 0 ?
           resolve({ id: "", creatorId, uri: ontUri || ontUrl, noOfTerms, terms: oTerms })
