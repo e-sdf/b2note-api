@@ -95,14 +95,16 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
 export function getOntologiesOfUser(userId: string): Promise<Array<Ontology>> {
   return new Promise((resolve, reject) =>
     oDb.getOntologiesRecords().then(
-      records => resolve(records.filter(rec => rec.userIds.includes(userId)).map(oDb.record2ontology)),
+      // FAIRsFAIR hack
+      // records => resolve(records.filter(rec => rec.userIds.includes(userId)).map(oDb.record2ontology)),
+      records => resolve(records.filter(rec => rec.userIds.includes(userId) || rec.name === "FSO").map(oDb.record2ontology)),
       err => reject(err)
     )
   );
 }
 
 export function addCustomOntology(userId: string, ontId: string): Promise<void> {
-  return new Promise((resolve, reject) => 
+  return new Promise((resolve, reject) =>
     getUserProfileById(userId).then(
       () => oDb.addUserOfOntology(ontId, userId).then(
         () => resolve(),
@@ -114,7 +116,7 @@ export function addCustomOntology(userId: string, ontId: string): Promise<void> 
 }
 
 export function deleteCustomOntology(userId: string, ontId: string): Promise<void> {
-  return new Promise((resolve, reject) => 
+  return new Promise((resolve, reject) =>
     getUserProfileById(userId).then(
       () => oDb.removeUserOfOntology(ontId, userId).then(
         () => resolve(),
