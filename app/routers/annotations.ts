@@ -8,7 +8,7 @@ import * as anModel from "../core/annotationsModel";
 import * as qModel from "../core/apiModels/anQueryModel";
 import * as sModel from "../core/searchModel";
 import * as searchQueryParser from "../core/searchQueryParser";
-import * as user from "../core/user";
+import * as userModel from "../core/user";
 import { ErrorCodes } from "../responses";
 import * as responses from "../responses";
 import * as db from "../db/annotations";
@@ -30,7 +30,7 @@ function urlize(an: anModel.Annotation): anModel.Annotation {
     id: config.domainUrl + anModel.annotationsUrl + "/" + an.id,
     creator: {
       ...an.creator,
-      id: config.domainUrl + user.usersUrl + "/" + an.creator.id
+      id: config.domainUrl + userModel.usersUrl + "/" + an.creator.id
     }
   };
 }
