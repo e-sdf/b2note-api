@@ -64,7 +64,9 @@ function mkCreatorFilter(query: qModel.GetAnQuery): DBQuery {
 function mkTargetIdFilter(query: qModel.GetAnQuery): DBQuery {
   const ff = query["target-id"];
   return (
-    ff && ff.length > 0 ? { "target.id": { "$in": ff } } : { }
+    ff && ff.length > 0 ?
+      { "$or": ff.map(tid => ({ "target.id": tid })) }
+    : { }
   );
 }
 

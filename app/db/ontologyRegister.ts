@@ -133,7 +133,7 @@ export function getOntologyRecord(ontId: string): Promise<OntologyRecord|null> {
 }
 
 export function getOntologyById(ontId: string): Promise<Ontology|null> {
-  return new Promise((resolve, reject) => 
+  return new Promise((resolve, reject) =>
     getOntologyRecord(ontId).then(
       record => record ? resolve(record2ontology(record)) : null,
       err => reject(err)
@@ -156,12 +156,12 @@ function getOntologyByTerms(terms: Array<OntologyTerm>): Promise<Ontology|null> 
 
 export function addOntology(ontUrl: string, format: oi.OntologyFormat, creatorId: string, checkUnique = true): Promise<oi.Ontology> {
   return withCollection(
-    ontCol => new Promise((resolve, reject) => 
+    ontCol => new Promise((resolve, reject) =>
       oi.mkOntologyPm(ontUrl, format, creatorId).then(
         ontology => {
           if (checkUnique) {
             getOntologyByTerms(ontology.terms).then(
-              o => (o ? 
+              o => (o ?
                 reject("Ontology with these terms exists: " + o.uri)
               : addItem(ontCol, ontology2record(ontology)).then(
                   newItem => addUserOfOntology(newItem.id, creatorId).then(
@@ -220,7 +220,7 @@ export function addUserOfOntology(ontId: string, userId: string): Promise<void> 
     getOntologyRecord(ontId).then(
       record => {
         if (record?.userIds.includes(userId)) {
-          resolve(); 
+          resolve();
         } else {
           withCollection(
             ontCol => ontCol.updateOne({ id: ontId }, { "$push": { userIds: userId } }).then(
@@ -262,13 +262,13 @@ export function addDomain(ontId: string, dId: string): Promise<void> {
               updateOntology(ontId, { domainsIds: [...ontology.domainsIds, dId] }).then(
                 () => resolve(),
                 err => reject(err)
-              );  
+              );
             }
           } else { // create new domains list with dId
             updateOntology(ontId, { domainsIds: [dId] }).then(
               () => resolve(),
               err => reject(err)
-            );  
+            );
           }
         }
       },
@@ -289,8 +289,8 @@ export function removeDomain(ontId: string, dId: string): Promise<void> {
               updateOntology(ontId, { domainsIds: ontology.domainsIds.filter(dId1 => dId1 !== dId) }).then(
                 res => resolve(),
                 err => reject(err)
-              );  
-            } else { 
+              );
+            } else {
               reject("Ontology [" + ontId + "] does not include domain [" + dId + "]");
             }
           } else { // create new domains list with dId
@@ -305,6 +305,7 @@ export function removeDomain(ontId: string, dId: string): Promise<void> {
 
 // Queries into ontologies {{{2
 
+
 function querySolrForTerms(query: string): Promise<Array<OntologyTerm>> {
   return new Promise((resolve, reject) => {
     const queryUrl = mkSolrTermQueryUrl(query);
@@ -315,11 +316,17 @@ function querySolrForTerms(query: string): Promise<Array<OntologyTerm>> {
   });
 }
 
+function addNameToTerm(o: Ontology, oTerm: OntologyTerm): OntologyTerm {
+  return {
+    ...oTerm,
+    ...o.name ? { ontologyName: o.name } : {}
+  }
+}
 function queryCustomOntologyForTerms(query: string, ontologyId: string): Promise<Array<OntologyTerm>> {
   return new Promise((resolve, reject) => {
     getOntologyRecord(ontologyId).then(
-      o => o ? 
-        resolve(o.terms.filter(t => t.label.toLocaleLowerCase().includes(query.toLowerCase())))
+      o => o ?
+        resolve(o.terms.filter(t => t.label.toLocaleLowerCase().includes(query.toLowerCase())).map(t => addNameToTerm(o, t)))
         : resolve([]),
       err => reject(err)
     );
@@ -349,6 +356,7 @@ export function getOTerm(term: string): Promise<OTermsDict> {
 }
 
 export function getOTermByUri(ontologyUri: string): Promise<OntologyTerm> {
+  // TODO: include custom ontologies
   return new Promise((resolve, reject) => {
     const queryUrl = encodeSolrQuery(config.solrUrl + '?q=uris:("' + ontologyUri + '")&rows=100&wt=json');
     get(queryUrl).then(
