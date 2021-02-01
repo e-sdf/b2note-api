@@ -151,6 +151,12 @@ export function getAnnotation(anId: string): Promise<anModel.Annotation|null> {
   );
 }
 
+export function getAnnotationsRecords(): Promise<Array<anModel.Annotation>> {
+  return withCollection(
+    anCol => anCol.find().toArray()
+  );
+}
+
 export function getAnnotations(mbUserId: string|null, query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
   const filters = [
       mkPrivateFilter(mbUserId),

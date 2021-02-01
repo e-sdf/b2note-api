@@ -305,7 +305,6 @@ export function removeDomain(ontId: string, dId: string): Promise<void> {
 
 // Queries into ontologies {{{2
 
-
 function querySolrForTerms(query: string): Promise<Array<OntologyTerm>> {
   return new Promise((resolve, reject) => {
     const queryUrl = mkSolrTermQueryUrl(query);

@@ -22,6 +22,12 @@ function mkId(email: string): string {
 
 // User queries {{{1
 
+export function getUsersRecords(): Promise<Array<UserProfile>> {
+  return withCollection(
+    usersCol => usersCol.find().toArray()
+  );
+}
+
 export function getUserProfileById(id: string): Promise<UserProfile|null> {
   return withCollection(
     usersCol => usersCol.findOne({ id })

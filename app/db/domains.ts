@@ -18,6 +18,12 @@ function mkId(name: string): string {
 
 // Getting domains {{{1
 
+export function getDomainsRecords(): Promise<Array<Domain>> {
+  return withCollection(
+    domainsCol => domainsCol.find().toArray()
+  );
+}
+
 export function getDomains(): Promise<Array<Domain>> {
   return withCollection(
     domainsCol => domainsCol.find().sort({ name: 1 }).toArray()
@@ -45,7 +51,7 @@ export function addDomain(name: string, creatorId: string): Promise<Domain> {
         if (mbDomain) {
           reject("Domain already exists");
         } else {
-          withCollection(domainsCol => 
+          withCollection(domainsCol =>
             addItem(domainsCol, { id: mkId(name), name, creatorId } as Domain).then(
               newItem => resolve(newItem),
               err => reject(err)

@@ -16,6 +16,7 @@
     "deploy": "scripts/git-tag.sh; scripts/docker-build.sh; scripts/docker-tag.sh; scripts/docker-push.sh",
     "docker-run": "docker-compose up --build",
     "docker-watch": "nodemon --watch app --ext ts,js,ejs,yaml,html --exec npm run build\\;npm run copy\\;npm run docker-run",
+    "backup-db": "cd dist; node -r dotenv/config db/backupDb",
     "clean": "npm cache clean --force"
   },
   "devDependencies": {
