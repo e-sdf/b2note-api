@@ -3,6 +3,7 @@ import { matchSwitch } from "@babakness/exhaustive-type-checking";
 import type { Collection } from "mongodb";
 import * as dbClient from "./client";
 import type { DBQuery } from "./client";
+import type { UserProfile } from "../core/user";
 import * as anModel from "../core/annotationsModel";
 import * as qModel from "../core/apiModels/anQueryModel";
 import type { TagExpr, Sexpr } from "../core/searchModel";
@@ -22,13 +23,13 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 // Filters {{{1
 
-function mkPrivateFilter(mbUserId: string|null): DBQuery {
+function mkPrivateFilter(mbUser: UserProfile|null): DBQuery {
   return (
-    mbUserId ?
+    mbUser && !mbUser.admin ?
       {
         "$or": [
           { visibility: "public" },
-          { "$and": [ { visibility: "private" }, { "creator.id": mbUserId }]}
+          { "$and": [ { visibility: "private" }, { "creator.id": mbUser.id }]}
         ]
       }
     : { visibility: "public" }
@@ -157,9 +158,9 @@ export function getAnnotationsRecords(): Promise<Array<anModel.Annotation>> {
   );
 }
 
-export function getAnnotations(mbUserId: string|null, query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
+export function getAnnotations(mbUser: UserProfile|null, query: qModel.GetAnQuery): Promise<Array<anModel.Annotation>> {
   const filters = [
-      mkPrivateFilter(mbUserId),
+      mkPrivateFilter(mbUser),
       mkTypeFilter(query),
       mkCreatorFilter(query),
       mkTargetIdFilter(query),
@@ -380,7 +381,7 @@ async function enrichExprWithSynonyms(sExpr: Sexpr): Promise<Sexpr> {
   }
 }
 
-export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr, catalog?: string): Promise<Array<anModel.Annotation>> {
+export function searchAnnotations(mbUser: UserProfile|null, sExpr: Sexpr, catalog?: string): Promise<Array<anModel.Annotation>> {
   return withCollection(
     anCol => new Promise((resolve, reject) => {
       // console.log(JSON.stringify(sExpr, null, 2));
@@ -389,7 +390,7 @@ export function searchAnnotations(mbUserId: string|null, sExpr: Sexpr, catalog?:
           // console.log(JSON.stringify(withSynonymExprs, null, 2));
           const filters = [
             mkExprDBQuery(withSynonymExprs),
-            mkPrivateFilter(mbUserId),
+            mkPrivateFilter(mbUser),
             mkCatalogFilter({ catalog })
           ].filter(f => !_.isEmpty(f));
           const dbQuery = filters.length > 0 ?

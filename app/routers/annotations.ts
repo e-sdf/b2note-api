@@ -40,7 +40,7 @@ function urlize(an: anModel.Annotation): anModel.Annotation {
 // Get list of annotations {{{2
 router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
   passport.authenticate("bearer", (err, user, info) => {
-    const mbUserId = user ? (user as UserProfile).id : null;
+    const mbUser = user ? user as UserProfile: null;
     let query2 = null;
     try {
       query2 = {
@@ -54,7 +54,7 @@ router.get(anModel.annotationsUrl, (req: Request, resp: Response) => {
         responses.reqErr(resp, errors);
       } else {
         const query3 = query2 as qModel.GetAnQuery;
-        db.getAnnotations(mbUserId, query3).then(
+        db.getAnnotations(mbUser,  query3).then(
           anlRecs => {
             const anl = anlRecs.map(urlize);
             const format = query3.format || formats.FormatType.JSONLD;
@@ -169,7 +169,7 @@ router.delete(anModel.annotationsUrl + "/:id", passport.authenticate("bearer", {
 // Search annotations {{{2
 router.get(sModel.searchUrl, (req: Request, resp: Response) => {
   passport.authenticate("bearer", (err, user, info) => {
-    const mbUserId = user ? (user as UserProfile).id : null;
+    const mbUser = user ? user as UserProfile : null;
     const expr = req.query.expression;
     if (!expr) {
       responses.clientErr(resp, ErrorCodes.REQ_FORMAT_ERR, "parameter missing: expression");
@@ -181,7 +181,7 @@ router.get(sModel.searchUrl, (req: Request, resp: Response) => {
         if (!parseResult.result) {
           throw new Error("result field expected but missing");
         } else {
-          db.searchAnnotations(mbUserId, parseResult.result as sModel.Sexpr).then(
+          db.searchAnnotations(mbUser, parseResult.result as sModel.Sexpr).then(
             anl => responses.ok(resp, anl.map(urlize)),
             error => responses.serverErr(resp, error)
           );
