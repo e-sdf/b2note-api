@@ -25,13 +25,16 @@ function withCollection<T>(dbOp: dbClient.DbOp): Promise<T> {
 
 function mkPrivateFilter(mbUser: UserProfile|null): DBQuery {
   return (
-    mbUser && !mbUser.admin ?
-      {
-        "$or": [
-          { visibility: "public" },
-          { "$and": [ { visibility: "private" }, { "creator.id": mbUser.id }]}
-        ]
-      }
+    mbUser ?
+      mbUser.admin ?
+        {}
+      :
+        {
+          "$or": [
+            { visibility: "public" },
+            { "$and": [ { visibility: "private" }, { "creator.id": mbUser.id }]}
+          ]
+        }
     : { visibility: "public" }
   );
 }
