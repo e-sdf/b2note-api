@@ -101,7 +101,9 @@ export async function updateUserProfile(email: string, userProfileChanges: Parti
 export function getOntologiesOfUser(userId: string): Promise<Array<Ontology>> {
   return new Promise((resolve, reject) =>
     oDb.getOntologiesRecords().then(
-      records => resolve(records.filter(rec => rec.userIds.includes(userId)).map(oDb.record2ontology)),
+      // FAIRsFAIR hack
+      // records => resolve(records.filter(rec => rec.userIds.includes(userId)).map(oDb.record2ontology)),
+      records => resolve(records.filter(rec => rec.userIds.includes(userId) || rec.name === "FSO").map(oDb.record2ontology)),
       err => reject(err)
     )
   );
