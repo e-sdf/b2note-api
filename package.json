@@ -71,7 +71,7 @@
     "ts-enum-util": "^4.0.2",
     "ts-transformer-keys": "^0.4.3",
     "uuid": "^8.3.2",
-    "xlsx": "^0.16.9",
+    "xlsx": "^0.17.0",
     "xmlbuilder": "^15.1.1"
   }
 }
